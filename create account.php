@@ -50,7 +50,7 @@
 </head>
 <body>
     <h2>Register</h2>
-    <form action="register.php" method="post">
+    <form action="../../eWork/register.php" method="post">
         <label for="name">Name:</label>
         <input type="text" name="name" id="name" required>
 
