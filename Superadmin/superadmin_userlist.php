@@ -2,7 +2,8 @@
 <html>
 <?php
 include "superadmin_menu.php";
-
+?>
+<?php
 if (isset($_POST['remove_selected'])) {
     // Check if any rows were selected for removal
     if (isset($_POST['selected_rows']) && is_array($_POST['selected_rows'])) {
@@ -10,10 +11,10 @@ if (isset($_POST['remove_selected'])) {
         $placeholders = implode(',', array_fill(0, count($_POST['selected_rows']), '?'));
 
         // Prepare the SQL statement to insert the records into the recyclebin table
-        $insertSql = "INSERT INTO tbl_recyclebin_account_request (firstname, lastname, job_description, email, contact_number, user_password, request_time, username) 
-                  SELECT firstname, lastname, job_description, email, contact_number, user_password, request_time, username
-                  FROM tbl_account_request 
-                  WHERE email IN ($placeholders)";
+        $insertSql = "INSERT INTO tbl_recyclebin_account_request (firstname, lastname, job_description, email, contact_number, user_password, request_time, username)
+                  SELECT user_firstname, user_lastname, job_position, user_email, user_contactnumber, user_password, NOW(), username
+                  FROM tbl_userlist 
+                  WHERE user_email IN ($placeholders)";
 
         // Create a prepared statement
         if ($stmt = $conn->prepare($insertSql)) {
@@ -25,7 +26,7 @@ if (isset($_POST['remove_selected'])) {
         }
 
         // Prepare the SQL statement to delete the records from the original table
-        $deleteSql = "DELETE FROM tbl_account_request WHERE email IN ($placeholders)";
+        $deleteSql = "DELETE FROM tbl_userlist WHERE user_email IN ($placeholders)";
 
         // Create a prepared statement
         if ($stmt = $conn->prepare($deleteSql)) {
@@ -39,71 +40,44 @@ if (isset($_POST['remove_selected'])) {
             $stmt->close();
         }
 
-        $_POST['selected_rows'] = array(); // Clear the selected rows array
-        header("Location: superadmin_home.php");
+        $_POST['selected_rows'] = array();
+        header("Location: superadmin_userlist.php");
         exit(); // Terminate script execution after redirection
     }
 }
 
-    if (isset($_POST['add_selected'])) {
-        // Check if any rows were selected for addition
-        if (isset($_POST['selected_rows']) && is_array($_POST['selected_rows'])) {
-            // Loop over the selected rows and assign roles
-            for ($i = 0; $i < count($_POST['selected_rows']); $i++) {
-                // Get the email and role for the current row
-                $email = $_POST['selected_rows'][$i];
-                $role = $_POST['role'][$i];
-    
-                // Prepare the SQL statement to insert the record into the tbl_userlist table
-                $insertSql = "INSERT INTO tbl_userlist (username, job_position, user_password, user_email, user_contactnumber, user_firstname, user_lastname) 
-                SELECT username, ?, user_password, email, contact_number, firstname, lastname 
-                FROM tbl_account_request 
-                WHERE email = ?";
-    
-                // Create a prepared statement
-                if ($stmt = $conn->prepare($insertSql)) {
-                    // Bind the role and email as parameters
-                    $stmt->bind_param('ss', $role, $email);
-    
-                    // Execute the statement to insert the selected row into the tbl_userlist table
-                    $stmt->execute();
-    
-                    // Close the prepared statement
+if (isset($_POST['change_role'])) {
+    // Check if any rows were selected for role update
+    if (isset($_POST['selected_rows']) && is_array($_POST['selected_rows'])) {
+        foreach ($_POST['selected_rows'] as $email) {
+            $roleField = 'role_' . str_replace('.', '_', $email); // Construct the field name
+            if (isset($_POST[$roleField])) {
+                $newRole = $_POST[$roleField];
+
+                $updateSql = "UPDATE tbl_userlist SET job_position = ? WHERE user_email = ?";
+                if ($stmt = $conn->prepare($updateSql)) {
+                    $stmt->bind_param('ss', $newRole, $email);
+                    if (!$stmt->execute()) {
+                        echo "Error executing update statement: " . $stmt->error;
+                    }
                     $stmt->close();
                 } else {
-                    // Handle any errors with the prepared statement
-                    echo "Error: " . $conn->error;
+                    echo "Error preparing update statement: " . $conn->error;
                 }
             }
-    
-            // Prepare the SQL statement to delete the records from the original table
-            $placeholders = implode(',', array_fill(0, count($_POST['selected_rows']), '?'));
-            $deleteSql = "DELETE FROM tbl_account_request WHERE email IN ($placeholders)";
-    
-            // Create a prepared statement
-            if ($stmt = $conn->prepare($deleteSql)) {
-                // Bind each email to its own placeholder
-                $stmt->bind_param(str_repeat('s', count($_POST['selected_rows'])), ...$_POST['selected_rows']);
-    
-                // Execute the statement to delete the selected rows from the original table
-                $stmt->execute();
-    
-                // Close the prepared statement
-                $stmt->close();
-            }
-    
-            $_POST['selected_rows'] = array();
-            header("Location: superadmin_home.php");
-            exit(); // Terminate script execution after redirection
         }
+        $_POST['selected_rows'] = array();
+        header("Location: superadmin_userlist.php");
+        exit();
     }
-    
-    ?>
+}
 
+
+
+?>
 
 <head>
     <title>Superadmin</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         /* Global styles */
         body {
@@ -191,11 +165,11 @@ if (isset($_POST['remove_selected'])) {
 
         }
 
-        #addSelect {
+        #changeRole {
             grid-column: 1 / -1;
             grid-row: 3 / 4;
             height: 50px;
-            width: 100px;
+            width: 150px;
             place-self: start start;
         }
 
@@ -224,7 +198,7 @@ if (isset($_POST['remove_selected'])) {
     </header>
 
     <?php
-    $limit = 30; // Number of entries to show in a page.
+    $limit = 10; // Number of entries to show in a page.
     // Look for a GET variable page if not found default is 1.  
     if (isset($_GET["page"])) {
         $pn  = $_GET["page"];
@@ -234,70 +208,69 @@ if (isset($_POST['remove_selected'])) {
 
     $start_from = ($pn - 1) * $limit;
 
-    $sql = "SELECT firstname, lastname, job_description, email, contact_number, request_time, username FROM tbl_account_request ORDER BY request_time DESC LIMIT $start_from, $limit";
+    $sql = "SELECT user_id, username, job_position, user_email, user_contactnumber, user_firstname, user_lastname FROM tbl_userlist";
     $rs_result = mysqli_query($conn, $sql);
     ?>
-    <form method="post" action="superadmin_home.php">
+    <form method="post" action="superadmin_userlist.php"> <!-- Changed action to superadmin_userlist.php -->
         <div id="maintable">
         <input type="text" id="searchInput" placeholder="Search for names...">
             <table>
                 <tr>
                     <th>Select</th>
-                    <th>Assign Role</th>
-                    <th>Firstname</th>
-                    <th>Lastname</th>
+                    <th>Change Role</th>
+                    <th>User ID</th>
                     <th>Username</th>
-                    <th>Job Description</th>
+                    <th>Job Position</th>
                     <th>Email</th>
                     <th>Contact Number</th>
-                    <th>Request Time</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
                 </tr>
                 <?php
                 while ($row = mysqli_fetch_assoc($rs_result)) {
                 ?>
                     <tr class="trHover">
-                        <td><input type="checkbox" name="selected_rows[]" value="<?php echo $row["email"]; ?>"></td>
+                        <td><input type="checkbox" name="selected_rows[]" value="<?php echo $row["user_email"]; ?>"></td>
                         <td>
-                            <select name="role[]">
+                            <select name="role_<?php echo str_replace('.', '_', $row["user_email"]); ?>">
                                 <option value="Agent">Agent</option>
                                 <option value="Artist">Artist</option>
                                 <option value="Manager">Manager</option>
-                                <option value="Superadmin">Superadmin</option>
                             </select>
                         </td>
-                        <td><?php echo $row["firstname"]; ?></td>
-                        <td><?php echo $row["lastname"]; ?></td>
+                        <td><?php echo $row["user_id"]; ?></td>
                         <td><?php echo $row["username"]; ?></td>
-                        <td><?php echo $row["job_description"]; ?></td>
-                        <td><?php echo $row["email"]; ?></td>
-                        <td><?php echo $row["contact_number"]; ?></td>
-                        <td><?php echo date("h:i A, M j", strtotime($row["request_time"])); ?></td>
+                        <td><?php echo $row["job_position"]; ?></td>
+                        <td><?php echo $row["user_email"]; ?></td>
+                        <td><?php echo $row["user_contactnumber"]; ?></td>
+                        <td><?php echo $row["user_firstname"]; ?></td>
+                        <td><?php echo $row["user_lastname"]; ?></td>
                     </tr>
                 <?php
                 };
                 ?>
             </table>
-            <input id="addSelect" type="submit" name="add_selected" value="Add Selected">
+            <input id="changeRole" type="submit" name="change_role" value="Change Privileges">
             <input id="removeSelect" type="submit" name="remove_selected" value="Remove Selected">
     </form>
 
     <div id="pageNumbers">
         <?php
-        $sql = "SELECT COUNT(*) FROM tbl_account_request";
+        $sql = "SELECT COUNT(*) FROM tbl_userlist"; // Change the table name
         $rs_result = mysqli_query($conn, $sql);
         $row = mysqli_fetch_row($rs_result);
         $total_records = $row[0];
         $total_pages = ceil($total_records / $limit);
         $pagLink = "<div class='pagination'>";
         for ($i = 1; $i <= $total_pages; $i++) {
-            $pagLink .= "<a href='superadmin_home.php?page=" . $i . "'>" . $i . "</a>";
+            $pagLink .= "<a href='superadmin_userlist.php?page=" . $i . "'>" . $i . "</a>"; // Changed the link
         };
         echo $pagLink . "</div>";
         ?>
     </div>
     </div>
 
-    
+
 </body>
 
 <script>
@@ -336,6 +309,4 @@ if (isset($_POST['remove_selected'])) {
         }
     });
 </script>
-
-
 </html>

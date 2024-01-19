@@ -125,7 +125,7 @@
         $password = $_POST['password'];
 			
         // Create a prepared statement
-        $stmt = $conn->prepare("SELECT username, job_position FROM tbl_userlist WHERE BINARY username = ? AND BINARY password = ?");
+        $stmt = $conn->prepare("SELECT username, job_position FROM tbl_userlist WHERE BINARY username = ? AND BINARY user_password = ?");
         if ($stmt) {
             // Bind the parameters
             $stmt->bind_param("ss", $username, $password);

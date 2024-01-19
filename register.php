@@ -3,7 +3,6 @@ include "logindbase.php";
 
 if (isset($_POST["createAccButton"])) {
 
-
     // Retrieve form data
     $firstname = $_POST["firstname"];
     $lastname = $_POST["lastname"];
@@ -11,19 +10,19 @@ if (isset($_POST["createAccButton"])) {
     $email = $_POST["email"];
     $contact_number = $_POST["contact_number"];
     $password = $_POST["user_password"];
+    $username = $_POST["username"];
 
     // Hash the password (using bcrypt or another secure hashing method)
     $hashed_password = password_hash($password, PASSWORD_BCRYPT);
 
     // Insert data into the table
-    $sql = "INSERT INTO tbl_account_request (`firstname`, `lastname`, `job_description`, `email`, `contact_number`, `user_password`, `request_time`)
-    VALUES (?, ?, ?, ?, ?, ?, NOW())";
+    $sql = "INSERT INTO tbl_account_request (`firstname`, `lastname`, `job_description`, `email`, `contact_number`, `user_password`, `request_time`, `username`)
+    VALUES (?, ?, ?, ?, ?, ?, NOW(), ?)";
 
-    
     $stmt = $conn->prepare($sql);
     
     if ($stmt) {
-        $stmt->bind_param("ssssss", $firstname, $lastname, $job_description, $email, $contact_number, $hashed_password);
+        $stmt->bind_param("sssssss", $firstname, $lastname, $job_description, $email, $contact_number, $hashed_password, $username);
         if ($stmt->execute()) {
             // Data inserted successfully
             echo '<script>alert("Account created successfully.");</script>';
@@ -32,12 +31,6 @@ if (isset($_POST["createAccButton"])) {
             // Error inserting data
             echo '<script>alert("Error: ' . $stmt->error . '");</script>';
         }
-        
-
-        $stmt->close();
-    } else {
-        // Error in SQL statement
-        echo "Error: " . $conn->error;
     }
 
     // Close the database connection
@@ -79,26 +72,29 @@ if (isset($_POST["createAccButton"])) {
         #heading_form{
             grid-area: 1 / 2 / 2 / 3;
         }
+
         .formLayout {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: 1fr 25px;
+            grid-template-columns: auto auto;
+            grid-template-rows: auto;
             justify-content: center;
             align-content: center;
             text-align: center;
             row-gap: .5em;
+            column-gap: 25px;
         }
 
-        .formLayout>label {
+        .formLayout label {
             font-size: 1.1rem;
+            font-weight: bold;
         }
 
         #employee_info {
             display:grid;
+            grid-template-rows: repeat(6, auto);
             grid-column: 1 / 2;
             grid-row: 1 / 2;
-            place-self: left;
-
+            place-items:start;
         }
 
         #imprint_logo_form{
@@ -108,8 +104,8 @@ if (isset($_POST["createAccButton"])) {
             }
 
         
-            #imprint_logo_form img{
-            margin-top: 40px;
+        #imprint_logo_form img{
+            margin-top: 35px;
             border-radius: 5px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
             }
@@ -121,7 +117,7 @@ if (isset($_POST["createAccButton"])) {
             grid-row: 1 / 2;
             background-color: rgba(0, 0, 0, 0.2);
             border-radius: 3px;
-            width: 75%;
+            width: auto;
             place-self:  end center;
         }
 
@@ -129,19 +125,13 @@ if (isset($_POST["createAccButton"])) {
         form {
             grid-area: 1 / 2 / 2 / 3;
             background-color: burlywood;
-            padding: 20px;
+            padding: 10px 100px 10px 100px;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
-            width: 50vw;
-            height: 60vh;
+            width: auto;
+            height: auto;
             place-self: center;
             place-items: center;
-        }
-
-        label {
-            width:15em;
-            margin: 5px 0;
-
         }
 
         input {
@@ -177,21 +167,24 @@ if (isset($_POST["createAccButton"])) {
     <h2>Create an account for eWork</h2>
     <form action="/ework_collab/register.php" method="post" class=formLayout onsubmit="return validateForm()">
         <div id="employee_info">
-            <label>Enter first name:</label>
+            <label>First name:</label>
             <input type="text" name="firstname" id="firstname" required>
-            <label>Enter last name:</label>
+            <label>Last name:</label>
             <input type="text" name="lastname" id="lastname" required>
-            <label>Enter your job role:</label>
-            <input type="text" name="job_description" id="job_description">
-            <label>Enter your email:</label>
-            <input type="text" name="email" id="email">
-            <label>Enter your contact number:</label>
-            <input name="contact_number" type="text" id="contact_number">
+            <label>Username:</label>
+            <input type="text" name="username" id="username" required>
+            <label>Job role:</label>
+            <input type="text" name="job_description" id="job_description" required>
+            <label>E-mail address:</label>
+            <input type="text" name="email" id="email" required>
+            <label>Contact number:</label>
+            <input name="contact_number" type="text" id="contact_number" required>
         </div>
         <div id="imprint_logo_form">
             <img src="images/imprint customs logo 2.png" alt="Imprint Customs Logo" width="200" height="200">
         </div>
         <div id="password_input">
+            <label>Password:</label>
             <input type="password" name="user_password" id="u_password" placeholder="Enter your password" required>
             <input type="password" name="confirm_password" id="confirm_password" placeholder="Confirm password" required>
             <span id="password_error" style="color: red; padding:10px auto;"></span>

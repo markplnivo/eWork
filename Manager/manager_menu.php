@@ -28,7 +28,9 @@ include "../logindbase.php";
             color: white;
             text-decoration: none;
             padding: 20px;
+            width:100px;
         }
+
         i{
             margin-right: 10px;
             display: block;
@@ -38,6 +40,7 @@ include "../logindbase.php";
             background-color: #0f0f0f;
             grid-area: 1 / 1 / 5 /-2 ;
             height:100%;
+            width:100%;
         }
 		.companylogo{
             margin-top: 20px;
@@ -54,6 +57,7 @@ include "../logindbase.php";
             margin-bottom: 20px;
         }
         .sidebar ul li{
+            overflow-x:hidden;
             width: 100%;
             list-style: none;
             line-height: 25px;
@@ -100,6 +104,9 @@ include "../logindbase.php";
 			font-family: Arial, Helvetica, sans-serif;
 		}
 
+        ul{
+            overflow-x:hidden;
+        }
 
 </style>
 </head>

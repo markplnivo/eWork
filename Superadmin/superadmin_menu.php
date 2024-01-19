@@ -1,98 +1,186 @@
-<?php 
+<?php
 include "../session_handler.php";
 include "../logindbase.php";
-	
-	if (!isLoggedIn()){
-		header("Location: ../login_page.php");
-		exit();
-	}
-	if ($_SESSION['position'] != 'Superadmin'){
-		header("Location: ../login_page.php");
-		exit();
-	}	
+
+if (!isLoggedIn()) {
+  header("Location: ../login_page.php");
+  exit();
+}
+if ($_SESSION['position'] != 'Superadmin') {
+  header("Location: ../login_page.php");
+  exit();
+}
 ?>
 
 <!doctype html>
 <html>
 
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
+
 <style>
-    /* Sidebar styles */
-    .sidebar {
-        width: 100%;
-        height: 100vh;
-        background-color: #FFFFFF;
-        padding-top: 6%;
-        padding-right: 4%;
-        padding-left: 4%;
-        padding-bottom: 100vh;
-        float: left;
-        font-size: 1.5vw;
-        font-family: "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", "DejaVu Sans", Verdana, sans-serif;
-        font-weight: 400;
-        font-style: normal;
-        color: #000000;
-        margin-left: 0;
-        text-align: center;
-    }
+  /* Hamburger menu styles */
+  #menu_toggle {
+    opacity: 0;
+  }
 
-    .sidebar h3 {
-        margin: 0;
-        color: red;
-        font-size: 1.5em;
-        text-shadow: 0 0 2px #000000;
-    }
+  #menu_toggle:checked+.menu_btn>span {
+    transform: rotate(45deg);
+  }
 
-    .sidebar ul {
-        list-style: none;
-        padding: 0;
-        text-align: center;
-        text-decoration: none;
-    }
+  #menu_toggle:checked+.menu_btn>span::before {
+    top: 0;
+    transform: rotate(0deg);
+  }
 
-    .sidebar ul li {
-        border-bottom: 1px solid #ccc;
-        padding: 1px 0;
-    }
+  #menu_toggle:checked+.menu_btn>span::after {
+    top: 0;
+    transform: rotate(90deg);
+  }
 
-    .sidebar a {
-        color: black;
-        text-decoration: none;
-        text-align: center;
-        display: block;
-        padding: 10px 0;
-    }
+  #menu_toggle:checked~.menu_box {
+    left: 0 !important;
+  }
 
-    .sidebar img {
-        border-radius: 5px;
-    }
+  .menu_btn {
+    position: fixed;
+    top: 50px;
+    left: 20px;
+    width: 26px;
+    height: 26px;
+    cursor: pointer;
+    z-index: 1;
+  }
+
+  .menu_btn>span,
+  .menu_btn>span::before,
+  .menu_btn>span::after {
+    display: block;
+    position: absolute;
+    width: 100%;
+    height: 3px;
+    background-color: #616161;
+    transition-duration: .25s;
+  }
+
+  .menu_btn>span::before {
+    content: '';
+    top: -8px;
+  }
+
+  .menu_btn>span::after {
+    content: '';
+    top: 8px;
+  }
+
+  .menu_box {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: -100%;
+    width: 300px;
+    height: 100%;
+    margin: 0;
+    padding: 80px 0;
+    list-style: none;
+    background-color: #ECEFF1;
+    box-shadow: 2px 2px 6px rgba(0, 0, 0, .4);
+    transition-duration: .25s;
+  }
+
+  .menu_box img {
+    display: block;
+    margin: 0 auto;
+    height: 180px;
+    width: auto;
+    box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.4); /* Add shadow effect */
+  }
+
+  .menu_box button {
+    display: block;
+    margin: 0 auto;
+    box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.4); /* Add shadow effect */
+  }
 
 
+  .menu_item {
+    display: block;
+    padding: 12px 24px;
+    color: #333;
+    font-family: 'Roboto', sans-serif;
+    font-size: 20px;
+    font-weight: 600;
+    text-decoration: none;
+    transition-duration: .25s;
+  }
+
+  .menu_spacer {
+    height:40px;
+  }
+
+  .menu_item:hover {
+    background-color: #CFD8DC;
+
+  }
+
+  body.menu-open {
+    grid-template-columns: 250px auto 0.5fr;
+    transition: grid-template-columns 0.3s ease-in-out;
+  }
 </style>
 
 <body>
-    <div class="sidebar">
-        <img src="../images/imprint customs logo 1.png" class="companylogo">
-        <h3>Admin</h3>
-        <ul>
+  <div class="hamburger-menu">
+    <input id="menu_toggle" type="checkbox" />
+    <label class="menu_btn" for="menu_toggle">
+      <span></span>
+    </label>
 
-            <form action="superadmin_menu.php" method="post">
-                <div class="logButton">
-                    <button type="submit" name="logoutButton">Logout</button>
-                </div>
-            </form>
-        </ul>
-    </div>
-    <?php
-    if (isset($_POST['logoutButton'])) {
-        logoutUser();
-        header("Location: ../login_page.php");
-        exit();
-    }
-    ?>
+    <ul class="menu_box">
+      <li><img src="../images/imprint customs logo 1.png" alt="Logo" width="100" height="100"></li>
+      <li><div class="menu_spacer"></div></li>
+      <li><a class="menu_item" href="superadmin_home.php">Home</a></li>
+      <li><a class="menu_item" href="superadmin_recyclebin.php">Recycle Bin</a></li>
+      <li><a class="menu_item" href="superadmin_userlist.php">User List</a></li>
+      <li><div class="menu_spacer"></div></li>
+      <li>
+        <form action="superadmin_menu.php" method="post">
+          <div class="logButton">
+            <button type="submit" name="logoutButton" class="menu_item">Logout</button>
+          </div>
+        </form>
+      </li>
+    </ul>
+  </div>
+
+  <?php
+  if (isset($_POST['logoutButton'])) {
+    logoutUser();
+    header("Location: ../login_page.php");
+    exit();
+  }
+  ?>
+
+  <script>
+    // Existing code
+    window.addEventListener('click', function(e) {
+      var menuBox = document.querySelector('.menu_box');
+      var menuBtn = document.querySelector('.menu_btn');
+      var menuToggle = document.querySelector('#menu_toggle');
+
+      if (!menuBox.contains(e.target) && !menuBtn.contains(e.target) && !menuToggle.contains(e.target)) {
+        menuToggle.checked = false;
+        document.body.classList.remove('menu-open');
+      }
+    });
+
+    var menuToggle = document.querySelector('#menu_toggle');
+    menuToggle.addEventListener('change', function() {
+      document.body.classList.toggle('menu-open', this.checked);
+    });
+  </script>
 </body>
 
 </html>
