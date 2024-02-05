@@ -55,6 +55,8 @@ include "../logindbase.php";
             line-height: 25px;
             font-size: 20px;
             margin-bottom: 20px;
+            font-size: 1rem;
+            overflow-y:hidden;
         }
         .sidebar ul li{
             overflow-x:hidden;
@@ -74,16 +76,8 @@ include "../logindbase.php";
             background: #fff00f;
             color: #000000;
             font-weight: bold;
-            font-size: 1.1em;
+            font-size: 0.9em;
         }
-		.sidebar .greetings{
-			color: #ffffff;
-			font-size: 15px;
-			margin-left: 15px;
-			margin-bottom: 20px;
-			border-bottom: none;
-			line-height: 30px;
-		}
 		.sidebar form{
 			margin-left: 55px;
 			margin-top: 0px;
@@ -108,17 +102,49 @@ include "../logindbase.php";
             overflow-x:hidden;
         }
 
+        .greetings{
+            grid-area: 1 / 2 / 2 / -1;
+            z-index:3;
+            background-color: rgba(0, 0, 0, 0.7); 
+            border-radius:5px;
+            width:250px;
+            height:auto;
+            place-self:start end;
+            color: #ffffff;
+            text-shadow: 2px 2px 4px #000000;
+			font-size: 15px;
+			border-bottom: none;
+			line-height: 30px;
+            padding-left: 10px;
+        }
+
+        .logButton > button:nth-child(1){
+            width:150px;
+        }
+
+
+
 </style>
 </head>
 <body>
 
 
 
+<div class="greetings">
+    <?php echo "Welcome, ".$_SESSION['username'];?>
+    <ul>
+    <li><a href="../user_settings.php"><i class="fa-solid fa-cog"></i>User Settings</a></li>
+    </ul>
+    <form action="manager_menu.php" method="post">
+		<div class="logButton">
+        <button type="submit" name="logoutButton">Logout</button>
+		</div>
+    </form>
+</div>
 <div class="sidebar">
 	<image src="imprint customs logo 1.png" class="companylogo">
-    <h3><a href="m-jobs-in-progress.php">MANAGER</a></h3>
+    <h3><a href="m-jobs-in-progress.php">Manager Dashboard</a></h3>
     <ul>
-        <li class="greetings"><?php echo "Welcome, ".$_SESSION['username'];?></li>
         <li><a href="./m-jobs-in-progress.php"><i class="fa-solid fa-bars-progress"></i>Jobs In Progress</a></li>
         <li><a href="./m-job-history.php"><i class="fa-solid fa-clock-rotate-left"></i>Job History</a></li>
         <li><a href="./m-job-list.php"><i class="fa-solid fa-list"></i>Job List</a></li>
@@ -126,11 +152,7 @@ include "../logindbase.php";
         <li><a href="./m-action-logs.php"><i class="fa-solid fa-person-circle-exclamation"></i>Action Logs</a></li>
         <li><a href="./m-remove-jobs.php"><i class="fa-solid fa-trash"></i>Remove Jobs</a></li>
         <li><a href="./m-recyclebin.php"><i class="fa-solid fa-recycle"></i>Recycle Bin</a></li>
-        <form action="manager_menu.php" method="post">
-		<div class="logButton">
-        <button type="submit" name="logoutButton">Logout</button>
-		</div>
-        </form>
+        <li><a href="./m-createtemplate.php"><i class="fa-solid fa-plus"></i>Add Product Template</a></li>
     </ul>
 </div>
 

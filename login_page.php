@@ -125,7 +125,7 @@
         $password = $_POST['password'];
 			
         // Create a prepared statement
-        $stmt = $conn->prepare("SELECT username, job_position FROM tbl_userlist WHERE BINARY username = ? AND BINARY user_password = ?");
+        $stmt = $conn->prepare("SELECT username, job_position, user_id FROM tbl_userlist WHERE BINARY username = ? AND BINARY user_password = ?");
         if ($stmt) {
             // Bind the parameters
             $stmt->bind_param("ss", $username, $password);
@@ -134,7 +134,7 @@
             $stmt->execute();
 
             // Bind the result to variables
-            $stmt->bind_result($result1, $result2); 
+            $stmt->bind_result($result1, $result2, $result3); 
 
             // Fetch the result
             $stmt->fetch();
@@ -143,7 +143,8 @@
                 if ($result1 !== null) {
 						$username = $result1;
 						$position = $result2;
-						loginUser($username, $position);
+                        $user_id = $result3;
+						loginUser($username, $position, $user_id);
                     // Successful login
                     switch ($result2) {
                         case 'Artist':

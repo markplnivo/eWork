@@ -1,9 +1,10 @@
 <?php
 session_start();
 
-function loginUser($username, $position) {
+function loginUser($username, $position, $user_id) {
     $_SESSION['username'] = $username;
     $_SESSION['position'] = $position;
+    $_SESSION['user_id'] = $user_id;
 }
 
 function logoutUser() {
