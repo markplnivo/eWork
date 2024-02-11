@@ -1,3 +1,4 @@
+<?php ob_start();?>
 <?php 
 include "../session_handler.php";
 include "../logindbase.php";
@@ -165,3 +166,4 @@ include "../logindbase.php";
 ?>
 </body>
 </html>
+<?php ob_end_flush();?>
