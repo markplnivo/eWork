@@ -85,7 +85,7 @@ if ($_SESSION['position'] != 'Superadmin') {
     margin: 0;
     padding: 80px 0;
     list-style: none;
-    background-color: #ECEFF1;
+    background-color: #0f0f0f;
     box-shadow: 2px 2px 6px rgba(0, 0, 0, .4);
     transition-duration: .25s;
   }
@@ -108,7 +108,7 @@ if ($_SESSION['position'] != 'Superadmin') {
   .menu_item {
     display: block;
     padding: 12px 24px;
-    color: #333;
+    color: white;
     font-family: 'Roboto', sans-serif;
     font-size: 20px;
     font-weight: 600;
@@ -121,14 +121,23 @@ if ($_SESSION['position'] != 'Superadmin') {
   }
 
   .menu_item:hover {
-    background-color: #CFD8DC;
-
+    background-color: #ffc400;
+	font-size: 25px;
   }
 
   body.menu-open {
     grid-template-columns: 250px auto 0.5fr;
     transition: grid-template-columns 0.3s ease-in-out;
   }
+	
+	#buttonlogout {
+		color: #333;
+	}
+	
+	#buttonlogout:hover {
+		cursor: pointer;
+	}
+	
 </style>
 
 <body>
@@ -148,7 +157,7 @@ if ($_SESSION['position'] != 'Superadmin') {
       <li>
         <form action="superadmin_menu.php" method="post">
           <div class="logButton">
-            <button type="submit" name="logoutButton" class="menu_item">Logout</button>
+            <button id="buttonlogout" type="submit" name="logoutButton" class="menu_item">Logout</button>
           </div>
         </form>
       </li>

@@ -16,7 +16,7 @@
         .main{
             height: 100vh;
             display: grid;
-            grid-template-rows: 180px 50px 1fr;
+            grid-template-rows: 100px 50px 1fr;
             grid-template-columns: 210px 1fr;
             
         }
@@ -25,8 +25,8 @@
             grid-area: 1 / 2 / -4 / 3 ;
         }
         .header1 .bannerlogo{
-            width: 1400px;
-            height: 275px;
+            width: 100%;
+            height: 100%;
             position: relative;
             object-fit: cover;
             z-index: -1;
@@ -37,18 +37,19 @@
             color: hsla(0, 0%, 100%, 0.74);
             position: absolute;
             z-index: 1;
-            margin-top: 27px;
-            margin-left: 500px;
-            font-size: 10vmin;
+            font-size: 5rem;
             -webkit-text-stroke: 4px black;
             letter-spacing: calc(1em / 9);
+			left: 55%;
+			transform: translateX(-55%);
+			margin: auto;
         }
         .header2{
             background-color: #292929; 
             grid-area: 3 / 2 / -3 / -2;
 			border-top-style: solid;
 			border-bottom-style: solid;
-
+			position: relative;
         }
 		.header2 h2{
 			color: #ffffff;
@@ -56,8 +57,9 @@
 			letter-spacing: calc(4em / 15);
 			font-weight: bold;
 			font-size: 30px;
-			margin-top: 2.5px;
-			margin-left: 590px;
+			position: absolute;
+			left: 50%;
+			transform: translateX(-50%);
 		}
 
 		 .table_container{
@@ -123,11 +125,11 @@
 <body>
 <div class="main">
 <div class="header1">
-   <h1>DASHBOARD</h1>
+   <h1>Recycle Bin</h1>
    <img src="highway with nature.jpg" class="bannerlogo">
 </div>
 <div class="header2">
-     <h2>Recycle Bin</h2>
+     <h2></h2>
 </div>
 
 <?php

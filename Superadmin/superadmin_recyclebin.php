@@ -87,7 +87,7 @@ if (isset($_POST['restore_selected'])) {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #000000;
+            background-color: #919191;
             color: #FFFFFF;
             display: grid;
             grid-template-rows: 10vh 1fr 10vh;
@@ -128,7 +128,7 @@ if (isset($_POST['restore_selected'])) {
             font-family: monospace;
             font-size: 0.9rem;
             text-align: center;
-            border: 3px solid #FFFFFF;
+            border: 0px solid #FFFFFF;
             background-color: lightgray;
             border-collapse: collapse;
             width: 100%;
@@ -147,8 +147,8 @@ if (isset($_POST['restore_selected'])) {
         }
 
         th {
-            background-color: #767676;
-            color: #fff;
+            background-color: #ffc400;
+            color: #0;
         }
 
         tr {
@@ -174,6 +174,9 @@ if (isset($_POST['restore_selected'])) {
             height: 50px;
             width: 150px;
             place-self: start start;
+			background-color: #ffc400;
+			border: 0px solid;
+			border-radius: 8px;
         }
 
         #removeSelect {
@@ -182,14 +185,48 @@ if (isset($_POST['restore_selected'])) {
             height: 50px;
             width: 120px;
             margin-left: 200px;
+			background-color: #ffc400;
+			border: 0px solid;
+			border-radius: 8px;
         }
+		
+		#restoreSelect:hover {
+			cursor: pointer;
+			box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.4);
+		}
+		
+		#removeSelect:hover {
+			cursor: pointer;
+			box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.4);
+		}
+		
+		#restoreSelect:active {
+			margin: 2px 0 0 2px;
+			box-shadow: none;
+		}
+		
+		#removeSelect:active {
+			margin: 2px 0 0 202px;
+			box-shadow: none;
+		}
 
         #searchInput{
             grid-area: 1 / 1 / 1 / 1;
             width:300px;
-            height:15px;
+            height:25px;
             place-self: end;
+			border: 0 solid;
+			border-radius: 4px;
+			background-color: lightyellow;
         }
+		
+		input[type="checkbox"] {
+			cursor: pointer;
+			height: 20px;
+			width: 20px;
+			accent-color: #ffc400;
+		}
+		
     </style>
 </head>
 <body>

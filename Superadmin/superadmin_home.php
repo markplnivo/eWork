@@ -110,7 +110,7 @@ if (isset($_POST['remove_selected'])) {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #000000;
+            background-color: #919191;
             color: #FFFFFF;
             display: grid;
             grid-template-rows: 10vh 1fr 10vh;
@@ -122,7 +122,7 @@ if (isset($_POST['remove_selected'])) {
         header {
             background-image: url("images/artist_home_header.jpg");
             background-repeat: no-repeat;
-            background-color: #333;
+            background-color: #292929;
             color: #fff;
             font-family: Cambria, "Hoefler Text", "Liberation Serif", Times, "Times New Roman", "serif";
             padding: 10px;
@@ -151,7 +151,7 @@ if (isset($_POST['remove_selected'])) {
             font-family: monospace;
             font-size: 0.9rem;
             text-align: center;
-            border: 3px solid #FFFFFF;
+            border: 0px solid #FFFFFF;
             background-color: lightgray;
             border-collapse: collapse;
             width: 100%;
@@ -170,8 +170,8 @@ if (isset($_POST['remove_selected'])) {
         }
 
         th {
-            background-color: #767676;
-            color: #fff;
+            background-color: #ffc400;
+            color: #0;
         }
 
         tr {
@@ -192,28 +192,77 @@ if (isset($_POST['remove_selected'])) {
         }
 
         #addSelect {
+			background-color: #ffc400;
+			border-radius: 8px;
+			border: 0 solid;
             grid-column: 1 / -1;
             grid-row: 3 / 4;
             height: 50px;
             width: 100px;
             place-self: start start;
+			transition-duration: .3s;
         }
 
         #removeSelect {
+			background-color: #ffc400;
+			border-radius: 8px;
+			border: 0 solid;
             grid-column: 1 / -1;
             grid-row: 3 / 4;
             height: 50px;
             width: 120px;
             margin-left: 200px;
-
+			transition-duration: .15s;
         }
 
         #searchInput{
             grid-area: 1 / 1 / 1 / 1;
             width:300px;
-            height:15px;
+            height:25px;
             place-self: end;
+			border: 0 solid;
+			border-radius: 4px;
+			background-color: lightyellow;
         }
+		
+		#addSelect:hover {
+			cursor: pointer;
+			box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.4);
+		}
+		
+		#removeSelect:hover {
+			cursor: pointer;
+			box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.4);
+		}
+		
+		#addSelect:active {
+			margin-top: 2px;
+			margin-left: 2px;
+			box-shadow: none;
+		}
+		
+		#removeSelect:active {
+			margin-top: 2px;
+			margin-left: 202px;
+			box-shadow: none;
+		}
+		
+		input[type="checkbox"] {
+			cursor: pointer;
+			height: 20px;
+			width: 20px;
+			accent-color: #ffc400;
+			border: 1px solid black;
+			border-radius: 5px;
+		}
+		
+		select {
+			background-color: lightyellow;
+			height: 25px;
+			border: 2px solid #ffc400;
+			border-radius: 8px;
+			cursor: pointer;
+		}
 
     </style>
 </head>
