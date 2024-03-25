@@ -255,26 +255,26 @@
         border-bottom: 4px solid #dbaf00;
     }
 
-    #templatesList form{
+    #templatesList form {
         display: grid;
         grid-template-rows: auto auto;
     }
 
-    #templatesList form input[type="submit"]{
+    #templatesList form input[type="submit"] {
         margin-left: 150px;
-		color: #000000;
-		background: #fcba03;
-		padding: 4px 20px;
-		border-radius: 10px;
-        width:210px;
-     }
+        color: #000000;
+        background: #fcba03;
+        padding: 4px 20px;
+        border-radius: 10px;
+        width: 210px;
+    }
 
-     .template_NameAndContainer{
-        background-color: rgba(0, 0, 0, 0.5); 
+    .template_NameAndContainer {
+        background-color: rgba(0, 0, 0, 0.5);
         border-radius: 10px;
         width: 70%;
         padding: 20px;
-     }
+    }
 </style>
 
 <body>
@@ -378,7 +378,7 @@
         // Count the number of processes
         $processCount = 0;
         foreach ($_POST as $key => $value) {
-            if (strpos($key, 'processName') === 0) {
+            if (strpos($key, 'processName') === 0 && trim($value) != '') {
                 $processCount++;
             }
         }
@@ -446,14 +446,14 @@
                         echo "<script>alert('Error: Unable to update the database.');</script>";
                     }
                 } else {
-                    echo "<script>alert('Error: There was a problem uploading your file. Please try again.');</script>";
+                    echo "<script>alert('There was an error uploading your file.');</script>";
                 }
             }
-        } else {
-            echo "<script>alert('Error: " . $_FILES["templateImage"]["error"] . "');</script>";
         }
+        $url = 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+        header('Location: ' . $url); // Redirect to the same page
+        exit(); // Stop script execution
     }
-
 
 
     ?>

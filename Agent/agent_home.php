@@ -301,9 +301,15 @@ $conn->close();
                     <option value="Manually">Set Time Manually</option>
                     <option value="Template">Use a template</option>
                 </select>
+
                 <!-- This is where the selected template's name will appear -->
                 <div id="selectedTemplateDiv"></div>
+                <input type="hidden" id="selected-template-name" name="selected-template-name">
 
+                <!-- Display the template details here -->
+                <div id="templateDetails" style="display:none;"></div>
+
+                <!-- Time tracking dropdown -->
                 <label>Set Job Tracking As:</label>
                 <select>
                     <option value="Artist">Artist</option>
@@ -313,10 +319,14 @@ $conn->close();
 
 
                 <!-- Time estimate input fields -->
-                <label for="estimated-hours">Estimated Job Order Duration:</label>
-                <input type="number" id="estimated-hours" name="estimated-hours" placeholder="Hours" required>
-                <input type="number" id="estimated-minutes" name="estimated-minutes" placeholder="Minutes" required>
+                <div id="manual-time-input">
+                    <label for="estimated-hours">Estimated Job Order Duration:</label>
+                    <input type="number" id="estimated-hours" name="estimated-hours" placeholder="Hours">
+                    <input type="number" id="estimated-minutes" name="estimated-minutes" placeholder="Minutes">
+                </div>
+
                 <center><input type="submit" name="submitJobCreation" value="Create Job"></center>
+
             </form>
         </div>
     </div>
@@ -324,15 +334,53 @@ $conn->close();
 <?php
 // Check if the form is submitted
 if (isset($_POST['submitJobCreation'])) {
+
+    $jobSubject = $_POST['job-subject'];
+    $jobBrief = $_POST['job-brief'];
+    $assignTo = $_POST['assign-to'];
+    $useTemplate = $_POST['use-template'];
+    $selectedArtistName = $_POST['selected-artist-name'];
+    $selectedTemplateName = $_POST['selected-template-name'];
+    $hours = $_POST['estimated-hours'];
+    $minutes = $_POST['estimated-minutes'];
+
+    // Initialize an array to hold process details
+    $processDetails = [];
+
+    // Iterate through $_POST to find process duration inputs
+    foreach ($_POST as $key => $value) {
+        if (strpos($key, 'duration_') === 0) {
+            // Extract the process ID from the input name
+            $processId = str_replace('duration_', '', $key);
+            $processDetails[] = "Process ID $processId Duration: $value minutes";
+        }
+    }
+
+    // Convert the process details array into a string for the alert
+    $processDetailsString = implode("\\n", $processDetails);
+
+    // Creating the alert script with process details included
+    echo "<script>alert('Job Subject: $jobSubject" .
+        "\\nJob Brief: $jobBrief" .
+        "\\nAssign to: $assignTo" .
+        "\\nUse Template to Determine Time: $useTemplate" .
+        "\\nSelected Artist Name: $selectedArtistName" .
+        "\\nSelected Template Name: $selectedTemplateName" .
+        "\\nEstimated Hours: $hours" .
+        "\\nEstimated Minutes: $minutes" .
+        (!empty($processDetailsString) ? "\\n" . $processDetailsString : "") .
+        "');</script>";
+    /*
     $jobSubject = $_POST['job-subject'];
     $jobBrief = $_POST['job-brief'];
     $selectedArtistName = $_POST['selected-artist-name'];
+    $selectedTemplateName = $_POST['selected-template-name'];
     $hours = intval($_POST['estimated-hours']);
     $minutes = intval($_POST['estimated-minutes']);
     $estimatedCompletion = $hours * 60 + $minutes;
     $creatorName = $_SESSION['username'];
 
-    echo "<script>alert('Job Subject: " . $jobSubject . "\\nJob Brief: " . $jobBrief . "\\nSelected Artist Name: " . $selectedArtistName . "');</script>";
+    echo "<script>alert('Job Subject: " . $jobSubject . "\\nJob Brief: " . $jobBrief . "\\nSelected Artist Name: " . $selectedArtistName . "\\Selected Template Name: " . $selectedTemplateName . "');</script>";
 
 
     // Insert a new row into tbl_jobs
@@ -359,16 +407,16 @@ if (isset($_POST['submitJobCreation'])) {
         var templateOverlay = document.getElementById('templateOverlay');
         var selectedTemplateDiv = document.getElementById('selectedTemplateDiv');
         var closeArtistButton = document.getElementById('closeArtistOverlay');
-        var closeButton = document.getElementById('closeTemplateOverlay'); 
+        var closeButton = document.getElementById('closeTemplateOverlay');
+        var templateList = document.getElementById('template-list');
+        var manualTimeInput = document.getElementById('manual-time-input');
+        var templateDetailsDiv = document.getElementById('templateDetails');
 
-        if (closeButton) {
-            closeButton.addEventListener('click', closeTemplateOverlay);
-        }
+        // Close overlay event listeners
+        if (closeButton) closeButton.addEventListener('click', closeTemplateOverlay);
+        if (closeArtistButton) closeArtistButton.addEventListener('click', closeArtistOverlay);
 
-        if (closeArtistButton) {
-            closeArtistButton.addEventListener('click', closeArtistOverlay);
-        }
-
+        // Artist selection
         selectArtistButton.addEventListener('click', function() {
             var selectedArtistName = artistSelect.options[artistSelect.selectedIndex].text;
             document.getElementById('selected-artist-name').value = selectedArtistName;
@@ -377,29 +425,88 @@ if (isset($_POST['submitJobCreation'])) {
             setTimeout(addResetFunctionality, 0);
         });
 
+        // Assign to selection change
         assignToSelect.addEventListener('change', function() {
             if (this.value === "Assign an Artist") {
                 document.getElementById('artistOverlay').style.display = 'block';
             } else {
-                selectedArtistDiv.innerHTML = ''; // Clear the selection if "Open to All" is chosen
+                selectedArtistDiv.innerHTML = '';
             }
         });
 
+        // Use template selection change
         useTemplateSelect.addEventListener('change', function() {
             if (this.value === "Template") {
                 templateOverlay.style.display = 'block';
+                manualTimeInput.style.display = 'none'; // Hide manual time inputs
+                templateDetailsDiv.style.display = 'block';
             } else {
-                selectedTemplateDiv.innerHTML = '';
+                manualTimeInput.style.display = 'block'; // Show manual time inputs
+                templateDetailsDiv.style.display = 'none';
             }
         });
 
+        // Template selection
         selectTemplateButton.addEventListener('click', function() {
-            var templateList = document.getElementById('template-list');
-            var selectedTemplate = templateList.options[templateList.selectedIndex].text;
-            selectedTemplateDiv.innerHTML = "Selected Template: " + selectedTemplate +
-                '<button class="reset-button" id="resetTemplateSelection" title="Reset selection">X</button>';
-            setTimeout(addResetTemplateFunctionality, 0);
+            var templateName = templateList.options[templateList.selectedIndex].text;
+            fetchTemplateDetailsByName(templateName); // Function to fetch template details using the name
         });
+
+
+        function fetchTemplateDetailsByName(templateName) {
+            fetch('fetch_template_details.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'templateName=' + encodeURIComponent(templateName),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log("Template ID: ", data.templateId);
+                        let htmlContent = `<h3>${data.templateName} Processes</h3>`;
+                        if (data.processes && data.processes.length > 0) {
+                            htmlContent += "<ul>";
+                            data.processes.forEach(process => {
+                                htmlContent += `<li>${process.process_name}`;
+                                // Check if the process's duration_option is 'salesagent', and add an input field if it is
+                                if (process.duration_option === "salesagent") {
+                                    htmlContent += `: <input type="number" name="duration_${process.process_id}" min="0" placeholder="Enter duration" />`;
+                                } else {
+                                    // If a duration is pre-defined, display it
+                                    htmlContent += process.duration ? ` - Predefined Duration: ${process.duration} minutes` : '';
+                                }
+                                htmlContent += `</li>`;
+                            });
+                            htmlContent += "</ul>";
+                        } else {
+                            htmlContent += "<p>No processes found for this template.</p>";
+                        }
+                        document.getElementById('templateDetails').innerHTML = htmlContent;
+                        document.getElementById('templateDetails').style.display = 'block';
+                    } else {
+                        console.error("Error fetching template details: ", data.error);
+                    }
+                })
+                .catch(error => console.error('Error in fetch operation: ', error));
+        }
+
+
+
+        document.getElementById('use-template').addEventListener('change', function() {
+            if (this.value === "Template") {
+                document.getElementById('templateOverlay').style.display = 'block';
+                document.getElementById('estimated-hours').style.display = 'none';
+                document.getElementById('estimated-minutes').style.display = 'none';
+                document.getElementById('templateDetails').style.display = 'block';
+            } else {
+                document.getElementById('estimated-hours').style.display = 'block';
+                document.getElementById('estimated-minutes').style.display = 'block';
+                document.getElementById('templateDetails').style.display = 'none';
+            }
+        });
+
 
         function addResetFunctionality() {
             var resetButton = document.getElementById('resetSelection');
@@ -427,6 +534,8 @@ if (isset($_POST['submitJobCreation'])) {
         }
     });
 </script>
+
+
 
 
 </html>
