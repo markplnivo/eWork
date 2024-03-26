@@ -301,22 +301,19 @@ $conn->close();
                     <option value="Manually">Set Time Manually</option>
                     <option value="Template">Use a template</option>
                 </select>
+                <!-- A hidden input field to store the selected template name -->
+                <input type="hidden" name="selectedTemplateName" id="selectedTemplateName">
 
-                <!-- This is where the selected template's name will appear -->
-                <div id="selectedTemplateDiv"></div>
-                <input type="hidden" id="selected-template-name" name="selected-template-name">
 
                 <!-- Display the template details here -->
                 <div id="templateDetails" style="display:none;"></div>
 
                 <!-- Time tracking dropdown -->
                 <label>Set Job Tracking As:</label>
-                <select>
+                <select id="job-tracking" name="job-tracking">
                     <option value="Artist">Artist</option>
                     <option value="Deadline">Deadline</option>
                 </select>
-
-
 
                 <!-- Time estimate input fields -->
                 <div id="manual-time-input">
@@ -335,24 +332,27 @@ $conn->close();
 // Check if the form is submitted
 if (isset($_POST['submitJobCreation'])) {
 
+    
     $jobSubject = $_POST['job-subject'];
     $jobBrief = $_POST['job-brief'];
     $assignTo = $_POST['assign-to'];
     $useTemplate = $_POST['use-template'];
     $selectedArtistName = $_POST['selected-artist-name'];
-    $selectedTemplateName = $_POST['selected-template-name'];
+    $selectedTemplateName = $_POST['selectedTemplateName'];
     $hours = $_POST['estimated-hours'];
     $minutes = $_POST['estimated-minutes'];
+    $jobTracking = $_POST['job-tracking'];
 
     // Initialize an array to hold process details
     $processDetails = [];
 
     // Iterate through $_POST to find process duration inputs
     foreach ($_POST as $key => $value) {
-        if (strpos($key, 'duration_') === 0) {
-            // Extract the process ID from the input name
-            $processId = str_replace('duration_', '', $key);
-            $processDetails[] = "Process ID $processId Duration: $value minutes";
+        if (strpos($key, 'processName_') === 0) {
+            $index = str_replace('processName_', '', $key);
+            $processName = $value;
+            $processDuration = $_POST["processDuration_" . $index] ?? 'Not specified';
+            $processDetails[] = "$processName Duration: $processDuration minutes";
         }
     }
 
@@ -368,7 +368,8 @@ if (isset($_POST['submitJobCreation'])) {
         "\\nSelected Template Name: $selectedTemplateName" .
         "\\nEstimated Hours: $hours" .
         "\\nEstimated Minutes: $minutes" .
-        (!empty($processDetailsString) ? "\\n" . $processDetailsString : "") .
+        "\\n" . $processDetailsString .
+        "\\nJob Tracking: $jobTracking" .
         "');</script>";
     /*
     $jobSubject = $_POST['job-subject'];
@@ -452,7 +453,6 @@ if (isset($_POST['submitJobCreation'])) {
             fetchTemplateDetailsByName(templateName); // Function to fetch template details using the name
         });
 
-
         function fetchTemplateDetailsByName(templateName) {
             fetch('fetch_template_details.php', {
                     method: 'POST',
@@ -464,25 +464,21 @@ if (isset($_POST['submitJobCreation'])) {
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        console.log("Template ID: ", data.templateId);
-                        let htmlContent = `<h3>${data.templateName} Processes</h3>`;
-                        if (data.processes && data.processes.length > 0) {
-                            htmlContent += "<ul>";
-                            data.processes.forEach(process => {
-                                htmlContent += `<li>${process.process_name}`;
-                                // Check if the process's duration_option is 'salesagent', and add an input field if it is
-                                if (process.duration_option === "salesagent") {
-                                    htmlContent += `: <input type="number" name="duration_${process.process_id}" min="0" placeholder="Enter duration" />`;
-                                } else {
-                                    // If a duration is pre-defined, display it
-                                    htmlContent += process.duration ? ` - Predefined Duration: ${process.duration} minutes` : '';
-                                }
-                                htmlContent += `</li>`;
-                            });
-                            htmlContent += "</ul>";
-                        } else {
-                            htmlContent += "<p>No processes found for this template.</p>";
-                        }
+                        let htmlContent = `<h3>${data.templateName} Processes</h3><ul>`;
+                        document.getElementById('selectedTemplateName').value = data.templateName;
+                        data.processes.forEach((process, index) => {
+                            htmlContent += `<li>${process.process_name}`;
+                            if (process.duration_option === "salesagent") {
+                                htmlContent += `: <input type="number" name="processDuration_${index}" min="0" placeholder="Enter duration"/>`;
+                            } else {
+                                htmlContent += process.duration ? ` - Predefined Duration: ${process.duration} minutes` : '';
+                            }
+                            htmlContent += `</li>`;
+                            // Include hidden inputs for name and duration
+                            htmlContent += `<input type="hidden" name="processName_${index}" value="${process.process_name}">`;
+                            htmlContent += `<input type="hidden" name="processDuration_${index}" value="${process.duration || 0}">`;
+                        });
+                        htmlContent += "</ul>";
                         document.getElementById('templateDetails').innerHTML = htmlContent;
                         document.getElementById('templateDetails').style.display = 'block';
                     } else {

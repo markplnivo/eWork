@@ -8,12 +8,12 @@ if (!isLoggedIn()) {
     exit();
 }
 
-	/*
-	if ($_SESSION['position'] != 'Artist'){
-		header("Location: ../login_page.php");
-		exit();
-	}
-	*/
+
+if ($_SESSION['position'] != 'Artist') {
+    header("Location: ../login_page.php");
+    exit();
+}
+
 ?>
 
 <!doctype html>
@@ -151,8 +151,8 @@ if (!isLoggedIn()) {
 
         .greetings .logButton button {
             cursor: pointer;
-            height:35px;
-            min-width:75px;
+            height: 35px;
+            min-width: 75px;
             border-radius: 7px;
             transition: all 0.1s ease-in-out;
         }
@@ -185,14 +185,14 @@ if (!isLoggedIn()) {
     </div>
     <div class="sidebar">
         <img class="companylogo" src="imprint customs logo 1.png">
-            <h3><a id="dashboard_link" href="artist_home.php">Agent Dashboard</a></h3>
-            <ul>
-			<?php if ($_SESSION['busy'] == 'busy') : ?>
-			  <li id="sidebar_link">Busy</li>
-			<?php else : ?>
-			  <li id="sidebar_link">Jobs</li>
-			<?php endif; ?>
-            </ul>
+        <h3><a id="dashboard_link" href="artist_home.php">Agent Dashboard</a></h3>
+        <ul>
+            <?php if (isset($_SESSION['busy']) && $_SESSION['busy'] == 'busy') : ?>
+                <li id="sidebar_link">Busy</li>
+            <?php else : ?>
+                <li id="sidebar_link">Jobs</li>
+            <?php endif; ?>
+        </ul>
     </div>
 
     <?php

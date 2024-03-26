@@ -1,67 +1,5 @@
 <?php
 ob_start();
-include "artist_menu.php";
-
-if ($_SESSION['busy'] == 'open'){
-    header("Location: ./artist_home.php");
-    exit();
-}
-
-
-// Your SQL query
-$sql = "SELECT job_id, creator_name, time_created, job_brief, job_subject
-        FROM tbl_jobs
-        WHERE job_id = ? AND assigned_artist = ?";
-
-// Create a prepared statement
-$stmt = $conn->prepare($sql);
-
-// Bind the parameters
-$stmt->bind_param("ss", $_SESSION['artist_currentJob'], $_SESSION['username']);
-
-// Execute the statement
-$stmt->execute();
-
-// Bind the result to variables
-$stmt->bind_result($jobId, $createdByAgent, $timeCreated, $jobBrief, $jobSubject);
-
-// Fetch the result
-$stmt->fetch();
-
-if (!$stmt->execute()) {
-    echo "Error executing query: " . $stmt->error;
-}
-// Close the statement
-$stmt->close();
-
-// Check if the form is submitted
-if (isset($_POST["submitLikert"])){
-    $artistUsername = $_SESSION['username'];
-    $completionPercentage = $_POST["completionPercentage"];
-
-    // Update the completion_percentage in tbl_artist_status
-    $updateSql = "UPDATE tbl_artist_status SET completion_percentage = ? WHERE artist_name = ?";
-    $stmt = $conn->prepare($updateSql);
-    $stmt->bind_param("ss", $completionPercentage, $artistUsername);
-    $stmt->execute();
-    $stmt->close();
-    header("Refresh:0");
-}
-
-if (isset($_POST["setOpen"])) {
-    $artistUsername = $_SESSION['username'];
-    $_SESSION['busy'] = 'open';
-    // Update artist_status to "open" and completion_percentage to 0
-    $updateStatusSql = "UPDATE tbl_artist_status SET artist_status = 'open', completion_percentage = 0 WHERE artist_name = ?";
-    $stmt = $conn->prepare($updateStatusSql);
-    $stmt->bind_param("s", $artistUsername);
-    $stmt->execute();
-    $stmt->close();
-    header("Location: ./artist_home.php");
-    exit();
-}
-// Close the database connection here to avoid issues
-$conn->close();
 ?>
 
 <!DOCTYPE html>
@@ -170,6 +108,71 @@ $conn->close();
     </style>
 </head>
 <body>
+
+<?php
+include "artist_menu.php";
+
+if ($_SESSION['busy'] == 'open'){
+    header("Location: ./artist_home.php");
+    exit();
+}
+
+
+// Your SQL query
+$sql = "SELECT job_id, creator_name, time_created, job_brief, job_subject
+        FROM tbl_jobs
+        WHERE job_id = ? AND assigned_artist = ?";
+
+// Create a prepared statement
+$stmt = $conn->prepare($sql);
+
+// Bind the parameters
+$stmt->bind_param("ss", $_SESSION['artist_currentJob'], $_SESSION['username']);
+
+// Execute the statement
+$stmt->execute();
+
+// Bind the result to variables
+$stmt->bind_result($jobId, $createdByAgent, $timeCreated, $jobBrief, $jobSubject);
+
+// Fetch the result
+$stmt->fetch();
+
+if (!$stmt->execute()) {
+    echo "Error executing query: " . $stmt->error;
+}
+// Close the statement
+$stmt->close();
+
+// Check if the form is submitted
+if (isset($_POST["submitLikert"])){
+    $artistUsername = $_SESSION['username'];
+    $completionPercentage = $_POST["completionPercentage"];
+
+    // Update the completion_percentage in tbl_artist_status
+    $updateSql = "UPDATE tbl_artist_status SET completion_percentage = ? WHERE artist_name = ?";
+    $stmt = $conn->prepare($updateSql);
+    $stmt->bind_param("ss", $completionPercentage, $artistUsername);
+    $stmt->execute();
+    $stmt->close();
+    header("Refresh:0");
+}
+
+if (isset($_POST["setOpen"])) {
+    $artistUsername = $_SESSION['username'];
+    $_SESSION['busy'] = 'open';
+    // Update artist_status to "open" and completion_percentage to 0
+    $updateStatusSql = "UPDATE tbl_artist_status SET artist_status = 'open', completion_percentage = 0 WHERE artist_name = ?";
+    $stmt = $conn->prepare($updateStatusSql);
+    $stmt->bind_param("s", $artistUsername);
+    $stmt->execute();
+    $stmt->close();
+    header("Location: ./artist_home.php");
+    exit();
+}
+// Close the database connection here to avoid issues
+$conn->close();
+?>
 
 <div class="dashboard">
 	<h1><center>D A S H B O A R D</center></h1>	
