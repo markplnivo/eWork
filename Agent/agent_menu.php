@@ -8,12 +8,12 @@ if (!isLoggedIn()) {
     exit();
 }
 
-/*
+
 if ($_SESSION['position'] != 'Agent') {
     header("Location: ../login_page.php");
     exit();
 }
-*/
+
 ?>
 
 <!doctype html>

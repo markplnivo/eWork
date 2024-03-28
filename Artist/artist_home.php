@@ -1,4 +1,6 @@
-<?php ob_start(); ?>
+<?php ob_start();
+include "../logindbase.php"; 
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -166,38 +168,6 @@
 
         <?php
         include "artist_menu.php";
-        include "../logindbase.php";
-
-        $artistName = $_SESSION['username']; // Example: getting the artist name from the session
-
-        // Prepare the SQL statement to avoid SQL injection
-        $stmt = $conn->prepare("SELECT artist_status FROM tbl_artist_status WHERE artist_name = ?");
-
-        // Bind the parameter (s for string)
-        $stmt->bind_param("s", $artistName);
-
-        // Execute the query
-        $stmt->execute();
-
-        // Bind the result to a variable
-        $stmt->bind_result($artistStatus);
-
-        // Fetch the result. No need for a loop since we expect only one row
-        if ($stmt->fetch()) {
-            // Assign the result to the session variable
-            $_SESSION['busy'] = $artistStatus;
-        } else {
-            // Handle the case where the artist does not exist in the table
-            echo "Artist not found or other error.";
-        }
-
-        // Close the statement
-        $stmt->close();
-
-        if ($_SESSION['busy'] == 'busy') {
-            header("Location: ./artist_busy.php");
-            exit();
-        }
         ?>
 
         <h1 class="main-title">Job List</h1>
@@ -243,6 +213,39 @@
             ?>
 
         </div>
+        
+        <?php
+        $artistName = $_SESSION['username']; // Example: getting the artist name from the session
+
+        // Prepare the SQL statement to avoid SQL injection
+        $stmt = $conn->prepare("SELECT artist_status FROM tbl_artist_status WHERE artist_name = ?");
+
+        // Bind the parameter (s for string)
+        $stmt->bind_param("s", $artistName);
+
+        // Execute the query
+        $stmt->execute();
+
+        // Bind the result to a variable
+        $stmt->bind_result($artistStatus);
+
+        // Fetch the result. No need for a loop since we expect only one row
+        if ($stmt->fetch()) {
+            // Assign the result to the session variable
+            $_SESSION['busy'] = $artistStatus;
+        } else {
+            // Handle the case where the artist does not exist in the table
+            echo "Artist not found or other error.";
+        }
+
+        // Close the statement
+        $stmt->close();
+
+        if ($_SESSION['busy'] == 'busy') {
+            header("Location: ./artist_busy.php");
+            exit();
+        }
+        ?>
 
         <?php
 
