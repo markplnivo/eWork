@@ -19,7 +19,7 @@ $templateIdRow = $result->fetch_assoc();
 
 if ($templateIdRow) {
     $templateId = $templateIdRow['template_id'];
-
+    $response['templateId'] = $templateId;
     // Now, get the processes associated with this template
     $processQuery = "SELECT * FROM tbl_template_processes WHERE template_id = ? ORDER BY process_id ASC";
     $stmt = $conn->prepare($processQuery);
@@ -30,6 +30,7 @@ if ($templateIdRow) {
     $processes = [];
     while ($row = $processesResult->fetch_assoc()) {
         $processes[] = [
+            'process_id' => $row['process_id'],
             'process_name' => $row['process_name'],
             'duration_option' => $row['duration_option'],
             'duration' => $row['duration'] // Ensure this column exists in your schema

@@ -1,12 +1,16 @@
 <?php
+
 // Database configuration
 include "../logindbase.php";
 include "../session_handler.php";
+
 
 // Assume these details are sent via POST (ensure you validate and sanitize appropriately)
 $creatorName = $conn->real_escape_string($_SESSION['username']);
 $jobSubject = $conn->real_escape_string($_POST['job-subject']);
 $jobBrief = $conn->real_escape_string($_POST['job-brief']);
+//$selectedArtistName = $conn->real_escape_string($_POST['selected-artist-name']);
+
 // Assuming `estimated_completion` is an integer representing time in minutes
 $estimatedCompletion = isset($_POST['estimatedCompletion']) ? (int)$_POST['estimatedCompletion'] : 0;
 
