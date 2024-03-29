@@ -377,17 +377,19 @@ $conn->close();
                     <label for="deadline_time">Deadline Time:</label>
                     <input type="time" id="deadline_time" name="deadline_time">
                 </div>
-                <div id="futureDateTimeDisplay" style="margin-top: 20px; font-weight: bold;"></div>
-                <center><input type="submit" name="submitJobCreation" value="Create Job"></center>
 
                 <!-- Display the future date and time based on the selected date and time -->
                 <div id="futureDateTimeDisplay" style="margin-top: 20px; font-weight: bold;"></div>
+                <input type="hidden" id="futureDateTimeInput" name="futureDateTime" value="" />
+                <center><input type="submit" name="submitJobCreation" value="Create Job"></center>
+
             </form>
         </div>
     </div>
 
     <?php
     if (isset($_POST['submitJobCreation'])) {
+
 
         $jobSubject = $_POST['job-subject'];
         $jobBrief = $_POST['job-brief'];
@@ -400,6 +402,13 @@ $conn->close();
 
         // Initialize an array to hold process details
         $processDetails = [];
+        // Process structured process durations
+        if (isset($_POST['processDuration']) && is_array($_POST['processDuration'])) {
+            foreach ($_POST['processDuration'] as $processId => $duration) {
+                // Process ID is directly available, and duration is the corresponding value
+                $processDetails[] = "Process ID $processId Duration: $duration minutes";
+            }
+        }
 
         // Iterate through $_POST to find process duration inputs
         foreach ($_POST as $key => $value) {
@@ -411,17 +420,23 @@ $conn->close();
             }
         }
 
-        // Convert the process details array into a string for the alert
+
+
+        $futureDateTime = $_POST['futureDateTime'] ?? 'Not Available';
+
         $processDetailsString = implode("\\n", $processDetails);
 
-        // Creating the alert script with process details included
+
+
+        // Output the script to show the alert with job and process details
         echo "<script>alert('Job Subject: $jobSubject" .
             "\\nJob Brief: $jobBrief" .
             "\\nAssign to: $assignTo" .
             "\\nUse Template to Determine Time: $useTemplate" .
             "\\nSelected Artist Name: $selectedArtistName" .
             "\\nSelected Template Name: $selectedTemplateName" .
-            "\\n" . $processDetailsString .
+            "\\n" . $processDetailsString . // Include process details in the alert
+            "\\nFuture Date and Time: $futureDateTime" . // Include future date and time
             "\\nJob Tracking: $jobTracking" .
             "');</script>";
     }
@@ -451,6 +466,14 @@ $conn->close();
 
                 var formData = new FormData(this);
                 console.log([...formData]); // Debugging
+                // Append process durations and their IDs to formData
+                $('.user-duration, .predefined-duration').each(function(index, input) {
+                    var processId = $(this).data('process-id');
+                    var duration = $(this).val();
+                    console.log(`Appending process ID ${processId} with duration ${duration}`);
+                    formData.append(`processes[${index}][id]`, processId);
+                    formData.append(`processes[${index}][duration]`, duration);
+                });
                 // AJAX call to create the job entry and get job_id
                 $.ajax({
                     url: 'create_job.php', // Adjust this to your actual endpoint
@@ -460,7 +483,8 @@ $conn->close();
                     contentType: false,
                     success: function(response) {
                         var job_id = JSON.parse(response).job_id; // Parse response to get job_id
-
+                        console.log("Job created successfully with ID:", job_id);
+                        console.log("$formData", [...formData]); // Debugging
                         // Assuming you have to upload files after creating the job
                         var files = $("#referenceImage")[0].files;
                         if (files.length > 0) {
@@ -624,6 +648,8 @@ $conn->close();
                         if (data.success) {
                             console.log("Future Date and Time: ", data.futureDateTime);
                             document.getElementById('futureDateTimeDisplay').innerText = "Future Date and Time: " + data.futureDateTime;
+                            // Store the future date in a hidden input so it can be submitted with the form
+                            document.getElementById('futureDateTimeInput').value = data.futureDateTime; // Ensure this input exists in your form
                         } else {
                             console.error("Error calculating future date and time: ", data.error);
                         }
@@ -651,25 +677,17 @@ $conn->close();
                             let htmlContent = `<h3>${data.templateName} Processes</h3><ul>`;
                             document.getElementById('selectedTemplateName').value = data.templateName;
                             data.processes.forEach((process, index) => {
-                                htmlContent += `<li>${process.process_name}`;
-                                if (process.duration_option === "salesagent") {
-                                    htmlContent += `: <input type="number" class="user-duration" name="processDuration_${index}" min="0" placeholder="Enter duration"/>`;
-                                } else {
-                                    htmlContent += process.duration ? ` - Predefined Duration: ${process.duration} minutes` : '';
-                                }
-                                htmlContent += `</li>`;
-                                // Include hidden inputs for name and duration
-                                htmlContent += `<input type="hidden" name="processName_${index}" value="${process.process_name}">`;
-                                htmlContent += `<input type="hidden" name="processDuration_${index}" value="${process.duration || 0}">`;
+                                htmlContent += generateProcessHTML(process, index);
                             });
                             htmlContent += "</ul>";
                             document.getElementById('templateDetails').innerHTML = htmlContent;
                             document.getElementById('templateDetails').style.display = 'block';
-
-                            // Attach event listeners to all user-duration input fields for recalculation
+                            // Attach event listeners to user-duration inputs after appending them to the DOM
                             document.querySelectorAll('.user-duration').forEach(input => {
                                 input.addEventListener('change', recalculateTotalDuration);
                             });
+                            // Recalculate to account for any predefined durations
+                            recalculateTotalDuration();
                         } else {
                             console.error("Error fetching template details: ", data.error);
                         }
@@ -677,30 +695,65 @@ $conn->close();
                     .catch(error => console.error('Error in fetch operation: ', error));
             }
 
-            // Function to recalculate total duration and trigger future date calculation
+            function generateProcessHTML(process, index) {
+                let html = `<li>${process.process_name}`;
+                if (process.duration_option === "salesagent") {
+                    // For user-set durations, provide an input field
+                    html += `: <input type="number" class="user-duration" name="processDuration_${index}" data-process-id="${process.process_id}" min="0" placeholder="Enter duration in minutes" />`;
+                } else {
+                    // Predefined durations also carry the process ID in a data attribute
+                    html += process.duration ? ` - Predefined Duration: ${process.duration} minutes` : '';
+                    html += `<input type="hidden" class="predefined-duration" name="processDuration_${index}" value="${process.duration || 0}" data-process-id="${process.process_id}">`;
+                }
+
+                html += `</li>`;
+                return html;
+            }
+
             function recalculateTotalDuration() {
                 let totalDuration = 0;
-                document.querySelectorAll('.user-duration').forEach(input => {
-                    const duration = parseInt(input.value, 10);
+                document.querySelectorAll('.user-duration, .predefined-duration').forEach(input => {
+                    const duration = parseInt(input.value, 10); // Removed fallback to dataset.defaultDuration for clarity
                     if (!isNaN(duration)) {
                         totalDuration += duration;
                     }
                 });
 
-                // Also include predefined durations if necessary
-                document.querySelectorAll("input[type='hidden'][name^='processDuration_']").forEach(input => {
-                    const duration = parseInt(input.value, 10);
-                    if (!isNaN(duration)) {
-                        totalDuration += duration;
-                    }
-                });
-
-                console.log("Recalculated Total Duration: ", totalDuration);
-                // Only call calculateFutureDateTime if totalDuration is meaningful
+                console.log("Recalculated Total Duration:", totalDuration);
                 if (totalDuration > 0) {
                     calculateFutureDateTime(totalDuration);
                 }
             }
+
+            // Add event listener for template selection changes
+            document.getElementById('use-template').addEventListener('change', function() {
+                // Check if the user selects "Set Time Manually" or changes the template
+                if (this.value === "Manually") {
+                    resetAndRecalculateDuration();
+                } else {
+                    // If a template is selected, fetch its details (which should also handle duration recalculation)
+                    fetchTemplateDetailsByName(this.value);
+                }
+            });
+
+            // Function to reset and recalculate total duration
+            function resetAndRecalculateDuration() {
+                // Reset any input fields if necessary. For example:
+                document.querySelectorAll('.user-duration').forEach(input => input.value = '');
+
+                // Clear predefined durations
+                document.querySelectorAll("input[type='hidden'][name^='processDuration_']").forEach(input => input.value = '0');
+
+                // You may want to hide or reset the display of future date/time
+                document.getElementById('futureDateTimeDisplay').innerText = '';
+
+                // Recalculate duration (which will now effectively be reset)
+                recalculateTotalDuration();
+            }
+
+            // Assuming fetchTemplateDetailsByName function is modified to also reset durations and recalculate as needed
+
+
 
 
             /*** END OF TEMPLATE SELECTION JAVASCRIPT ***/
