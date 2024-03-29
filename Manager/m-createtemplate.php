@@ -201,7 +201,7 @@
 
     .templateImageContainer img {
         width: 200px;
-        height: auto;
+        height: 200px;
         border-radius: 15px;
         box-shadow: 0 0 5px rgba(0, 0, 0, 0.4);
         /* Add box shadow effect */
@@ -296,40 +296,39 @@
             <button id="viewTemplatesBtn">View Templates</button>
         </div>
 
-        <?php
-        echo '
-    <div class="template-creation-container" id="templateCreation">
-    <form action="m-createtemplate.php" method="post" enctype="multipart/form-data" id="templateCreationForm">
-        <div class="template_NameAndContainer">
-        <label for="templateName">Template Name:</label>
-        <input type="text" id="templateName" name="templateName" required>
 
-        <div class="templateImageContainer">
-        <label for="templateImage">Template Image:</label>
-        <img id="imagePreview" src="../upload/default_template.jpg" alt="Template Preview"/>
-        <input type="file" id="templateImage" name="templateImage" accept="image/*" placeholder="Upload Template Image">
-        </div>
-        </div>
+        <div class="template-creation-container" id="templateCreation">
+            <form action="m-createtemplate.php" method="post" enctype="multipart/form-data" id="templateCreationForm">
+                <div class="template_NameAndContainer">
+                    <label for="templateName">Template Name:</label>
+                    <input type="text" id="templateName" name="templateName" required>
 
-        <table id="processFieldsTable">
-            <thead>
-                <tr>
-                    <th>Remove</th>
-                    <th>Process Name</th>
-                    <th>Duration Option</th>
-                    <th>Duration (minutes)</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Process rows will be added here -->
-            </tbody>
-        </table>
-        <button type="button" id="addProcessButton">Add Process</button>
-        <button type="button" id="removeSelectedButton">Remove Selected</button>
-        <button type="submit" id="submitTemplateCreation" name="submitTemplateCreation">Create Template</button>
-    </form>
-</div>';
-        ?>
+                    <div class="templateImageContainer">
+                        <label for="templateImage">Template Image:</label>
+                        <img id="imagePreview" src="../upload/default_template.jpg" alt="Template Preview" />
+                        <input type="file" id="templateImage" name="templateImage" accept="image/*" placeholder="Upload Template Image">
+                    </div>
+                </div>
+
+                <table id="processFieldsTable">
+                    <thead>
+                        <tr>
+                            <th>Remove</th>
+                            <th>Process Name</th>
+                            <th>Duration Option</th>
+                            <th>Duration (minutes)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Process rows will be added here -->
+                    </tbody>
+                </table>
+                <button type="button" id="addProcessButton">Add Process</button>
+                <button type="button" id="removeSelectedButton">Remove Selected</button>
+                <button type="submit" id="submitTemplateCreation" name="submitTemplateCreation">Create Template</button>
+            </form>
+        </div>';
+
         <div class="templates-list-container" id="templatesList" style="display: none;">
             <!-- PHP code to fetch and display templates from tbl_templatelist -->
             <form method="post" action="m-createtemplate.php">

@@ -8,7 +8,7 @@ ob_start();
 <head>
 	<title>Artist Home Page</title>
 	<style>
-		@import "compass/css3";
+		@import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap');
 
 		*,
 		body,
@@ -194,11 +194,72 @@ ob_start();
 			margin: 20px;
 		}
 
-		.likert-scale #cubeRange {
-			
+
+		.likert_scale {
+			display: grid;
+			grid-template-columns: auto;
+			grid-template-rows: 30px 30px 30px;
 		}
 
-		
+
+		#likertTitle {
+			grid-area: 1 / 1 / 2 / 2;
+			align-self: center;
+			justify-self: center;
+		}
+
+		#likertSpan {
+			grid-area: 2 / 1 / 3 / 2;
+			align-self: center;
+			justify-self: center;
+		}
+
+		#likertScale {
+			grid-area: 3 / 1 / 4 / 2;
+			align-self: center;
+			justify-self: center;
+		}
+
+		.likert_scale input {
+			-webkit-appearance: none;
+			width: 400px;
+			height: 10px;
+			border-radius: 5px;
+			background-color: #ba3950;
+			outline: none;
+		}
+
+		.likert_scale input::-webkit-slider-thumb {
+			-webkit-appearance: none;
+			width: 30px;
+			height: 20px;
+			border-radius: 50%;
+			background-color: #a83348;
+		}
+
+		.likert_scale input[type='range']::-moz-range-thumb {
+			width: 30px;
+			height: 20px;
+			background: #4CAF50;
+		}
+
+		.likert_scale span {
+			width: 75px;
+			height: 30px;
+			background-color: #222;
+			color: #fff;
+			border-radius: 3px;
+			text-align: center;
+			line-height: 30px;
+		}
+
+		.likert_scale span:before {
+			content: '';
+			border-bottom: 12px solid #222;
+			left: -10px;
+			top: 50%;
+			transform: translateY(-50%) rotate(-90deg);
+		}
 	</style>
 </head>
 
@@ -307,33 +368,38 @@ ob_start();
 			<!-- Likert scale form -->
 			<div class="likertContainer">
 				<form action="artist_busy.php" method="post" id="likert_container">
-					<div class="likert-scale">
-						<p><strong>Completion Percentage:</strong></p>
-						<input type='range' min='1' max='7' step='1' value='4' id="cubeRange"/>
+					<div class="likert_scale">
+						<p id="likertTitle"><strong>Completion Percentage:</strong></p>
+						<span id="likertSpan">0%</span>
+						<input id="likertScale" type="range" min='0' max='100' step='25' value='0' />
 					</div>
 					<input type="submit" name="submitLikert" value="Submit" class="submitButton">
 				</form>
+				<div id="DEBUG BUTTON">
+					<form action="artist_busy.php" method="post" id="debugOpen">
+						<input type="submit" name="setOpen" value="debugOpen">
+					</form>
+				</div>
 			</div>
 		</div>
 
 	</div>
 </body>
 
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    var rangeInput = document.getElementById('cubeRange');
+<script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js" integrity="sha256-T0Vest3yCU7pafRw9r+settMBX6JkKN06dqBnpQ8d30=" crossorigin="anonymous"></script>
 
-    // Update cube visualization based on the slider value
-    function updateCubes(value) {
-        // This is a placeholder for any logic you need to update the visual representation
-        // of the cubes based on the slider's value. You might need to dynamically adjust
-        // the CSS or trigger a re-render of the cubes if using a web component or canvas.
-    }
+<script type="text/javascript">
+	// Function to show the range value
+	$(function() {
 
-    rangeInput.addEventListener('input', function() {
-        updateCubes(this.value);
-    });
-});
+		$('.likert_scale input').on('mousemove', function() {
+			var getValRange = $(this).val();
+			$('.likert_scale span').text(getValRange + '%');
+		});
+
+
+	});
 </script>
 
 
