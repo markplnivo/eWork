@@ -319,10 +319,10 @@ $conn->close();
         <div class="table_container">
             <form method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>" enctype="multipart/form-data" id="jobForm">
                 <label for="job-subject">Job Order Title:</label>
-                <input type="text" id="job-subject" name="job-subject" required>
+                <input type="text" id="job-subject" name="job-subject">
 
                 <label for="job-brief">Job Order Description:</label>
-                <textarea id="job-brief" name="job-brief" rows="4" required></textarea>
+                <textarea id="job-brief" name="job-brief" rows="4"></textarea>
 
 
                 <!-- Upload design reference -->
@@ -390,7 +390,7 @@ $conn->close();
     <?php
     if (isset($_POST['submitJobCreation'])) {
 
-
+        /*
         $jobSubject = $_POST['job-subject'];
         $jobBrief = $_POST['job-brief'];
         $assignTo = $_POST['assign-to'];
@@ -435,6 +435,7 @@ $conn->close();
             "\\nFuture Date and Time: $futureDateTime" . // Include future date and time
             "\\nJob Tracking: $jobTracking" .
             "');</script>";
+            */
     }
 
     ?>
@@ -462,15 +463,29 @@ $conn->close();
 
                 var formData = new FormData(this);
                 // Log formData for debugging
-                console.log([...formData]);
                 // Append process durations and their IDs to formData
-                $('.user-duration, .predefined-duration').each(function(index, input) {
+
+                /*$('.user-duration, .predefined-duration').each(function(index, input) {
                     var processId = $(this).data('process-id');
                     var duration = $(this).val();
                     formData.append(`processes[${index}][id]`, processId);
                     formData.append(`processes[${index}][duration]`, duration);
-                });
+                    // Retrieve and append the selected option value for each process
+                    var selectedOption = $(this).closest('li').find('.process-option').val();
+                    formData.append(`processes[${index}][option]`, selectedOption);
+                });*/
 
+                // New logic to append process details using the structured naming convention
+                $('.process-row').each(function(index, processRow) {
+                    var processId = $(processRow).data('process-id'); // Assuming processId is stored as data attribute
+                    var duration = $(processRow).find('.process-duration').val(); // Assuming you have an input with class 'process-duration'
+                    var option = $(processRow).find('.process-option').val(); // Assuming select class 'process-option'
+
+                    formData.append(`processes[${index}][id]`, processId);
+                    formData.append(`processes[${index}][duration]`, duration);
+                    formData.append(`processes[${index}][option]`, option);
+                });
+                console.log([...formData]);
                 // AJAX call to create the job entry and potentially get job_id
                 $.ajax({
                     url: 'create_job.php', // actual endpoint
@@ -503,17 +518,19 @@ $conn->close();
                             // Wait for all file uploads to complete
                             Promise.all(uploadPromises).then(() => {
                                 console.log("All files uploaded successfully.");
-                                $('#jobForm').trigger("reset");
+                                //$('#jobForm').trigger("reset");
                             }).catch((error) => {
+                                console.log([...formData]);
                                 console.error("Error during file upload:", error);
                                 alert("An error occurred during the file upload.");
                             });
                         } else {
                             // If no files, just show success log and reset form
-                            $('#jobForm').trigger("reset");
+                            //$('#jobForm').trigger("reset");
                         }
                     },
                     error: function() {
+                        
                         console.log("Error creating job.");
                         alert("Error creating job.");
                     }
@@ -697,15 +714,25 @@ $conn->close();
             }
 
             function generateProcessHTML(process, index) {
-                let html = `<li>${process.process_name}`;
+                // Wrap the process details in a div or li with class 'process-row' and data attribute for process ID
+                let html = `<li class="process-row" data-process-id="${process.process_id}">${process.process_name}`;
+
+                // Check for user-set durations and adjust class names accordingly
                 if (process.duration_option === "salesagent") {
-                    // For user-set durations, provide an input field
-                    html += `: <input type="number" class="user-duration" name="processDuration_${index}" data-process-id="${process.process_id}" min="0" placeholder="Enter duration in minutes" />`;
+                    // For user-set durations, provide an input field with class 'process-duration'
+                    html += `: <input type="number" class="process-duration user-duration" name="processDuration_${index}" min="0" placeholder="Enter duration in minutes" />`;
                 } else {
                     // Predefined durations also carry the process ID in a data attribute
+                    // Using 'process-duration' for consistency, though it might be hidden or readonly based on your design
                     html += process.duration ? ` - Predefined Duration: ${process.duration} minutes` : '';
-                    html += `<input type="hidden" class="predefined-duration" name="processDuration_${index}" value="${process.duration || 0}" data-process-id="${process.process_id}">`;
+                    html += `<input type="hidden" class="process-duration predefined-duration" name="processDuration_${index}" value="${process.duration || 0}">`;
                 }
+
+                // Adding a select element with options using class 'process-option'
+                html += ` <select name="processOption_${index}" class="process-option">
+                <option value="Artist">Artist</option>
+                <option value="Production">Production</option>
+                </select>`;
 
                 html += `</li>`;
                 return html;
