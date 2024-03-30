@@ -518,7 +518,7 @@ $conn->close();
                             // Wait for all file uploads to complete
                             Promise.all(uploadPromises).then(() => {
                                 console.log("All files uploaded successfully.");
-                                //$('#jobForm').trigger("reset");
+                                $('#jobForm').trigger("reset");
                             }).catch((error) => {
                                 console.log([...formData]);
                                 console.error("Error during file upload:", error);
@@ -526,7 +526,7 @@ $conn->close();
                             });
                         } else {
                             // If no files, just show success log and reset form
-                            //$('#jobForm').trigger("reset");
+                            $('#jobForm').trigger("reset");
                         }
                     },
                     error: function() {

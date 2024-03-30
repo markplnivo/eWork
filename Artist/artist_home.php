@@ -1,10 +1,16 @@
 <?php ob_start();
-include "../logindbase.php"; 
+include "../logindbase.php";
 ?>
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
+    <link rel="stylesheet" href="popup.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&display=swap" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/fa2481bda4.js" crossorigin="anonymous"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 </head>
 <meta charset="UTF-8">
 <title>Artists' Status</title>
@@ -120,7 +126,7 @@ include "../logindbase.php";
     }
 
     .table_container tr {
-        border-bottom: 1px solid #525252;
+        /*border-bottom: 1px solid #525252;*/
     }
 
     .table_container tr:nth-of-type(even) {
@@ -128,7 +134,7 @@ include "../logindbase.php";
     }
 
     .table_container tr:last-of-type {
-        border-bottom: 4px solid #dbaf00;
+        /*border-bottom: 4px solid #dbaf00;*/
     }
 
     .pagination-container {
@@ -160,6 +166,11 @@ include "../logindbase.php";
         border-radius: 8px;
         background-color: rgba(64, 64, 64, 0.4);
     }
+
+    input[type='radio']{
+        transform: scale(1.25);
+    
+    }
 </style>
 
 <body>
@@ -188,7 +199,7 @@ include "../logindbase.php";
 
             $start_from = ($page - 1) * $results_per_page;
             // Pagination links
-            $sql = "SELECT COUNT(*) AS total FROM tbl_jobs";
+            $sql = "SELECT COUNT(*) AS total FROM tbl_jobs WHERE job_status = 'open' OR assigned_artist = '{$_SESSION['username']}'";
             $result = $conn->query($sql);
             $row = $result->fetch_assoc();
             $total_pages = ceil($row['total'] / $results_per_page);
@@ -202,6 +213,16 @@ include "../logindbase.php";
                 <button id="cardViewBtn">Card View</button>
             </div>
 
+            <div id="jobDetailsPopup" class="popup-overlay" style="display:none;">
+                <div class="popup-content-left">
+                    <span class="close-btn">&times;</span>
+                    <div id="jobDetails"></div>
+                </div>
+                <div class="popup-content-right">
+                    <div id="jobImages"></div>
+                </div>
+            </div>
+
             <?php
             echo "<div class='pagination-container'>";
             echo "<label>Page</label>";
@@ -213,7 +234,7 @@ include "../logindbase.php";
             ?>
 
         </div>
-        
+
         <?php
         $artistName = $_SESSION['username']; // Example: getting the artist name from the session
 
@@ -250,23 +271,40 @@ include "../logindbase.php";
         <?php
 
         // Retrieve data from the database for open jobs
-        $sql_jobs = "SELECT job_id, creator_name, time_created, job_brief FROM tbl_jobs WHERE job_status = 'open' LIMIT $start_from, $results_per_page";
-        $result_jobs = $conn->query($sql_jobs);
 
+        $sql_jobs = "
+            SELECT job_id, creator_name, time_created, job_brief,
+            CASE
+            WHEN deadline_futureDateTime IS NOT NULL THEN deadline_futureDateTime
+            WHEN manual_deadline_date IS NOT NULL AND manual_deadline_time IS NOT NULL
+                THEN CONCAT(manual_deadline_date, ' ', manual_deadline_time)
+            END AS effective_deadline
+            FROM tbl_jobs
+            WHERE job_status = 'open' 
+            AND (assigning_method = 'Open to All' 
+            OR (assigning_method = 'Assign an Artist' AND assigned_artist = '$username'))
+            ORDER BY 
+            CASE WHEN effective_deadline IS NULL THEN 1 ELSE 0 END, 
+            effective_deadline ASC
+            LIMIT $start_from, $results_per_page";
+
+        $result_jobs = $conn->query($sql_jobs);
         echo '<div class="table_container" id="tableView">';
         // Display the table
         echo "<form method='post' action='" . $_SERVER['PHP_SELF'] . "'>";
         echo "<table>";
-        echo "<tr><th id='th1'>Select</th><th>Job ID</th><th>Creator Name</th><th>Time Created</th><th>Job Brief</th></tr>";
+        echo "<tr><th id='th1'>Select</th><th>Job ID</th><th>Job Created By</th><th>Time Created</th><th>Job Brief</th><th>Deadline</th></tr>";
 
 
         while ($row_jobs = $result_jobs->fetch_assoc()) {
+            $deadlineDisplay = $row_jobs['effective_deadline'] ? $row_jobs['effective_deadline'] : "Determined by Artist"; // Display "Not set" if null
             echo "<tr class='trHover'>";
-            echo "<td><input type='radio' name='selected_job' value='" . $row_jobs['job_id'] . "'> </label></td>";
+            echo "<td><input type='radio' name='selected_job' value='" . $row_jobs['job_id'] . "'></td>";
             echo "<td>" . $row_jobs['job_id'] . "</td>";
             echo "<td>" . $row_jobs['creator_name'] . "</td>";
             echo "<td>" . $row_jobs['time_created'] . "</td>";
             echo "<td>" . $row_jobs['job_brief'] . "</td>";
+            echo "<td>" . $deadlineDisplay . "</td>"; // Use the $deadlineDisplay variable here
             echo "</tr>";
         }
 
@@ -353,5 +391,114 @@ include "../logindbase.php";
         echo "</div>";
         ?>
     </div>
+
+    <script>
+        $(document).ready(function() {
+            $("#tableView table tbody tr").click(function() {
+                var jobId = $(this).find("td:nth-child(2)").text(); // Assuming Job ID is in the second column
+
+                // Fetch job details
+                $.ajax({
+                    url: 'fetch_job_details.php', // Endpoint that returns job details
+                    type: 'POST',
+                    data: {
+                        jobId: jobId
+                    },
+                    success: function(data) {
+                        var jobDetails = JSON.parse(data);
+                        var detailsHtml = '<div class="job-order-details">';
+                        detailsHtml += '<p><strong>Job ID:</strong> ' + jobDetails.job_id + '</p>';
+                        detailsHtml += '<p><strong>Creator Name:</strong> ' + jobDetails.creator_name + '</p>';
+                        detailsHtml += '<p><strong>Time Created:</strong> ' + jobDetails.time_created + '</p>';
+                        detailsHtml += '<p><strong>Job Brief:</strong> ' + jobDetails.job_brief + '</p>';
+                        // Add more details as needed
+                        detailsHtml += '</div>';
+                        $("#jobDetails").html(detailsHtml);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error fetching job details: " + error);
+                    }
+                });
+
+                // Fetch reference images
+                $.ajax({
+                    url: 'fetch_reference_images.php', // Endpoint that returns the image URLs
+                    type: 'POST',
+                    data: {
+                        jobId: jobId
+                    },
+                    success: function(data) {
+                        var images = JSON.parse(data);
+                        var imagesHtml = '<div class="image-gallery">';
+
+                        // Check if the images array is empty and set a default image
+                        if (images.length === 0) {
+                            images.push('http://localhost/eWork_collab/upload/default_reference.jpg'); // Replace with the path to your default image
+                        }
+
+
+                        images.forEach((url, index) => {
+                            // Delay the animation start time for each image
+                            var animationDelay = index * 150; // 100ms delay increment for each image
+                            imagesHtml += `<img src="${url}" alt="Image" class="gallery-image" style="animation-delay: ${animationDelay}ms;">`;
+                        });
+
+                        imagesHtml += '</div>';
+                        $("#jobImages").html(imagesHtml);
+                        $("#jobDetailsPopup").show();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error fetching images: " + error);
+                    }
+                });
+            });
+
+            $(document).on('click', '.gallery-image', function(e) {
+                // Check if the image is already enlarged
+                if ($(this).hasClass('enlarged')) {
+                    // Image is already enlarged, so remove the class to minimize it
+                    $(this).removeClass('enlarged');
+                } else {
+                    // Image is not enlarged, so first remove 'enlarged' class from any image that may have it
+                    $('.gallery-image').removeClass('enlarged');
+                    // Then, add 'enlarged' class to the clicked image
+                    $(this).addClass('enlarged');
+                }
+                // Prevent the click event from propagating to higher elements
+                e.stopPropagation();
+            });
+
+            // Click event for the popup overlay and its contents, excluding gallery images
+            $(document).on('click', function(e) {
+                // Conditions to close the popup:
+                // 1. Click is outside of both popup-content-left and popup-content-right
+                // 2. Click is not on a gallery image
+                // This ensures clicks on enlarged images or within the popup content do not close the popup
+                if (!$(e.target).closest('.popup-content-left').length &&
+                    !$(e.target).closest('.popup-content-right').length &&
+                    !$(e.target).hasClass('gallery-image')) {
+                    // Minimize any enlarged image
+                    $('.gallery-image').removeClass('enlarged');
+                    // Hide the popup overlay
+                    $("#jobDetailsPopup").hide();
+                }
+            });
+
+            // Close button functionality: Close the popup when the close button is clicked
+            $(".close-btn").click(function(e) {
+                // Hide the popup
+                $("#jobDetailsPopup").hide();
+                // Prevent the event from propagating to avoid triggering the document click event
+                e.stopPropagation();
+            });
+
+            // Specifically prevent the pop-up when clicking on the radio button
+            $("#tableView table tbody tr td input[type='radio']").click(function(e) {
+                e.stopPropagation(); // Stop the click event from bubbling up to the parent tr
+            });
+
+            /***End of code for popup ***/
+        });
+    </script>
 </body>
 <?php ob_end_flush(); ?>

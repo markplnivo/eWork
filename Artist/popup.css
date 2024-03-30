@@ -1,0 +1,145 @@
+/* Container for both popups */
+
+.popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 2;
+    /* Ensure it's above other content */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#jobDetailsPopup {
+    display: flex;
+    /* Use flexbox to arrange children */
+    flex-wrap: wrap;
+    /* Allows items to wrap as needed */
+    justify-content: center;
+    /* Center the items horizontally */
+    align-items: center;
+    /* Center the items vertically */
+    gap: 100px;
+    /* Spacing between the popups */
+}
+
+/* Styling for the right popup (use similar styling for both popups) */
+.popup-content-right {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: calc(50% - 10px);
+    /* Adjust width, subtracting gap */
+    min-height: 300px;
+    max-width: 600px;
+    /* Maximum width */
+    max-height: 50%;
+    /* Height can be auto for flexible content */
+}
+
+/* Styling for the left popup */
+.popup-content-left {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: calc(50% - 10px);
+    /* Adjust width, subtracting gap */
+    max-width: 600px;
+    /* Maximum width */
+    max-height: 50%;
+    /* Height can be auto for flexible content */
+}
+
+/* Responsive adjustments if necessary */
+@media (max-width: 768px) {
+    .jobDetailsPopup {
+        flex-direction: column;
+        /* Stack popups on smaller screens */
+    }
+
+    .popup-content-right,
+    .popup-content-left {
+        width: 100%;
+        /* Full width on smaller screens */
+        max-width: 100%;
+        /* Allow popups to expand to full container width */
+    }
+}
+
+
+.image-gallery {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    gap: 10px;
+    /* Adjust the space between images */
+    align-content: center;
+    justify-content: center;
+    /* Center the images within the gallery */
+    padding: 10px;
+    /* Add some padding around the gallery */
+}
+
+.gallery-image {
+    width: 250px;
+    /* Adjust based on your preference */
+    height: 250px;
+    /* Adjust based on your preference */
+    object-fit: cover;
+    /* Ensure images cover the area, may crop */
+    border-radius: 5px;
+    /* Optional: round the corners of the images */
+    opacity: 0;
+    /* Start fully transparent */
+    transition: all 0.3s ease;
+    animation: fadeImg 0.8s forwards;
+}
+
+    .gallery-image.enlarged {
+    position: fixed;
+    /* Fixed position to keep it in place on the screen */
+    top: 50%;
+    /* Position at the center vertically */
+    left: 50%;
+    /* Position at the center horizontally */
+    transform: translate(-50%, -50%) scale(1.5);
+    /* Center and scale up the image */
+    z-index: 100;
+    /* Ensure it's above other content */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    /* Optional: add shadow for effect */
+    cursor: pointer;
+    /* Change cursor to indicate clickable */
+    max-height: 50%;
+    /* Max height to ensure it doesn't get too big */
+    max-width: 50%;
+    /* Max width to ensure it doesn't get too big */
+    height: auto;
+    /* Keep aspect ratio */
+    width: auto;
+    /* Keep aspect ratio */
+}
+
+@keyframes fadeImg {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.close-btn {
+    float: right;
+    cursor: pointer;
+    font-size: 36px; /* Increase the font size to 36px */
+    padding: 5px; /* Increase the padding */
+}
+  
