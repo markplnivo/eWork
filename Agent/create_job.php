@@ -1,5 +1,4 @@
 <?php
-
 // Database configuration
 include "../logindbase.php";
 include "../session_handler.php";
@@ -9,23 +8,27 @@ include "../session_handler.php";
 $creatorName = $conn->real_escape_string($_SESSION['username']);
 $jobSubject = $conn->real_escape_string($_POST['job-subject']);
 $jobBrief = $conn->real_escape_string($_POST['job-brief']);
-//$selectedArtistName = $conn->real_escape_string($_POST['selected-artist-name']);
+$assignTo = $conn->real_escape_string($_POST['assign-to']);
+$selectedArtistName = $conn->real_escape_string($_POST['selected-artist-name']);
+$useTemplate = $conn->real_escape_string($_POST['use-template']);
+$selectedTemplateName = $conn->real_escape_string($_POST['selectedTemplateName']);
+$jobTracking = $conn->real_escape_string($_POST['job-tracking']);
+$deadlineDate = $conn->real_escape_string($_POST['deadline_date']);
+$deadlineTime = $conn->real_escape_string($_POST['deadline_time']);
+$futureDateTime = $conn->real_escape_string($_POST['futureDateTime']);
 
-// Assuming `estimated_completion` is an integer representing time in minutes
-$estimatedCompletion = isset($_POST['estimatedCompletion']) ? (int)$_POST['estimatedCompletion'] : 0;
 
 // Prepare the SQL statement with placeholders
-$insertSql = "INSERT INTO tbl_jobs (creator_name, time_created, job_status, job_subject, job_brief, estimated_completion) VALUES (?, CURRENT_TIMESTAMP, 'open', ?, ?, ?)";
+$insertSql = "INSERT INTO tbl_jobs (creator_name, time_created, job_status, job_subject, job_brief) VALUES (?, CURRENT_TIMESTAMP, 'open', ?, ?)";
 
 $stmtInsert = $conn->prepare($insertSql);
 
 if ($stmtInsert) {
     // Bind the parameters to the SQL statement
-    $stmtInsert->bind_param("sssi", $creatorName, $jobSubject, $jobBrief, $estimatedCompletion);
+    $stmtInsert->bind_param("sss", $creatorName, $jobSubject, $jobBrief);
     
     // Execute the statement
     $stmtInsert->execute();
-
     if ($stmtInsert->affected_rows > 0) {
         $jobId = $stmtInsert->insert_id; // Get the ID of the inserted job
         // Return the job_id to the client
@@ -43,3 +46,4 @@ if ($stmtInsert) {
 // Close the database connection
 $conn->close();
 ?>
+

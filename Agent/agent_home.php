@@ -319,10 +319,10 @@ $conn->close();
         <div class="table_container">
             <form method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>" enctype="multipart/form-data" id="jobForm">
                 <label for="job-subject">Job Order Title:</label>
-                <input type="text" id="job-subject" name="job-subject">
+                <input type="text" id="job-subject" name="job-subject" required>
 
                 <label for="job-brief">Job Order Description:</label>
-                <textarea id="job-brief" name="job-brief" rows="4"></textarea>
+                <textarea id="job-brief" name="job-brief" rows="4" required></textarea>
 
 
                 <!-- Upload design reference -->
@@ -423,11 +423,7 @@ $conn->close();
 
 
         $futureDateTime = $_POST['futureDateTime'] ?? 'Not Available';
-
         $processDetailsString = implode("\\n", $processDetails);
-
-
-
         // Output the script to show the alert with job and process details
         echo "<script>alert('Job Subject: $jobSubject" .
             "\\nJob Brief: $jobBrief" .
@@ -465,18 +461,19 @@ $conn->close();
                 event.preventDefault(); // Prevent the default form submission
 
                 var formData = new FormData(this);
-                console.log([...formData]); // Debugging
+                // Log formData for debugging
+                console.log([...formData]);
                 // Append process durations and their IDs to formData
                 $('.user-duration, .predefined-duration').each(function(index, input) {
                     var processId = $(this).data('process-id');
                     var duration = $(this).val();
-                    console.log(`Appending process ID ${processId} with duration ${duration}`);
                     formData.append(`processes[${index}][id]`, processId);
                     formData.append(`processes[${index}][duration]`, duration);
                 });
-                // AJAX call to create the job entry and get job_id
+
+                // AJAX call to create the job entry and potentially get job_id
                 $.ajax({
-                    url: 'create_job.php', // Adjust this to your actual endpoint
+                    url: 'create_job.php', // actual endpoint
                     type: 'POST',
                     data: formData,
                     processData: false,
@@ -484,37 +481,41 @@ $conn->close();
                     success: function(response) {
                         var job_id = JSON.parse(response).job_id; // Parse response to get job_id
                         console.log("Job created successfully with ID:", job_id);
-                        console.log("$formData", [...formData]); // Debugging
-                        // Assuming you have to upload files after creating the job
+
+                        // Check if there are files to upload
                         var files = $("#referenceImage")[0].files;
                         if (files.length > 0) {
-                            Array.from(files).forEach(function(file) {
+                            // If there are files, upload each one
+                            var uploadPromises = Array.from(files).map(function(file) {
                                 var fileData = new FormData();
                                 fileData.append("job_id", job_id); // Include the job_id
-                                fileData.append("referenceImage", file); // Add each file
-
-                                // AJAX call to upload each file
-                                $.ajax({
-                                    url: 'upload_file.php', // Adjust this to your actual endpoint
+                                fileData.append("referenceImage", file); // Add the file
+                                // Return the AJAX call promise
+                                return $.ajax({
+                                    url: 'upload_file.php', // actual endpoint
                                     type: 'POST',
                                     data: fileData,
                                     processData: false,
-                                    contentType: false,
-                                    success: function(uploadResponse) {
-                                        console.log("File uploaded successfully.");
-                                        // Handle success (e.g., showing a message or updating UI)
-                                    },
-                                    error: function() {
-                                        console.log("Error uploading file.");
-                                        // Handle error
-                                    }
+                                    contentType: false
                                 });
                             });
+
+                            // Wait for all file uploads to complete
+                            Promise.all(uploadPromises).then(() => {
+                                console.log("All files uploaded successfully.");
+                                $('#jobForm').trigger("reset");
+                            }).catch((error) => {
+                                console.error("Error during file upload:", error);
+                                alert("An error occurred during the file upload.");
+                            });
+                        } else {
+                            // If no files, just show success log and reset form
+                            $('#jobForm').trigger("reset");
                         }
                     },
                     error: function() {
                         console.log("Error creating job.");
-                        // Handle job creation error
+                        alert("Error creating job.");
                     }
                 });
             });
