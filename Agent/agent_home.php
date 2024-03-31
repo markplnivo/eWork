@@ -530,7 +530,7 @@ $conn->close();
                         }
                     },
                     error: function() {
-                        
+
                         console.log("Error creating job.");
                         alert("Error creating job.");
                     }
@@ -598,9 +598,12 @@ $conn->close();
             assignToSelect.addEventListener('change', function() {
                 if (this.value === "Assign an Artist") {
                     document.getElementById('artistOverlay').style.display = 'block';
-                } else {
-                    selectedArtistDiv.innerHTML = '';
-                }
+                } 
+                if (this.value === "Open to All") {
+                    document.getElementById('selected-artist-name').value = null;
+                    document.getElementById('artistOverlay').style.display = 'none'; // Hide the overlay if it was previously shown
+                    selectedArtistDiv.innerHTML = ''; // Clear any selected artist information
+                } 
             });
             // Add event listener to the close button
             if (closeArtistButton) closeArtistButton.addEventListener('click', closeArtistOverlay);

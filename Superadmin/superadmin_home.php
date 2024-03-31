@@ -45,60 +45,79 @@ if (isset($_POST['remove_selected'])) {
     }
 }
 
-    if (isset($_POST['add_selected'])) {
-        // Check if any rows were selected for addition
-        if (isset($_POST['selected_rows']) && is_array($_POST['selected_rows'])) {
-            // Loop over the selected rows and assign roles
-            for ($i = 0; $i < count($_POST['selected_rows']); $i++) {
-                // Get the email and role for the current row
-                $email = $_POST['selected_rows'][$i];
-                $role = $_POST['role'][$i];
-    
-                // Prepare the SQL statement to insert the record into the tbl_userlist table
-                $insertSql = "INSERT INTO tbl_userlist (username, job_position, user_password, user_email, user_contactnumber, user_firstname, user_lastname) 
+if (isset($_POST['add_selected'])) {
+    // Check if any rows were selected for addition
+    if (isset($_POST['selected_rows']) && is_array($_POST['selected_rows'])) {
+        // Loop over the selected rows and assign roles
+        for ($i = 0; $i < count($_POST['selected_rows']); $i++) {
+            // Get the email and role for the current row
+            $email = $_POST['selected_rows'][$i];
+            $role = $_POST['role'][$i];
+
+            // Prepare the SQL statement to insert the record into the tbl_userlist table
+            $insertSql = "INSERT INTO tbl_userlist (username, job_position, user_password, user_email, user_contactnumber, user_firstname, user_lastname) 
                 SELECT username, ?, user_password, email, contact_number, firstname, lastname 
                 FROM tbl_account_request 
                 WHERE email = ?";
-    
-                // Create a prepared statement
-                if ($stmt = $conn->prepare($insertSql)) {
-                    // Bind the role and email as parameters
-                    $stmt->bind_param('ss', $role, $email);
-    
-                    // Execute the statement to insert the selected row into the tbl_userlist table
-                    $stmt->execute();
-    
-                    // Close the prepared statement
-                    $stmt->close();
-                } else {
-                    // Handle any errors with the prepared statement
-                    echo "Error: " . $conn->error;
-                }
-            }
-    
-            // Prepare the SQL statement to delete the records from the original table
-            $placeholders = implode(',', array_fill(0, count($_POST['selected_rows']), '?'));
-            $deleteSql = "DELETE FROM tbl_account_request WHERE email IN ($placeholders)";
-    
+
             // Create a prepared statement
-            if ($stmt = $conn->prepare($deleteSql)) {
-                // Bind each email to its own placeholder
-                $stmt->bind_param(str_repeat('s', count($_POST['selected_rows'])), ...$_POST['selected_rows']);
-    
-                // Execute the statement to delete the selected rows from the original table
+            if ($stmt = $conn->prepare($insertSql)) {
+                // Bind the role and email as parameters
+                $stmt->bind_param('ss', $role, $email);
+
+                // Execute the statement to insert the selected row into the tbl_userlist table
                 $stmt->execute();
-    
+
                 // Close the prepared statement
                 $stmt->close();
+            } else {
+                // Handle any errors with the prepared statement
+                echo "Error: " . $conn->error;
             }
-    
-            $_POST['selected_rows'] = array();
-            header("Location: superadmin_home.php");
-            exit(); // Terminate script execution after redirection
         }
+
+        /*** This code is from artist_home.php and was moved to superadmin_home.php ***/
+        // Check tbl_userlist for new usernames with job_position 'Artist'
+        $sqlCheckNewArtists = "SELECT username FROM tbl_userlist WHERE job_position = 'Artist' AND username NOT IN (SELECT artist_name FROM tbl_artist_status)";
+        $resultCheckNewArtists = $conn->query($sqlCheckNewArtists);
+
+        // Insert new artists into tbl_artist_status
+        if ($resultCheckNewArtists->num_rows > 0) {
+            $insertSql = "INSERT INTO tbl_artist_status (artist_name, artist_status) VALUES (?, 'open')";
+            $stmtInsert = $conn->prepare($insertSql);
+
+            while ($row = $resultCheckNewArtists->fetch_assoc()) {
+                $newArtistName = $row['username'];
+                $stmtInsert->bind_param("s", $newArtistName);
+                $stmtInsert->execute();
+            }
+
+            $stmtInsert->close();
+        }
+
+        // Prepare the SQL statement to delete the records from the original table
+        $placeholders = implode(',', array_fill(0, count($_POST['selected_rows']), '?'));
+        $deleteSql = "DELETE FROM tbl_account_request WHERE email IN ($placeholders)";
+
+        // Create a prepared statement
+        if ($stmt = $conn->prepare($deleteSql)) {
+            // Bind each email to its own placeholder
+            $stmt->bind_param(str_repeat('s', count($_POST['selected_rows'])), ...$_POST['selected_rows']);
+
+            // Execute the statement to delete the selected rows from the original table
+            $stmt->execute();
+
+            // Close the prepared statement
+            $stmt->close();
+        }
+
+        $_POST['selected_rows'] = array();
+        header("Location: superadmin_home.php");
+        exit(); // Terminate script execution after redirection
     }
-    
-    ?>
+}
+
+?>
 
 
 <head>
@@ -192,78 +211,77 @@ if (isset($_POST['remove_selected'])) {
         }
 
         #addSelect {
-			background-color: #ffc400;
-			border-radius: 8px;
-			border: 0 solid;
+            background-color: #ffc400;
+            border-radius: 8px;
+            border: 0 solid;
             grid-column: 1 / -1;
             grid-row: 3 / 4;
             height: 50px;
             width: 100px;
             place-self: start start;
-			transition-duration: .3s;
+            transition-duration: .3s;
         }
 
         #removeSelect {
-			background-color: #ffc400;
-			border-radius: 8px;
-			border: 0 solid;
+            background-color: #ffc400;
+            border-radius: 8px;
+            border: 0 solid;
             grid-column: 1 / -1;
             grid-row: 3 / 4;
             height: 50px;
             width: 120px;
             margin-left: 200px;
-			transition-duration: .15s;
+            transition-duration: .15s;
         }
 
-        #searchInput{
+        #searchInput {
             grid-area: 1 / 1 / 1 / 1;
-            width:300px;
-            height:25px;
+            width: 300px;
+            height: 25px;
             place-self: end;
-			border: 0 solid;
-			border-radius: 4px;
-			background-color: lightyellow;
+            border: 0 solid;
+            border-radius: 4px;
+            background-color: lightyellow;
         }
-		
-		#addSelect:hover {
-			cursor: pointer;
-			box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.4);
-		}
-		
-		#removeSelect:hover {
-			cursor: pointer;
-			box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.4);
-		}
-		
-		#addSelect:active {
-			margin-top: 2px;
-			margin-left: 2px;
-			box-shadow: none;
-		}
-		
-		#removeSelect:active {
-			margin-top: 2px;
-			margin-left: 202px;
-			box-shadow: none;
-		}
-		
-		input[type="checkbox"] {
-			cursor: pointer;
-			height: 20px;
-			width: 20px;
-			accent-color: #ffc400;
-			border: 1px solid black;
-			border-radius: 5px;
-		}
-		
-		select {
-			background-color: lightyellow;
-			height: 25px;
-			border: 2px solid #ffc400;
-			border-radius: 8px;
-			cursor: pointer;
-		}
 
+        #addSelect:hover {
+            cursor: pointer;
+            box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.4);
+        }
+
+        #removeSelect:hover {
+            cursor: pointer;
+            box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.4);
+        }
+
+        #addSelect:active {
+            margin-top: 2px;
+            margin-left: 2px;
+            box-shadow: none;
+        }
+
+        #removeSelect:active {
+            margin-top: 2px;
+            margin-left: 202px;
+            box-shadow: none;
+        }
+
+        input[type="checkbox"] {
+            cursor: pointer;
+            height: 20px;
+            width: 20px;
+            accent-color: #ffc400;
+            border: 1px solid black;
+            border-radius: 5px;
+        }
+
+        select {
+            background-color: lightyellow;
+            height: 25px;
+            border: 2px solid #ffc400;
+            border-radius: 8px;
+            cursor: pointer;
+        }
     </style>
 </head>
 
@@ -288,7 +306,7 @@ if (isset($_POST['remove_selected'])) {
     ?>
     <form method="post" action="superadmin_home.php">
         <div id="maintable">
-        <input type="text" id="searchInput" placeholder="Search for names...">
+            <input type="text" id="searchInput" placeholder="Search for names...">
             <table>
                 <tr>
                     <th>Select</th>
@@ -346,7 +364,7 @@ if (isset($_POST['remove_selected'])) {
     </div>
     </div>
 
-    
+
 </body>
 
 <script>

@@ -284,37 +284,59 @@ ob_start();
 			<h2 class="content-title"></h2>
 			<?php
 
+			$sql = "SELECT current_jobID FROM tbl_artist_status WHERE artist_name = ?";
+			$stmt = $conn->prepare($sql);
+			$stmt->bind_param("s", $artistName);
+			$stmt->execute();
+			$result = $stmt->get_result();
+
+			if ($row = $result->fetch_assoc()) {
+				if ($row['current_jobID'] !== NULL) {
+					// If current_jobID is not null, set the session variable to its value
+					$_SESSION['artist_currentJob'] = $row['current_jobID'];
+					$_SESSION['busy'] = 'busy';
+				} else {
+					// If current_jobID is null, set $_SESSION['busy'] to 'open'
+					$_SESSION['busy'] = 'open';
+					header("Location: agent_home.php");
+					exit();
+				}
+			}
+			$stmt->close();
+
 
 			// Your SQL query
 			$sql = "SELECT job_id, creator_name, time_created, job_brief, job_subject
-        FROM tbl_jobs
-        WHERE job_id = ? AND assigned_artist = ?";
+        	FROM tbl_jobs
+        	WHERE job_id = ? AND assigned_artist = ?";
 
-			// Create a prepared statement
 			$stmt = $conn->prepare($sql);
-
-			// Bind the parameters
 			$stmt->bind_param("ss", $_SESSION['artist_currentJob'], $_SESSION['username']);
-
-			// Execute the statement
 			$stmt->execute();
-
-			// Bind the result to variables
 			$stmt->bind_result($jobId, $createdByAgent, $timeCreated, $jobBrief, $jobSubject);
-
-			// Fetch the result
 			$stmt->fetch();
-
 			if (!$stmt->execute()) {
 				echo "Error executing query: " . $stmt->error;
 			}
-			// Close the statement
 			$stmt->close();
 
 			// Check if the form is submitted
 			if (isset($_POST["submitLikert"])) {
 				$artistUsername = $_SESSION['username'];
 				$completionPercentage = $_POST["completionPercentage"];
+				$artist_currentJob = $_SESSION['artist_currentJob'];
+
+				$sql = "UPDATE tbl_jobs SET job_status = 'completed' WHERE job_id = ?";
+				$stmt = $conn->prepare($sql);
+				$stmt->bind_param("i", $artist_currentJob);
+				$stmt->execute();
+				// Check for success or handle errors
+				if ($stmt->affected_rows > 0) {
+					echo "Job status updated successfully.";
+				} else {
+					echo "No job found with the provided ID.";
+				}
+				$stmt->close();
 
 				// Update the completion_percentage in tbl_artist_status
 				$updateSql = "UPDATE tbl_artist_status SET completion_percentage = ? WHERE artist_name = ?";
@@ -329,6 +351,8 @@ ob_start();
 				$artistUsername = $_SESSION['username'];
 				$_SESSION['busy'] = 'open';
 				// Update artist_status to "open" and completion_percentage to 0
+
+
 				$updateStatusSql = "UPDATE tbl_artist_status SET artist_status = 'open', completion_percentage = 0 WHERE artist_name = ?";
 				$stmt = $conn->prepare($updateStatusSql);
 				$stmt->bind_param("s", $artistUsername);
@@ -392,7 +416,6 @@ ob_start();
 <script type="text/javascript">
 	// Function to show the range value
 	$(function() {
-
 		$('.likert_scale input').on('mousemove', function() {
 			var getValRange = $(this).val();
 			$('.likert_scale span').text(getValRange + '%');

@@ -125,17 +125,10 @@ include "../logindbase.php";
         padding: 12px 25px;
     }
 
-    .table_container tr {
-        /*border-bottom: 1px solid #525252;*/
-    }
-
     .table_container tr:nth-of-type(even) {
         background-color: #cfcfcf;
     }
 
-    .table_container tr:last-of-type {
-        /*border-bottom: 4px solid #dbaf00;*/
-    }
 
     .pagination-container {
         grid-area: 2 / 1 / 3 / -1;
@@ -167,11 +160,35 @@ include "../logindbase.php";
         background-color: rgba(64, 64, 64, 0.4);
     }
 
-    input[type='radio']{
+    input[type='radio'] {
         transform: scale(1.25);
-    
+
+    }
+
+
+
+    @keyframes glow {
+
+        0%,
+        100% {
+            background-color: #FFD700;
+            /* Final color */
+        }
+
+        50% {
+            background-color: #FFEA00;
+            /* Lighter color for glow effect */
+        }
+    }
+
+    .assignedToArtist {
+        animation: glow 2s ease-in-out forwards;
+        /* Use 'forwards' to keep the final state */
+        /* Initial state is the final color of the animation to ensure it matches the last keyframe */
+        background-color: #FFD700;
     }
 </style>
+
 
 <body>
     <div class="main">
@@ -236,21 +253,33 @@ include "../logindbase.php";
         </div>
 
         <?php
+
+
         $artistName = $_SESSION['username']; // Example: getting the artist name from the session
+
+        // Prepare the SQL statement to check if the current_jobID is not null for the current artist
+        $sql = "SELECT current_jobID FROM tbl_artist_status WHERE artist_name = ? AND current_jobID IS NOT NULL";
+
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("s", $artistName);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($result->num_rows > 0) {
+            // If the current_jobID is not null, set the session variable and redirect
+            $_SESSION['busy'] = 'busy';
+            header("Location: ./artist_busy.php");
+            exit(); // Don't forget to exit to stop the script execution after the redirect
+        } else {
+            $_SESSION['busy'] = 'open';
+        }
+        $stmt->close();
 
         // Prepare the SQL statement to avoid SQL injection
         $stmt = $conn->prepare("SELECT artist_status FROM tbl_artist_status WHERE artist_name = ?");
-
-        // Bind the parameter (s for string)
         $stmt->bind_param("s", $artistName);
-
-        // Execute the query
         $stmt->execute();
-
-        // Bind the result to a variable
         $stmt->bind_result($artistStatus);
-
-        // Fetch the result. No need for a loop since we expect only one row
+        // Fetch the result.
         if ($stmt->fetch()) {
             // Assign the result to the session variable
             $_SESSION['busy'] = $artistStatus;
@@ -273,7 +302,7 @@ include "../logindbase.php";
         // Retrieve data from the database for open jobs
 
         $sql_jobs = "
-            SELECT job_id, creator_name, time_created, job_brief,
+            SELECT job_id, job_subject, creator_name, time_created, job_brief, assigned_artist,
             CASE
             WHEN deadline_futureDateTime IS NOT NULL THEN deadline_futureDateTime
             WHEN manual_deadline_date IS NOT NULL AND manual_deadline_time IS NOT NULL
@@ -282,38 +311,49 @@ include "../logindbase.php";
             FROM tbl_jobs
             WHERE job_status = 'open' 
             AND (assigning_method = 'Open to All' 
-            OR (assigning_method = 'Assign an Artist' AND assigned_artist = '$username'))
+            OR (assigned_artist = '$artistName'))
             ORDER BY 
             CASE WHEN effective_deadline IS NULL THEN 1 ELSE 0 END, 
             effective_deadline ASC
             LIMIT $start_from, $results_per_page";
 
         $result_jobs = $conn->query($sql_jobs);
-        echo '<div class="table_container" id="tableView">';
-        // Display the table
-        echo "<form method='post' action='" . $_SERVER['PHP_SELF'] . "'>";
-        echo "<table>";
-        echo "<tr><th id='th1'>Select</th><th>Job ID</th><th>Job Created By</th><th>Time Created</th><th>Job Brief</th><th>Deadline</th></tr>";
+        ?>
+        <div class="table_container" id="tableView">
+            <!-- Display the table -->
+            <form method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>">
+                <table>
+                    <tr>
+                        <th id="th1">Select</th>
+                        <th>Job ID</th>
+                        <th>Job Created By</th>
+                        <th>Time Created</th>
+                        <th>Job Title</th>
+                        <th>Job Brief</th>
+                        <th>Deadline</th>
+                    </tr>
+
+                    <?php while ($row_jobs = $result_jobs->fetch_assoc()) : ?>
+                        <?php $deadlineDisplay = $row_jobs['effective_deadline'] ? $row_jobs['effective_deadline'] : "Determined by Artist"; // Display "Not set" if null 
+                        ?>
+                        <?php $rowClass = $row_jobs['assigned_artist'] === $artistName ? 'assignedToArtist' : 'trHover'; ?>
+                        <tr class="<?php echo $rowClass; ?>">
+                            <td><input type='radio' name='selected_job' value='<?php echo $row_jobs['job_id']; ?>'></td>
+                            <td><?php echo $row_jobs['job_id']; ?></td>
+                            <td><?php echo $row_jobs['creator_name']; ?></td>
+                            <td><?php echo $row_jobs['time_created']; ?></td>
+                            <td><?php echo $row_jobs['job_subject']; ?></td>
+                            <td><?php echo $row_jobs['job_brief']; ?></td>
+                            <td><?php echo $deadlineDisplay; ?></td>
+                        </tr>
+                    <?php endwhile; ?>
+                </table>
+                <input type="submit" name="press_selectJob" value="Start Selected Job">
+            </form>
+        </div>
 
 
-        while ($row_jobs = $result_jobs->fetch_assoc()) {
-            $deadlineDisplay = $row_jobs['effective_deadline'] ? $row_jobs['effective_deadline'] : "Determined by Artist"; // Display "Not set" if null
-            echo "<tr class='trHover'>";
-            echo "<td><input type='radio' name='selected_job' value='" . $row_jobs['job_id'] . "'></td>";
-            echo "<td>" . $row_jobs['job_id'] . "</td>";
-            echo "<td>" . $row_jobs['creator_name'] . "</td>";
-            echo "<td>" . $row_jobs['time_created'] . "</td>";
-            echo "<td>" . $row_jobs['job_brief'] . "</td>";
-            echo "<td>" . $deadlineDisplay . "</td>"; // Use the $deadlineDisplay variable here
-            echo "</tr>";
-        }
-
-        echo "</table>";
-        echo "<input type='submit' name='press_selectJob' value='Start Selected Job'>";
-        echo "</form>";
-        echo '</div>';
-
-
+        <?php
         // Check if the form is submitted
         if (isset($_POST['press_selectJob']) && isset($_POST['selected_job'])) {
             // Get the selected job_id and update tbl_jobs
@@ -321,7 +361,7 @@ include "../logindbase.php";
             $assignedArtist = $_SESSION['username'];
             $_SESSION['artist_currentJob'] = $selectedJobId;
 
-            $updateSql = "UPDATE tbl_jobs SET job_status = 'ongoing', assigned_artist = ? WHERE job_id = ?";
+            $updateSql = "UPDATE tbl_jobs SET job_status = 'pending', assigned_artist = ? WHERE job_id = ?";
             $stmt = $conn->prepare($updateSql);
             $stmt->bind_param("si", $assignedArtist, $selectedJobId);
             $stmt->execute();
@@ -331,46 +371,41 @@ include "../logindbase.php";
             $_SESSION['busy'] = 'busy';
 
             // Update tbl_artist_status
-            $updateArtistStatusSql = "UPDATE tbl_artist_status SET artist_status = 'busy' WHERE artist_name = ?";
+            $updateArtistStatusSql = "UPDATE tbl_artist_status SET artist_status = 'busy', current_jobID = ? WHERE artist_name = ?";
             $stmtArtistStatus = $conn->prepare($updateArtistStatusSql);
-            $stmtArtistStatus->bind_param("s", $assignedArtist);
+            $stmtArtistStatus->bind_param("is", $selectedJobId, $assignedArtist);
             $stmtArtistStatus->execute();
             $stmtArtistStatus->close();
             header("Refresh:0");
         }
 
+        /*
         // Check tbl_userlist for new usernames with job_position 'Artist'
         $sqlCheckNewArtists = "SELECT username FROM tbl_userlist WHERE job_position = 'Artist' AND username NOT IN (SELECT artist_name FROM tbl_artist_status)";
         $resultCheckNewArtists = $conn->query($sqlCheckNewArtists);
 
         // Insert new artists into tbl_artist_status
         if ($resultCheckNewArtists->num_rows > 0) {
-            $insertSql = "INSERT INTO tbl_artist_status (artist_name, artist_status) VALUES (?, 'open')";
-            $stmtInsert = $conn->prepare($insertSql);
+        $insertSql = "INSERT INTO tbl_artist_status (artist_name, artist_status) VALUES (?, 'open')";
+        $stmtInsert = $conn->prepare($insertSql);
 
-            while ($row = $resultCheckNewArtists->fetch_assoc()) {
-                $newArtistName = $row['username'];
-                $stmtInsert->bind_param("s", $newArtistName);
-                $stmtInsert->execute();
-            }
-
-            $stmtInsert->close();
+        while ($row = $resultCheckNewArtists->fetch_assoc()) {
+        $newArtistName = $row['username'];
+        $stmtInsert->bind_param("s", $newArtistName);
+        $stmtInsert->execute();
         }
 
+        $stmtInsert->close();
+        }
+        */
+
         // Pagination links for open jobs
-        $sql_jobs_total = "SELECT COUNT(*) AS total FROM tbl_jobs WHERE job_status = 'open'";
+        $sql_jobs_total = "SELECT COUNT(*) AS total FROM tbl_jobs WHERE job_status = 'open' AND (assigning_method = 'Open to All' OR assigned_artist = '$artistName')";
         $result_jobs_total = $conn->query($sql_jobs_total);
         $row_jobs_total = $result_jobs_total->fetch_assoc();
         $total_pages_jobs = ceil($row_jobs_total['total'] / $results_per_page);
 
         $current_page_jobs = basename($_SERVER['PHP_SELF']);
-
-        echo "<div class='pagination'>";
-        for ($i = 1; $i <= $total_pages_jobs; $i++) {
-            echo "<a href='$current_page_jobs?page=" . $i . "'>" . $i . "</a> ";
-        }
-        echo "</div>";
-
 
         echo '<div class="card_container" id="cardView" style="display: none;">';
         foreach ($result as $row) {
@@ -387,7 +422,8 @@ include "../logindbase.php";
 
         // Close the database connection
         $conn->close();
-        echo "</div>";
+        echo "
+    </div>";
         echo "</div>";
         ?>
     </div>
@@ -498,7 +534,11 @@ include "../logindbase.php";
             });
 
             /***End of code for popup ***/
-        });
+
+
+
+
+        }); //End of Javascript
     </script>
 </body>
 <?php ob_end_flush(); ?>
