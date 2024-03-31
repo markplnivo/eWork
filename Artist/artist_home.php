@@ -110,7 +110,7 @@ include "../logindbase.php";
         font-size: 0.9em;
         min-width: 70vw;
         min-height: 100px;
-        border-radius: 12px 12px 0px 0px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
     }
 
     .table_container th {
@@ -125,8 +125,9 @@ include "../logindbase.php";
         padding: 12px 25px;
     }
 
-    .table_container tr:nth-of-type(even) {
+    .table_container tr {
         background-color: #cfcfcf;
+        margin-bottom: 20px;
     }
 
 
@@ -165,27 +166,57 @@ include "../logindbase.php";
 
     }
 
+    tr:hover {
+        background-image: linear-gradient(to left, #cfcfcf 10%, #bfbfbf 50%);
+    }
 
 
-    @keyframes glow {
 
-        0%,
-        100% {
-            background-color: #FFD700;
-            /* Final color */
+    @keyframes swipeGradient {
+        0% {
+            background-position: 0%;
         }
 
-        50% {
-            background-color: #FFEA00;
-            /* Lighter color for glow effect */
+        100% {
+            background-position: -100%;
         }
     }
 
+    .assignedToArtist:hover {
+        /* Slightly adjust the gradient colors for hover state */
+        background-image: linear-gradient(to left, #FFD700 10%, #bfbfbf 50%);
+        /* Keep the rest of the properties the same */
+        background-position: -100%;
+        background-size: 200%;
+        animation: swipeGradient 0.5s linear forwards;
+    }
+
     .assignedToArtist {
-        animation: glow 2s ease-in-out forwards;
-        /* Use 'forwards' to keep the final state */
-        /* Initial state is the final color of the animation to ensure it matches the last keyframe */
-        background-color: #FFD700;
+        /* Define a linear gradient background. Adjust colors as desired. */
+        background-image: linear-gradient(to left, #FFD700 10%, #cfcfcf 50%);
+        /* Initial background position */
+        background-position: -100%;
+        /* Make sure the gradient covers the entire row. */
+        background-size: 200%;
+        /* Apply the animation. Adjust duration and timing function as desired. */
+        animation: swipeGradient 0.5s linear forwards;
+    }
+
+    #submitButton {
+        /* Your styles here */
+        /* For example: */
+        background-color: #ffc400;
+        color: #000000;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-left:100px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    #submitButton:hover {
+        background-color: #dbaf00;
     }
 </style>
 
@@ -243,7 +274,7 @@ include "../logindbase.php";
             <?php
             echo "<div class='pagination-container'>";
             echo "<label>Page</label>";
-            for ($i = 1; $i <= $total_pages; $i++) {
+            for ($i = 1; $i < $total_pages; $i++) {
                 echo "<a href='$current_page?page=$i' class='page-link'>" . $i . "</a> ";
             }
             echo "<input type='text' id='searchInput' placeholder='Search for names...'>";
@@ -302,17 +333,16 @@ include "../logindbase.php";
         // Retrieve data from the database for open jobs
 
         $sql_jobs = "
-            SELECT job_id, job_subject, creator_name, time_created, job_brief, assigned_artist,
-            CASE
-            WHEN deadline_futureDateTime IS NOT NULL THEN deadline_futureDateTime
-            WHEN manual_deadline_date IS NOT NULL AND manual_deadline_time IS NOT NULL
-                THEN CONCAT(manual_deadline_date, ' ', manual_deadline_time)
+        SELECT job_id, job_subject, creator_name, time_created, job_brief, assigned_artist,
+        CASE
+        WHEN deadline_futureDateTime IS NOT NULL THEN deadline_futureDateTime
+        WHEN manual_deadline_date IS NOT NULL AND manual_deadline_time IS NOT NULL THEN CONCAT(manual_deadline_date, ' ', manual_deadline_time)
             END AS effective_deadline
-            FROM tbl_jobs
+        FROM tbl_jobs
             WHERE job_status = 'open' 
-            AND (assigning_method = 'Open to All' 
-            OR (assigned_artist = '$artistName'))
+            AND (assigning_method = 'Open to All' OR (assigned_artist = '$artistName'))
             ORDER BY 
+            COALESCE(NULLIF(assigned_artist, '') IS NOT NULL, FALSE) DESC,
             CASE WHEN effective_deadline IS NULL THEN 1 ELSE 0 END, 
             effective_deadline ASC
             LIMIT $start_from, $results_per_page";
@@ -320,10 +350,16 @@ include "../logindbase.php";
         $result_jobs = $conn->query($sql_jobs);
         ?>
         <div class="table_container" id="tableView">
+
             <!-- Display the table -->
             <form method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>">
                 <table>
-                    <tr>
+                    <tr class="infoRow">
+                        <th style="background-color: transparent; text-align: left;" colspan="7">
+                            Jobs colored with <div style="display: inline-block; width: 10px; height: 10px; background-color: #FFD700; border-radius: 50%; margin-right: 5px;"></div>are assigned to you.
+                        </th>
+                    </tr>
+                    <tr class="infoRow">
                         <th id="th1">Select</th>
                         <th>Job ID</th>
                         <th>Job Created By</th>
@@ -348,7 +384,7 @@ include "../logindbase.php";
                         </tr>
                     <?php endwhile; ?>
                 </table>
-                <input type="submit" name="press_selectJob" value="Start Selected Job">
+                <input id="submitButton" type="submit" name="press_selectJob" value="Start Selected Job">
             </form>
         </div>
 
@@ -376,34 +412,16 @@ include "../logindbase.php";
             $stmtArtistStatus->bind_param("is", $selectedJobId, $assignedArtist);
             $stmtArtistStatus->execute();
             $stmtArtistStatus->close();
-            header("Refresh:0");
+            header("Location: ./artist_busy.php");
         }
 
-        /*
-        // Check tbl_userlist for new usernames with job_position 'Artist'
-        $sqlCheckNewArtists = "SELECT username FROM tbl_userlist WHERE job_position = 'Artist' AND username NOT IN (SELECT artist_name FROM tbl_artist_status)";
-        $resultCheckNewArtists = $conn->query($sqlCheckNewArtists);
-
-        // Insert new artists into tbl_artist_status
-        if ($resultCheckNewArtists->num_rows > 0) {
-        $insertSql = "INSERT INTO tbl_artist_status (artist_name, artist_status) VALUES (?, 'open')";
-        $stmtInsert = $conn->prepare($insertSql);
-
-        while ($row = $resultCheckNewArtists->fetch_assoc()) {
-        $newArtistName = $row['username'];
-        $stmtInsert->bind_param("s", $newArtistName);
-        $stmtInsert->execute();
-        }
-
-        $stmtInsert->close();
-        }
-        */
 
         // Pagination links for open jobs
         $sql_jobs_total = "SELECT COUNT(*) AS total FROM tbl_jobs WHERE job_status = 'open' AND (assigning_method = 'Open to All' OR assigned_artist = '$artistName')";
         $result_jobs_total = $conn->query($sql_jobs_total);
         $row_jobs_total = $result_jobs_total->fetch_assoc();
         $total_pages_jobs = ceil($row_jobs_total['total'] / $results_per_page);
+        echo "<script>console.log('Total pages: $total_pages_jobs');</script>";
 
         $current_page_jobs = basename($_SERVER['PHP_SELF']);
 
@@ -431,6 +449,9 @@ include "../logindbase.php";
     <script>
         $(document).ready(function() {
             $("#tableView table tbody tr").click(function() {
+                if ($(this).hasClass('infoRow')) {
+                    return false; // Prevent popup overlay for info row
+                }
                 var jobId = $(this).find("td:nth-child(2)").text(); // Assuming Job ID is in the second column
 
                 // Fetch job details
@@ -487,7 +508,7 @@ include "../logindbase.php";
                         console.error("Error fetching images: " + error);
                     }
                 });
-            });
+            }); // End of table row click event
 
             $(document).on('click', '.gallery-image', function(e) {
                 // Check if the image is already enlarged

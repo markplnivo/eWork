@@ -6,6 +6,9 @@ ob_start();
 <html>
 
 <head>
+	<script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+	<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+	<link rel="stylesheet" href="jobDetails.css">
 	<title>Artist Home Page</title>
 	<style>
 		@import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap');
@@ -91,8 +94,8 @@ ob_start();
 		}
 
 		.table_container {
-			grid-template-rows: auto auto auto;
-			grid-template-columns: auto;
+			grid-template-rows: repeat(2, minmax(300px, 400px));
+			grid-template-columns: repeat(3, minmax(300px, 500px));
 		}
 
 		.table_container,
@@ -129,13 +132,6 @@ ob_start();
 			border-bottom: 1px solid #525252;
 		}
 
-		.table_container tr:nth-of-type(even) {
-			background-color: #cfcfcf;
-		}
-
-		.table_container tr:last-of-type {
-			border-bottom: 4px solid #dbaf00;
-		}
 
 		.pagination-container {
 			grid-area: 2 / 1 / 3 / -1;
@@ -168,7 +164,6 @@ ob_start();
 		}
 
 		.jobInfo {
-			background-color: #919191;
 			padding: 10px;
 			margin: 10px;
 			border-radius: 8px;
@@ -176,22 +171,20 @@ ob_start();
 		}
 
 		.jobBrief {
-			background-color: #919191;
 			padding: 10px;
 			margin: 10px;
 			border-radius: 8px;
-			grid-area: 2 / 1 / 3 / 2;
+			grid-area: 1 / 2 / 1 / 3;
 
 		}
 
 		.likertContainer {
-			background-color: #919191;
 			padding: 10px;
 			margin: 10px;
 			border-radius: 8px;
-			grid-area: 3 / 1 / 4 / 2;
+			grid-area: 1 / 3 / 2 / 4;
 			text-align: center;
-			margin: 20px;
+
 		}
 
 
@@ -306,18 +299,27 @@ ob_start();
 
 
 			// Your SQL query
-			$sql = "SELECT job_id, creator_name, time_created, job_brief, job_subject
-        	FROM tbl_jobs
-        	WHERE job_id = ? AND assigned_artist = ?";
-
+			$sql = "SELECT job_id, creator_name, time_created, job_brief, job_subject, manual_deadline_date, manual_deadline_time, deadline_futureDateTime, template_id
+        FROM tbl_jobs
+        WHERE job_id = ? AND assigned_artist = ?";
 			$stmt = $conn->prepare($sql);
 			$stmt->bind_param("ss", $_SESSION['artist_currentJob'], $_SESSION['username']);
-			$stmt->execute();
-			$stmt->bind_result($jobId, $createdByAgent, $timeCreated, $jobBrief, $jobSubject);
-			$stmt->fetch();
 			if (!$stmt->execute()) {
 				echo "Error executing query: " . $stmt->error;
 			}
+			$stmt->bind_result(
+				$jobId,
+				$createdByAgent,
+				$timeCreated,
+				$jobBrief,
+				$jobSubject,
+				$manualDeadlineDate,
+				$manualDeadlineTime,
+				$deadlineFutureDateTime,
+				$templateId
+			);
+			// Fetch the results
+			$stmt->fetch();
 			$stmt->close();
 
 			// Check if the form is submitted
@@ -326,6 +328,7 @@ ob_start();
 				$completionPercentage = $_POST["completionPercentage"];
 				$artist_currentJob = $_SESSION['artist_currentJob'];
 
+				/*
 				$sql = "UPDATE tbl_jobs SET job_status = 'completed' WHERE job_id = ?";
 				$stmt = $conn->prepare($sql);
 				$stmt->bind_param("i", $artist_currentJob);
@@ -337,6 +340,7 @@ ob_start();
 					echo "No job found with the provided ID.";
 				}
 				$stmt->close();
+				*/
 
 				// Update the completion_percentage in tbl_artist_status
 				$updateSql = "UPDATE tbl_artist_status SET completion_percentage = ? WHERE artist_name = ?";
@@ -353,7 +357,7 @@ ob_start();
 				// Update artist_status to "open" and completion_percentage to 0
 
 
-				$updateStatusSql = "UPDATE tbl_artist_status SET artist_status = 'open', completion_percentage = 0 WHERE artist_name = ?";
+				$updateStatusSql = "UPDATE tbl_artist_status SET artist_status = 'open', completion_percentage = 0, current_jobID = null WHERE artist_name = ?";
 				$stmt = $conn->prepare($updateStatusSql);
 				$stmt->bind_param("s", $artistUsername);
 				$stmt->execute();
@@ -379,6 +383,27 @@ ob_start();
 					<li><strong>Created by Agent:</strong> <?php echo $createdByAgent; ?></li>
 					<li><strong>Time Created:</strong> <?php echo $timeCreated; ?></li>
 				</ul>
+				<?php
+				// Determine which deadline to use
+				if (!empty($manualDeadlineDate) && !empty($manualDeadlineTime)) {
+					$deadline = $manualDeadlineDate . ' ' . $manualDeadlineTime;
+				} else {
+					$deadline = $deadlineFutureDateTime;
+				}
+				// Current datetime
+				$now = new DateTime();
+				// Deadline datetime
+				$deadlineDateTime = new DateTime($deadline);
+				// Time left
+				$timeLeft = $deadlineDateTime->diff($now);
+				// Display the countdown
+				?>
+				<strong>Time Left Until Deadline:</strong>
+				<div class="time-left">
+					<div class="days"><?php echo $timeLeft->format('%a') . ' day(s)'; ?></div>
+					<div class="hours"><?php echo $timeLeft->format('%h') . ' hours'; ?></div>
+					<div class="minutes"><?php echo $timeLeft->format('%i') . ' minutes'; ?></div>
+				</div>
 			</div>
 
 
@@ -405,15 +430,76 @@ ob_start();
 					</form>
 				</div>
 			</div>
+			<div id="jobImages">TEST</div>
 		</div>
 
-	</div>
+
+	</div> <!-- End of main div -->
+
+
+
 </body>
 
-<script src="https://code.jquery.com/jquery-3.5.1.js"></script>
-<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js" integrity="sha256-T0Vest3yCU7pafRw9r+settMBX6JkKN06dqBnpQ8d30=" crossorigin="anonymous"></script>
+
 
 <script type="text/javascript">
+	document.addEventListener('DOMContentLoaded', function() {
+
+		// Directly use PHP variable by echoing it into the JavaScript variable
+		var jobId = <?php echo json_encode($jobId); ?>; // Ensure $jobId is defined and accessible
+
+		fetchReferenceImages(jobId); // Call the function with jobId on page load
+
+		function fetchReferenceImages(jobId) {
+			$.ajax({
+				url: 'fetch_reference_images.php', // Endpoint that returns the image URLs
+				type: 'POST',
+				data: {
+					jobId: jobId
+				},
+				success: function(data) {
+					var images = JSON.parse(data);
+					var imagesHtml = '<div class="image-gallery">';
+
+					// Check if the images array is empty and set a default image
+					if (images.length === 0) {
+						images.push('http://localhost/eWork_collab/upload/default_reference.jpg'); // Replace with the path to your default image
+					}
+
+					images.forEach((url, index) => {
+						// Delay the animation start time for each image
+						var animationDelay = index * 150; // Adjust delay increment for each image
+						imagesHtml += `<img src="${url}" alt="Image" class="gallery-image" style="animation-delay: ${animationDelay}ms;">`;
+					});
+
+					imagesHtml += '</div>';
+					$("#jobImages").html(imagesHtml);
+				},
+				error: function(xhr, status, error) {
+					console.error("Error fetching images: " + error);
+				}
+			});
+		} // End of fetchReferenceImages function
+
+		$(document).on('click', '.gallery-image', function(e) {
+			if ($(this).hasClass('enlarged')) {
+				$(this).removeClass('enlarged');
+			} else {
+				$('.gallery-image').removeClass('enlarged');
+				$(this).addClass('enlarged');
+			}
+			e.stopPropagation();
+		});
+
+		// Click anywhere on the page to minimize the enlarged image
+		$(document).click(function(e) {
+			if (!$(e.target).is('.gallery-image')) {
+				$('.gallery-image.enlarged').removeClass('enlarged');
+			}
+		});
+
+	}); // End of DOMContentLoaded
+
 	// Function to show the range value
 	$(function() {
 		$('.likert_scale input').on('mousemove', function() {

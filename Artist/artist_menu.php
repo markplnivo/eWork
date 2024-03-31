@@ -87,7 +87,7 @@ if ($_SESSION['position'] != 'Artist') {
             height: 100%;
             transition: all 0.1s ease-in-out;
             font-size: 12px;
-            line-height: 25px;
+            line-height: 25px; 
         }
 
         .sidebar ul li #sidebar_link:hover {
@@ -95,6 +95,10 @@ if ($_SESSION['position'] != 'Artist') {
             color: #000000;
             font-weight: bold;
             font-size: 15px;
+        }
+
+        .sidebar ul {
+            overflow-x:hidden;
         }
 
 

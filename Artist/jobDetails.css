@@ -1,0 +1,212 @@
+.jobInfo {
+    border: 1px solid #ccc;
+    /* Add a border around the jobInfo container */
+    padding: 20px;
+    /* Add padding to create some space inside the container */
+    max-width: 400px;
+    /* Set a maximum width for the container */
+    margin: 0 auto;
+    /* Center the container horizontally */
+    background-color: #cfcfcf;
+}
+
+.jobInfo h3 {
+    margin-top: 0;
+    /* Remove default margin from the h3 element */
+    font-size: 20px;
+    /* Set font size for the heading */
+    color: #333;
+    /* Set color for the heading */
+}
+
+.jobInfo ul {
+    list-style-type: none;
+    /* Remove default list styles */
+    padding: 0;
+    /* Remove default padding */
+}
+
+.jobInfo ul li {
+    margin-bottom: 10px;
+    /* Add some space between list items */
+}
+
+.jobInfo ul li strong {
+    display: inline-block;
+    /* Make the strong tag inline-block */
+    width: 150px;
+    /* Set a fixed width for strong tags */
+}
+
+.jobInfo ul li strong::after {
+    content: ":";
+    /* Add a colon after each strong tag */
+    margin-right: 5px;
+    /* Add some space between the strong tag and the colon */
+}
+
+.jobBrief {
+    border: 1px solid #ccc;
+    /* Add a border around the jobBrief container */
+    padding: 20px;
+    /* Add padding to create some space inside the container */
+    max-width: 400px;
+    /* Set a maximum width for the container */
+    margin: 0 auto;
+    /* Center the container horizontally */
+    background-color: #cfcfcf;
+}
+
+.jobBrief strong {
+    display: block;
+    /* Display strong tags as block elements */
+    margin-bottom: 10px;
+    /* Add some space between strong tags */
+}
+
+.jobBrief strong::after {
+    content: ":";
+    /* Add a colon after each strong tag */
+    margin-right: 5px;
+    /* Add some space between the strong tag and the colon */
+}
+
+.likertContainer {
+    border: 1px solid #ccc;
+    /* Add a border around the likertContainer */
+    padding: 10px;
+    /* Add padding to create some space inside the container */
+    max-width: 400px;
+    /* Set a maximum width for the container */
+    margin: 0 auto;
+    /* Center the container horizontally */
+    background-color: #cfcfcf;
+}
+
+.likert_scale {
+    margin-bottom: 20px;
+    /* Add some space below the likert_scale */
+}
+
+#likertTitle {
+    font-weight: bold;
+    /* Make the likertTitle text bold */
+    margin-bottom: 10px;
+    /* Add some space below the likertTitle */
+}
+
+#likertSpan {
+    display: inline-block;
+    /* Make the likertSpan inline-block */
+    width: 40px;
+    /* Set a fixed width for the likertSpan */
+    text-align: center;
+    /* Center-align the text inside likertSpan */
+    margin-right: 10px;
+    /* Add some space to the right of likertSpan */
+}
+
+#likertScale {
+    width: 100%;
+    /* Make the likertScale input fill its parent container */
+}
+
+.submitButton {
+    display: block;
+    /* Display the submit button as a block element */
+    width: 100%;
+    /* Make the submit button fill its parent container */
+    margin-top: 10px;
+    /* Add some space above the submit button */
+}
+
+#DEBUG BUTTON {
+    margin-top: 20px;
+    /* Add some space above the DEBUG BUTTON section */
+}
+
+#debugOpen {
+    display: inline-block;
+    /* Make the debugOpen form inline-block */
+}
+
+#debugOpen input[type="submit"] {
+    display: block;
+    /* Display the submit button as a block element */
+    margin-top: 10px;
+    /* Add some space above the submit button */
+}
+
+.time-left {
+    display: flex;
+    gap: 10px;
+    /* Adjust the space between each unit */
+}
+
+.time-left>div {
+    padding: 5px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    /* Soft shadow for depth */
+    font-size: 26px;
+    /* Increase the font size to 20 pixels */
+}
+
+.days {
+    background-color: #ffcccc;
+    /* Light red */
+}
+
+.hours {
+    background-color: #ccffcc;
+    /* Light green */
+}
+
+.minutes {
+    background-color: #ccccff;
+    /* Light blue */
+}
+
+#jobImages {
+    grid-row: 2 / span 1;
+    /* Span the second row */
+    grid-column: 1 / span 3;
+    /* Cover all three columns */
+    width: fit-content;
+    /* Set width to auto */
+    background-color: #cfcfcf;
+    border-radius: 10px;
+    display: flex; /* Use flexbox */
+    justify-content: center; /* Center items horizontally */
+    align-items: center; /* Center items vertically */
+}
+
+.gallery-image {
+    width: 250px;
+    height: 250px;
+    object-fit: cover;
+    border-radius: 5px;
+    opacity: 0;
+    transition: all 0.3s ease;
+    animation: fadeImg 0.8s forwards;
+}
+
+.gallery-image.enlarged {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(1.5);
+    z-index: 100;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    max-height: 50%;
+    max-width: 50%;
+    height: auto;
+    width: auto;
+}
+
+@keyframes fadeImg {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+

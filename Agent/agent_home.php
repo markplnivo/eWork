@@ -388,55 +388,7 @@ $conn->close();
     </div>
 
     <?php
-    if (isset($_POST['submitJobCreation'])) {
 
-        /*
-        $jobSubject = $_POST['job-subject'];
-        $jobBrief = $_POST['job-brief'];
-        $assignTo = $_POST['assign-to'];
-        $useTemplate = $_POST['use-template'];
-        $selectedArtistName = $_POST['selected-artist-name'];
-        $selectedTemplateName = $_POST['selectedTemplateName'];
-        $jobTracking = $_POST['job-tracking'];
-
-
-        // Initialize an array to hold process details
-        $processDetails = [];
-        // Process structured process durations
-        if (isset($_POST['processDuration']) && is_array($_POST['processDuration'])) {
-            foreach ($_POST['processDuration'] as $processId => $duration) {
-                // Process ID is directly available, and duration is the corresponding value
-                $processDetails[] = "Process ID $processId Duration: $duration minutes";
-            }
-        }
-
-        // Iterate through $_POST to find process duration inputs
-        foreach ($_POST as $key => $value) {
-            if (strpos($key, 'processName_') === 0) {
-                $index = str_replace('processName_', '', $key);
-                $processName = $value;
-                $processDuration = $_POST["processDuration_" . $index] ?? 'Not specified';
-                $processDetails[] = "$processName Duration: $processDuration minutes";
-            }
-        }
-
-
-
-        $futureDateTime = $_POST['futureDateTime'] ?? 'Not Available';
-        $processDetailsString = implode("\\n", $processDetails);
-        // Output the script to show the alert with job and process details
-        echo "<script>alert('Job Subject: $jobSubject" .
-            "\\nJob Brief: $jobBrief" .
-            "\\nAssign to: $assignTo" .
-            "\\nUse Template to Determine Time: $useTemplate" .
-            "\\nSelected Artist Name: $selectedArtistName" .
-            "\\nSelected Template Name: $selectedTemplateName" .
-            "\\n" . $processDetailsString . // Include process details in the alert
-            "\\nFuture Date and Time: $futureDateTime" . // Include future date and time
-            "\\nJob Tracking: $jobTracking" .
-            "');</script>";
-            */
-    }
 
     ?>
     <script type="text/javascript">
@@ -462,25 +414,11 @@ $conn->close();
                 event.preventDefault(); // Prevent the default form submission
 
                 var formData = new FormData(this);
-                // Log formData for debugging
-                // Append process durations and their IDs to formData
-
-                /*$('.user-duration, .predefined-duration').each(function(index, input) {
-                    var processId = $(this).data('process-id');
-                    var duration = $(this).val();
-                    formData.append(`processes[${index}][id]`, processId);
-                    formData.append(`processes[${index}][duration]`, duration);
-                    // Retrieve and append the selected option value for each process
-                    var selectedOption = $(this).closest('li').find('.process-option').val();
-                    formData.append(`processes[${index}][option]`, selectedOption);
-                });*/
-
                 // New logic to append process details using the structured naming convention
                 $('.process-row').each(function(index, processRow) {
                     var processId = $(processRow).data('process-id'); // Assuming processId is stored as data attribute
                     var duration = $(processRow).find('.process-duration').val(); // Assuming you have an input with class 'process-duration'
                     var option = $(processRow).find('.process-option').val(); // Assuming select class 'process-option'
-
                     formData.append(`processes[${index}][id]`, processId);
                     formData.append(`processes[${index}][duration]`, duration);
                     formData.append(`processes[${index}][option]`, option);
@@ -496,7 +434,6 @@ $conn->close();
                     success: function(response) {
                         var job_id = JSON.parse(response).job_id; // Parse response to get job_id
                         console.log("Job created successfully with ID:", job_id);
-
                         // Check if there are files to upload
                         var files = $("#referenceImage")[0].files;
                         if (files.length > 0) {
@@ -519,6 +456,7 @@ $conn->close();
                             Promise.all(uploadPromises).then(() => {
                                 console.log("All files uploaded successfully.");
                                 $('#jobForm').trigger("reset");
+                                window.location.reload(true); // refresh the page
                             }).catch((error) => {
                                 console.log([...formData]);
                                 console.error("Error during file upload:", error);
@@ -527,8 +465,9 @@ $conn->close();
                         } else {
                             // If no files, just show success log and reset form
                             $('#jobForm').trigger("reset");
+                            window.location.reload(true);
                         }
-                    },
+                    }, // End of success callback
                     error: function() {
 
                         console.log("Error creating job.");
