@@ -8,11 +8,11 @@ $jobId = $_POST['job_id']; // The job_id to associate the uploaded file with
 $allowed = ["jpg" => "image/jpg", "jpeg" => "image/jpeg", "gif" => "image/gif", "png" => "image/png"];
 $maxsize = 5 * 1024 * 1024; // 5MB maximum
 
-/*
+
 if (!isset($_FILES['referenceImage']) || !is_array($_FILES['referenceImage']['name'])) {
     die("Error: No files uploaded or invalid file data.");
 }
-*/
+
 $files = $_FILES['referenceImage'];
 
 if (!is_array($files['name'])) {

@@ -6,6 +6,7 @@ ob_start();
 <html>
 
 <head>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 	<script src="https://code.jquery.com/jquery-3.5.1.js"></script>
 	<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 	<link rel="stylesheet" href="jobDetails.css">
@@ -95,7 +96,7 @@ ob_start();
 
 		.table_container {
 			grid-template-rows: repeat(2, minmax(300px, 400px));
-			grid-template-columns: repeat(3, minmax(300px, 500px));
+			grid-template-columns: repeat(4, minmax(300px, 500px));
 		}
 
 		.table_container,
@@ -253,6 +254,15 @@ ob_start();
 			top: 50%;
 			transform: translateY(-50%) rotate(-90deg);
 		}
+
+		.progressImages {
+			grid-area: 1 / 4 / 2 / 4;
+			padding: 10px;
+			margin: 10px;
+			border-radius: 8px;
+			text-align: center;
+			background-color: #cfcfcf;
+		}
 	</style>
 </head>
 
@@ -276,10 +286,10 @@ ob_start();
 		<div class="content-header">
 			<h2 class="content-title"></h2>
 			<?php
-
+			$artistUsername = $_SESSION['username'];
 			$sql = "SELECT current_jobID FROM tbl_artist_status WHERE artist_name = ?";
 			$stmt = $conn->prepare($sql);
-			$stmt->bind_param("s", $artistName);
+			$stmt->bind_param("s", $artistUsername);
 			$stmt->execute();
 			$result = $stmt->get_result();
 
@@ -300,8 +310,8 @@ ob_start();
 
 			// Your SQL query
 			$sql = "SELECT job_id, creator_name, time_created, job_brief, job_subject, manual_deadline_date, manual_deadline_time, deadline_futureDateTime, template_id
-        FROM tbl_jobs
-        WHERE job_id = ? AND assigned_artist = ?";
+        	FROM tbl_jobs
+        	WHERE job_id = ? AND assigned_artist = ?";
 			$stmt = $conn->prepare($sql);
 			$stmt->bind_param("ss", $_SESSION['artist_currentJob'], $_SESSION['username']);
 			if (!$stmt->execute()) {
@@ -322,34 +332,10 @@ ob_start();
 			$stmt->fetch();
 			$stmt->close();
 
+
 			// Check if the form is submitted
 			if (isset($_POST["submitLikert"])) {
-				$artistUsername = $_SESSION['username'];
-				$completionPercentage = $_POST["completionPercentage"];
-				$artist_currentJob = $_SESSION['artist_currentJob'];
-
-				/*
-				$sql = "UPDATE tbl_jobs SET job_status = 'completed' WHERE job_id = ?";
-				$stmt = $conn->prepare($sql);
-				$stmt->bind_param("i", $artist_currentJob);
-				$stmt->execute();
-				// Check for success or handle errors
-				if ($stmt->affected_rows > 0) {
-					echo "Job status updated successfully.";
-				} else {
-					echo "No job found with the provided ID.";
-				}
-				$stmt->close();
-				*/
-
-				// Update the completion_percentage in tbl_artist_status
-				$updateSql = "UPDATE tbl_artist_status SET completion_percentage = ? WHERE artist_name = ?";
-				$stmt = $conn->prepare($updateSql);
-				$stmt->bind_param("ss", $completionPercentage, $artistUsername);
-				$stmt->execute();
-				$stmt->close();
-				header("Refresh:0");
-			}
+			} // End of submitLikert check
 
 			if (isset($_POST["setOpen"])) {
 				$artistUsername = $_SESSION['username'];
@@ -365,8 +351,8 @@ ob_start();
 				header("Location: ./artist_home.php");
 				exit();
 			}
-			// Close the database connection here to avoid issues
-			$conn->close();
+
+			echo "$jobId"
 			?>
 
 			<div class="view-buttons">
@@ -413,6 +399,25 @@ ob_start();
 				<strong>Job Brief:</strong> <?php echo $jobBrief; ?>
 			</div>
 
+			<?php //PHP for likert scale
+			// Prepare the SQL query
+			$query = "SELECT completion_percentage FROM tbl_artist_status WHERE artist_name = ?";
+			if ($stmt = $conn->prepare($query)) {
+				$stmt->bind_param("s", $artistUsername);
+				$stmt->execute();
+				$stmt->bind_result($completionPercentage);
+				if ($stmt->fetch()) {
+					// $completionPercentage now has the value from the database
+				} else {
+					$completionPercentage = 0; // Default to 0 if not found
+				}
+				$stmt->close();
+			} else {
+				// Handle error
+				$completionPercentage = 0; // Default to 0 in case of an error
+			}
+			//End of PHP for likert scale
+			?>
 
 			<!-- Likert scale form -->
 			<div class="likertContainer">
@@ -420,22 +425,38 @@ ob_start();
 					<div class="likert_scale">
 						<p id="likertTitle"><strong>Completion Percentage:</strong></p>
 						<span id="likertSpan">0%</span>
-						<input id="likertScale" type="range" min='0' max='100' step='25' value='0' />
+						<input id="likertScale" type="range" min="0" max="100" step="25" value="<?php echo $completionPercentage; ?>" name="completionPercentage" />
 					</div>
 					<input type="submit" name="submitLikert" value="Submit" class="submitButton">
 				</form>
+
 				<div id="DEBUG BUTTON">
 					<form action="artist_busy.php" method="post" id="debugOpen">
 						<input type="submit" name="setOpen" value="debugOpen">
 					</form>
 				</div>
 			</div>
-			<div id="jobImages">TEST</div>
-		</div>
 
+			<!-- Reference images container -->
+			<div id="jobImages">TEST</div>
+
+			<!-- Progress images container -->
+			<div class="progressImages">
+				<form id="progressImageUploadForm" action="javascript:void(0);" method="post" enctype="multipart/form-data">
+					<div class="progressImageContainer">
+						<label for="progressImage">Reference Image:</label>
+						<img id="defaultProgressImagePreview" src="../upload/default_reference.jpg" alt="Design Reference Preview" />
+						<div id="progressImagePreviewContainer"></div>
+						<input type="file" id="progressImage" name="progressImage[]" accept="image/*" multiple>
+					</div>
+					<input type="submit" name="submitProgressImage" value="Upload Reference Image" class="submitButton">
+				</form>
+			</div>
+
+
+		</div> <!-- End of table_container div -->
 
 	</div> <!-- End of main div -->
-
 
 
 </body>
@@ -449,7 +470,6 @@ ob_start();
 		var jobId = <?php echo json_encode($jobId); ?>; // Ensure $jobId is defined and accessible
 
 		fetchReferenceImages(jobId); // Call the function with jobId on page load
-
 		function fetchReferenceImages(jobId) {
 			$.ajax({
 				url: 'fetch_reference_images.php', // Endpoint that returns the image URLs
@@ -481,6 +501,102 @@ ob_start();
 			});
 		} // End of fetchReferenceImages function
 
+		// Handle file input change event for progress images
+		document.getElementById('progressImage').addEventListener('change', function(event) {
+			const progressImagePreviewContainer = document.getElementById('progressImagePreviewContainer');
+			const defaultProgressImagePreview = document.getElementById('defaultProgressImagePreview');
+
+			// Clear out any existing dynamic previews
+			progressImagePreviewContainer.innerHTML = '';
+
+			const files = event.target.files;
+			if (files.length > 0) {
+				// Hide the default preview image
+				defaultProgressImagePreview.style.display = 'none';
+
+				Array.from(files).forEach(file => {
+					if (file.type.startsWith('image/')) {
+						const img = document.createElement('img');
+						img.classList.add('progressImagePreview'); // Adjust class for styling
+						img.src = URL.createObjectURL(file);
+						img.onload = function() {
+							URL.revokeObjectURL(img.src); // Clean up memory
+						};
+
+						// Append the dynamically created img element
+						progressImagePreviewContainer.appendChild(img);
+					}
+				});
+			} else {
+				// If no files are selected, revert to the default image
+				defaultProgressImagePreview.style.display = 'block';
+			}
+		}); // End of file input change event
+
+		// Handling form submission for file uploading
+		$('#progressImageUploadForm').on('submit', function(e) {
+			e.preventDefault();
+
+			var jobId = <?php echo json_encode($jobId); ?>; // Ensure $jobId is defined and accessible
+
+			var files = $('#progressImage')[0].files;
+			if (files.length > 0) {
+				var uploadPromises = Array.from(files).map(function(file) {
+					var fileData = new FormData();
+					fileData.append("progressImage[]", file); // Add each file under the same name
+					fileData.append("job_id", jobId); // Add the job ID for each file
+					console.log("Uploading file:", file.name); // Log the file name for debugging
+					return $.ajax({
+						url: 'upload_progress_file.php', // Endpoint for file upload
+						type: 'POST',
+						data: fileData,
+						processData: false,
+						contentType: false
+					});
+				});
+
+				Promise.all(uploadPromises).then(function() {
+					console.log("All files uploaded successfully.");
+					// Update UI or refresh the page as needed
+					//window.location.reload(true);
+				}).catch(function(error) {
+					console.error("Error during file upload:", error);
+					alert("An error occurred during the file upload.");
+				});
+			} else {
+				alert("Please select files to upload.");
+			}
+		}); // End of form submission event
+
+
+		// Submit the form when the range value changes
+		$('#likertScale').on('input change', function() {
+			var completionPercentage = $(this).val();
+			$('#likertSpan').text(completionPercentage + '%'); // Update the display
+
+			// Send AJAX request
+			$.ajax({
+				url: 'update_completion_percentage.php', // Path to your PHP script
+				type: 'POST',
+				data: {
+					completionPercentage: completionPercentage,
+					artistUsername: '<?php echo $_SESSION['username']; ?>', // Assuming the username is stored in session
+					// artist_currentJob: '<?php echo $_SESSION['artist_currentJob']; ?>' // If you also need to pass the current job ID
+				},
+				success: function(response) {
+					// Handle successful update
+					console.log("Update successful: ", response);
+					// Optionally, display a success message or update the UI accordingly
+				},
+				error: function(xhr, status, error) {
+					// Handle error
+					console.error("Update failed: ", error);
+					// Optionally, display an error message
+				}
+			});
+		}); // End of range input event
+
+		// Click event to enlarge the image
 		$(document).on('click', '.gallery-image', function(e) {
 			if ($(this).hasClass('enlarged')) {
 				$(this).removeClass('enlarged');
@@ -489,7 +605,7 @@ ob_start();
 				$(this).addClass('enlarged');
 			}
 			e.stopPropagation();
-		});
+		}); // End of click event to enlarge the image
 
 		// Click anywhere on the page to minimize the enlarged image
 		$(document).click(function(e) {
@@ -513,4 +629,5 @@ ob_start();
 
 
 </html>
+<?php $conn->close(); ?>
 <?php ob_end_flush(); ?>
