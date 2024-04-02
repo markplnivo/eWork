@@ -80,7 +80,7 @@ if ($_SESSION['position'] != 'Superadmin') {
     position: fixed;
     top: 0;
     left: -100%;
-    width: 300px;
+    width: 250px;
     height: 100%;
     margin: 0;
     padding: 80px 0;
@@ -122,7 +122,7 @@ if ($_SESSION['position'] != 'Superadmin') {
 
   .menu_item:hover {
     background-color: #ffc400;
-	font-size: 25px;
+	  font-size: 25px;
   }
 
   body.menu-open {

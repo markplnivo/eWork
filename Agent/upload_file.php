@@ -9,10 +9,6 @@ $allowed = ["jpg" => "image/jpg", "jpeg" => "image/jpeg", "gif" => "image/gif", 
 $maxsize = 5 * 1024 * 1024; // 5MB maximum
 
 
-if (!isset($_FILES['referenceImage']) || !is_array($_FILES['referenceImage']['name'])) {
-    die("Error: No files uploaded or invalid file data.");
-}
-
 $files = $_FILES['referenceImage'];
 
 if (!is_array($files['name'])) {

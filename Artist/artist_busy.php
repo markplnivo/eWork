@@ -95,12 +95,17 @@ ob_start();
 		}
 
 		.table_container {
-			grid-template-rows: repeat(2, minmax(300px, 400px));
-			grid-template-columns: repeat(4, minmax(300px, 500px));
+			grid-template-rows: 10% 55% 35%;
+			grid-template-columns: repeat(3, minmax(20%, 35%));
+		}
+
+		.upload_container {
+			grid-template-rows: 10% 55% 35%;
+			grid-template-columns: repeat(3, minmax(20%, 35%));
 		}
 
 		.table_container,
-		.card_container {
+		.upload_container {
 			display: grid;
 			background-color: #919191;
 			grid-area: 3 / 2 / -1 / -1;
@@ -168,48 +173,52 @@ ob_start();
 			padding: 10px;
 			margin: 10px;
 			border-radius: 8px;
-			grid-area: 1 / 1 / 2 / 2;
+			grid-area: 2 / 1 / 3 / 2;
+			grid-row: 2 / 3;
+			grid-column: 1 / span 2;
 		}
 
 		.jobBrief {
 			padding: 10px;
 			margin: 10px;
 			border-radius: 8px;
-			grid-area: 1 / 2 / 1 / 3;
-
 		}
 
 		.likertContainer {
 			padding: 10px;
 			margin: 10px;
 			border-radius: 8px;
-			grid-area: 1 / 3 / 2 / 4;
+			grid-row: 3 / 4;
+			grid-column: 1 / span 2;
 			text-align: center;
-
+			height: 30%;
+			overflow-y: hidden;
+			font-size: 0.8vw;
 		}
 
 
 		.likert_scale {
 			display: grid;
-			grid-template-columns: auto;
-			grid-template-rows: 30px 30px 30px;
+			grid-template-columns: auto auto;
+			grid-template-rows: 30px 30px;
+			height: 100%;
 		}
-
 
 		#likertTitle {
 			grid-area: 1 / 1 / 2 / 2;
 			align-self: center;
-			justify-self: center;
+			justify-self: end;
 		}
 
 		#likertSpan {
-			grid-area: 2 / 1 / 3 / 2;
+			grid-area: 1 / 2 / 2 / 3;
 			align-self: center;
-			justify-self: center;
+			justify-self: start;
 		}
 
 		#likertScale {
-			grid-area: 3 / 1 / 4 / 2;
+			grid-row: 2 / 3;
+			grid-column: 1/ span 2;
 			align-self: center;
 			justify-self: center;
 		}
@@ -257,11 +266,79 @@ ob_start();
 
 		.progressImages {
 			grid-area: 1 / 4 / 2 / 4;
+			grid-row: 1 / span 3;
+			grid-column: 3 / 4;
 			padding: 10px;
 			margin: 10px;
 			border-radius: 8px;
 			text-align: center;
 			background-color: #cfcfcf;
+			height: 80%;
+		}
+
+		.deadlineContainer {
+			border: 1px solid #ccc;
+			padding: 10px;
+			max-width: 400px;
+			margin: 0 auto;
+			background-color: #cfcfcf;
+			grid-area: 1 / 1 / 2 / 4;
+		}
+
+		.timeContainer {
+			grid-area: 1 / 1 / 2 / 2;
+			padding: 10px;
+			margin: 10px;
+			border-radius: 8px;
+			text-align: center;
+			background-color: #cfcfcf;
+			overflow-y: hidden;
+		}
+
+		#goToUploadPage {
+			grid-area: 1 / 2 / 2 / 3;
+			padding: 10px;
+			margin: 10px;
+			border-radius: 8px;
+			text-align: center;
+			background-color: #cfcfcf;
+		}
+
+
+		#goToMainPage {
+			grid-area: 1 / 2 / 2 / 3;
+			padding: 10px;
+			margin: 10px;
+			border-radius: 8px;
+			text-align: center;
+			background-color: #cfcfcf;
+			font-size: 0.8vw;
+		}
+
+		.ArtistOnlyDeadline {
+			grid-template-rows: auto auto;
+			height: 100%;
+			align-content: center;
+			font-size: 0.8vw;
+		}
+
+		.uploadButton {
+			grid-row: 3 / 4;
+			grid-column: 2 / 3;
+			height: 30%;
+			width: 50%;
+			justify-self: end;
+			margin: 10px;
+			cursor: pointer;
+		}
+
+		.uploadButton:disabled {
+			color: #000000;
+			cursor: not-allowed;
+		}
+
+		.time-leftTitle {
+			grid-column: 1 / span 3;
 		}
 	</style>
 </head>
@@ -309,7 +386,16 @@ ob_start();
 
 
 			// Your SQL query
-			$sql = "SELECT job_id, creator_name, time_created, job_brief, job_subject, manual_deadline_date, manual_deadline_time, deadline_futureDateTime, template_id
+			$sql = "SELECT job_id, 
+			creator_name, 
+			time_created, 
+			job_brief, 
+			job_subject, 
+			manual_deadline_date, 
+			manual_deadline_time, 
+			deadline_futureDateTime, 
+			template_id,
+			job_tracking_method
         	FROM tbl_jobs
         	WHERE job_id = ? AND assigned_artist = ?";
 			$stmt = $conn->prepare($sql);
@@ -326,7 +412,8 @@ ob_start();
 				$manualDeadlineDate,
 				$manualDeadlineTime,
 				$deadlineFutureDateTime,
-				$templateId
+				$templateId,
+				$jobTrackingMethod
 			);
 			// Fetch the results
 			$stmt->fetch();
@@ -334,8 +421,18 @@ ob_start();
 
 
 			// Check if the form is submitted
-			if (isset($_POST["submitLikert"])) {
-			} // End of submitLikert check
+			if (isset($_POST["submit_CompleteJob"])) {
+				$artistUsername = $_SESSION['username'];
+				$_SESSION['busy'] = 'open';
+
+				$updateStatusSql = "UPDATE tbl_artist_status SET artist_status = 'open', completion_percentage = 0, current_jobID = null WHERE artist_name = ?";
+				$stmt = $conn->prepare($updateStatusSql);
+				$stmt->bind_param("s", $artistUsername);
+				$stmt->execute();
+				$stmt->close();
+				header("Location: ./artist_home.php");
+				exit();
+			}
 
 			if (isset($_POST["setOpen"])) {
 				$artistUsername = $_SESSION['username'];
@@ -352,7 +449,20 @@ ob_start();
 				exit();
 			}
 
-			echo "$jobId"
+			// Countdown timer
+			// Determine which deadline to use
+			if (!empty($manualDeadlineDate) && !empty($manualDeadlineTime)) {
+				$deadline = $manualDeadlineDate . ' ' . $manualDeadlineTime;
+			} else {
+				$deadline = $deadlineFutureDateTime;
+			}
+			// Current datetime
+			$now = new DateTime();
+			// Deadline datetime
+			$deadlineDateTime = new DateTime($deadline);
+			// Time left
+			$timeLeft = $deadlineDateTime->diff($now);
+			// Display the countdown
 			?>
 
 			<div class="view-buttons">
@@ -361,7 +471,24 @@ ob_start();
 			</div>
 		</div>
 
-		<div class="table_container">
+		<div class="upload_container">
+
+			<button id="goToMainPage">Go to Job Page</button>
+			<!-- Upload Time Container-->
+			<div class="timeContainer">
+				<div class="ArtistOnlyDeadline">
+					<b>This job is being tracked by input from Artist.</b>
+					<b>Use the progress slider below to update the completion percentage.</b>
+				</div>
+
+				<div class="time-left">
+					<b class="time-leftTitle">Time Left Until Deadline:</b>
+					<div class="days"><?php echo $timeLeft->format('%a') . ' day(s)'; ?></div>
+					<div class="hours"><?php echo $timeLeft->format('%h') . ' hours'; ?></div>
+					<div class="minutes"><?php echo $timeLeft->format('%i') . ' minutes'; ?></div>
+				</div>
+			</div><!-- End of upload_timeContainer div -->
+
 			<div class="jobInfo">
 				<h3>Current Job Information</h3>
 				<ul>
@@ -369,35 +496,82 @@ ob_start();
 					<li><strong>Created by Agent:</strong> <?php echo $createdByAgent; ?></li>
 					<li><strong>Time Created:</strong> <?php echo $timeCreated; ?></li>
 				</ul>
-				<?php
-				// Determine which deadline to use
-				if (!empty($manualDeadlineDate) && !empty($manualDeadlineTime)) {
-					$deadline = $manualDeadlineDate . ' ' . $manualDeadlineTime;
-				} else {
-					$deadline = $deadlineFutureDateTime;
-				}
-				// Current datetime
-				$now = new DateTime();
-				// Deadline datetime
-				$deadlineDateTime = new DateTime($deadline);
-				// Time left
-				$timeLeft = $deadlineDateTime->diff($now);
-				// Display the countdown
-				?>
-				<strong>Time Left Until Deadline:</strong>
+
+				<div id="DEBUG BUTTON">
+					<form action="artist_busy.php" method="post" id="debugOpen">
+						<input type="submit" name="setOpen" value="debugOpen">
+					</form>
+				</div>
+
+				<div class="jobBrief">
+					<strong>Job Subject:</strong> <?php echo $jobSubject; ?>
+					<br>
+					<strong>Job Brief:</strong> <?php echo $jobBrief; ?>
+				</div>
+			</div>
+
+			<!-- Progress images container -->
+			<div class="progressImages">
+				<form id="progressImageUploadForm" action="artist_busy.php" method="post" enctype="multipart/form-data">
+					<div class="progressImageContainer">
+						<label for="progressImage">Upload Your Work Below:</label>
+						<img id="defaultProgressImagePreview" src="../upload/default_reference.jpg" alt="Design Reference Preview" />
+						<div id="progressImagePreviewContainer"></div>
+						<input type="file" id="progressImage" name="progressImage[]" accept="image/*" multiple>
+					</div>
+				</form>
+			</div>
+
+
+			<input type="submit" form="progressImageUploadForm" name="submit_CompleteJob" value="Upload & Complete" class="uploadButton" disabled>
+
+
+
+		</div>
+
+
+
+		<div class="table_container">
+
+			<button id="goToUploadPage">Go to Upload Page</button>
+
+			<div class="timeContainer">
+				<div class="ArtistOnlyDeadline">
+					<b>This job is being tracked by input from Artist.</b>
+					<b>Use the progress slider below to update the completion percentage.</b>
+				</div>
+
 				<div class="time-left">
+					<b class="time-leftTitle">Time Left Until Deadline:</b>
 					<div class="days"><?php echo $timeLeft->format('%a') . ' day(s)'; ?></div>
 					<div class="hours"><?php echo $timeLeft->format('%h') . ' hours'; ?></div>
 					<div class="minutes"><?php echo $timeLeft->format('%i') . ' minutes'; ?></div>
 				</div>
 			</div>
 
+			<div class="jobInfo">
+				<h3>Current Job Information</h3>
+				<ul>
+					<li><strong>Job ID:</strong> <?php echo $jobId; ?></li>
+					<li><strong>Created by Agent:</strong> <?php echo $createdByAgent; ?></li>
+					<li><strong>Time Created:</strong> <?php echo $timeCreated; ?></li>
+				</ul>
 
-			<div class="jobBrief">
-				<strong>Job Subject:</strong> <?php echo $jobSubject; ?>
-				<br>
-				<strong>Job Brief:</strong> <?php echo $jobBrief; ?>
+				<div id="DEBUG BUTTON">
+					<form action="artist_busy.php" method="post" id="debugOpen">
+						<input type="submit" name="setOpen" value="debugOpen">
+					</form>
+				</div>
+
+				<div class="jobBrief">
+					<strong>Job Subject:</strong> <?php echo $jobSubject; ?>
+					<br>
+					<strong>Job Brief:</strong> <?php echo $jobBrief; ?>
+				</div>
 			</div>
+
+
+
 
 			<?php //PHP for likert scale
 			// Prepare the SQL query
@@ -420,38 +594,24 @@ ob_start();
 			?>
 
 			<!-- Likert scale form -->
-			<div class="likertContainer">
-				<form action="artist_busy.php" method="post" id="likert_container">
-					<div class="likert_scale">
-						<p id="likertTitle"><strong>Completion Percentage:</strong></p>
-						<span id="likertSpan">0%</span>
-						<input id="likertScale" type="range" min="0" max="100" step="25" value="<?php echo $completionPercentage; ?>" name="completionPercentage" />
-					</div>
-					<input type="submit" name="submitLikert" value="Submit" class="submitButton">
-				</form>
-
-				<div id="DEBUG BUTTON">
-					<form action="artist_busy.php" method="post" id="debugOpen">
-						<input type="submit" name="setOpen" value="debugOpen">
+			<?php if ($jobTrackingMethod != "deadline") : ?>
+				<div class="likertContainer">
+					<form action="artist_busy.php" method="post" id="likert_container">
+						<div class="likert_scale">
+							<p id="likertTitle"><strong>Completion Percentage:</strong></p>
+							<span id="likertSpan">0%</span>
+							<input id="likertScale" type="range" min="0" max="100" step="25" value="<?php echo $completionPercentage; ?>" name="completionPercentage" />
+						</div>
+						<!-- <input type="submit" name="submitLikert" value="Submit" class="submitButton"> -->
 					</form>
 				</div>
-			</div>
+			<?php endif; ?>
+
 
 			<!-- Reference images container -->
-			<div id="jobImages">TEST</div>
-
-			<!-- Progress images container -->
-			<div class="progressImages">
-				<form id="progressImageUploadForm" action="javascript:void(0);" method="post" enctype="multipart/form-data">
-					<div class="progressImageContainer">
-						<label for="progressImage">Reference Image:</label>
-						<img id="defaultProgressImagePreview" src="../upload/default_reference.jpg" alt="Design Reference Preview" />
-						<div id="progressImagePreviewContainer"></div>
-						<input type="file" id="progressImage" name="progressImage[]" accept="image/*" multiple>
-					</div>
-					<input type="submit" name="submitProgressImage" value="Upload Reference Image" class="submitButton">
-				</form>
+			<div id="jobImages">
 			</div>
+
 
 
 		</div> <!-- End of table_container div -->
@@ -468,6 +628,61 @@ ob_start();
 
 		// Directly use PHP variable by echoing it into the JavaScript variable
 		var jobId = <?php echo json_encode($jobId); ?>; // Ensure $jobId is defined and accessible
+		// var jobTrackingMethod = "<?php echo htmlspecialchars($jobTrackingMethod, ENT_QUOTES, 'UTF-8'); ?>";
+		var jobTrackingMethod = "<?php echo $jobTrackingMethod; ?>"; // Assuming $jobTrackingMethod is available in PHP
+		var deadline = "<?php echo $deadline; ?>"; // Assuming $deadline is available in PHP
+		var goToUploadPage = document.getElementById('goToUploadPage');
+		var goToMainPage = document.getElementById('goToMainPage');
+		var fileInput = document.getElementById('progressImage');
+		var submitButton = document.querySelector('.uploadButton');
+		var slider = document.getElementById('likertScale');
+		var disable_UploadButton = document.getElementById('goToUploadPage');
+
+		// Initial check in case the slider's initial value is 100
+		//updateButtonState();
+
+		// Add event listener for slider changes
+		//slider.addEventListener('input', updateButtonState);
+
+		// Check if the file input has any files selected
+		fileInput.addEventListener('change', function() {
+			submitButton.disabled = this.files.length === 0; // Disable if no files, enable if files are selected
+		}); // End of file input change event
+
+
+		// Add confirmation message on submit button click
+		submitButton.addEventListener('click', function(e) {
+			var confirmSubmission = confirm("Are you sure you want to upload the images and mark the job as completed?");
+			if (!confirmSubmission) {
+				e.preventDefault(); // Prevent form submission if the user cancels
+			}
+		});
+
+		applyVisibility(); // Call the function on page load
+		// Add event listener to the submit button and hide table container
+		goToUploadPage.addEventListener('click', function() {
+			// Toggle state
+			var isUploadVisible = localStorage.getItem('isUploadVisible') === 'true';
+			// Save the new state
+			localStorage.setItem('isUploadVisible', !isUploadVisible);
+			// Apply the new state to the elements
+			applyVisibility();
+		});
+		// Add event listener to the main page button and show table container
+		goToMainPage.addEventListener('click', function() {
+			// Show table container, hide upload container
+			localStorage.setItem('isUploadVisible', 'false');
+			applyVisibility();
+		}); // End of event listener for main page button and show table container
+
+
+		// Check the job tracking method and hide the likert scale if it's "Deadline" and vice versa
+		if (jobTrackingMethod === "Deadline") {
+			document.querySelector('.likertContainer').style.display = 'none';
+		} else {
+			document.querySelector('.likertContainer').style.display = 'block';
+		}
+
 
 		fetchReferenceImages(jobId); // Call the function with jobId on page load
 		function fetchReferenceImages(jobId) {
@@ -479,7 +694,8 @@ ob_start();
 				},
 				success: function(data) {
 					var images = JSON.parse(data);
-					var imagesHtml = '<div class="image-gallery">';
+					var imagesHtml = '<div class="image-gallery"><strong id="image-gallery-title">Reference Images:</strong>';
+
 
 					// Check if the images array is empty and set a default image
 					if (images.length === 0) {
@@ -537,8 +753,8 @@ ob_start();
 		$('#progressImageUploadForm').on('submit', function(e) {
 			e.preventDefault();
 
+			var form = this;
 			var jobId = <?php echo json_encode($jobId); ?>; // Ensure $jobId is defined and accessible
-
 			var files = $('#progressImage')[0].files;
 			if (files.length > 0) {
 				var uploadPromises = Array.from(files).map(function(file) {
@@ -557,8 +773,14 @@ ob_start();
 
 				Promise.all(uploadPromises).then(function() {
 					console.log("All files uploaded successfully.");
+					var hiddenInput = document.createElement('input');
+					hiddenInput.type = 'hidden';
+					hiddenInput.name = 'submit_CompleteJob';
+					hiddenInput.value = 'Upload & Complete'; // The value of your submit button
+					form.appendChild(hiddenInput);
 					// Update UI or refresh the page as needed
 					//window.location.reload(true);
+					form.submit(); // Submit the form after all files are uploaded
 				}).catch(function(error) {
 					console.error("Error during file upload:", error);
 					alert("An error occurred during the file upload.");
@@ -614,6 +836,36 @@ ob_start();
 			}
 		});
 
+		// Check if the job tracking method is "Artist" and the deadline is empty or NULL
+
+		if (jobTrackingMethod === 'Artist' && (deadline === 'NULL' || deadline === '')) {
+			// Hide the timer and show the ArtistOnlyDeadline message in all instances
+			document.querySelectorAll('.time-left').forEach(function(element) {
+				element.style.display = 'none';
+			});
+			document.querySelectorAll('.ArtistOnlyDeadline').forEach(function(element) {
+				element.style.display = 'grid'; // or "flex", "grid" etc.
+			});
+		} else {
+			// If not artist method or deadline is not null, hide ArtistOnlyDeadline message
+			document.querySelectorAll('.ArtistOnlyDeadline').forEach(function(element) {
+				element.style.display = 'none';
+			});
+		}
+
+		/*
+		// Function to update the button state based on the slider value
+		function updateButtonState() {
+			if (slider.value == 100) {
+				disable_UploadButton.disabled = false; // Enable disable_UploadButton
+				// Optionally reset styles if needed
+			} else {
+				disable_UploadButton.disabled = true; // Disable disable_UploadButton
+			}
+
+		} // End of updateButtonState function
+		*/
+
 	}); // End of DOMContentLoaded
 
 	// Function to show the range value
@@ -622,9 +874,14 @@ ob_start();
 			var getValRange = $(this).val();
 			$('.likert_scale span').text(getValRange + '%');
 		});
+	}); // End of range value function
 
-
-	});
+	// Function to apply visibility based on the state
+	function applyVisibility() {
+		var isUploadVisible = localStorage.getItem('isUploadVisible') === 'true'; // Retrieve state
+		document.querySelector('.upload_container').style.display = isUploadVisible ? 'grid' : 'none';
+		document.querySelector('.table_container').style.display = isUploadVisible ? 'none' : 'grid';
+	} // End of applyVisibility function
 </script>
 
 

@@ -108,7 +108,7 @@ include "../logindbase.php";
         border-collapse: collapse;
         margin: 25px 90px;
         font-size: 0.9em;
-        min-width: 70vw;
+        min-width: 90%;
         min-height: 100px;
         box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
     }
@@ -561,5 +561,7 @@ include "../logindbase.php";
 
         }); //End of Javascript
     </script>
+
 </body>
+
 <?php ob_end_flush(); ?>

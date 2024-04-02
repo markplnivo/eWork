@@ -206,7 +206,7 @@ if ($_SESSION['position'] != 'Artist') {
         exit();
     }
     ?>
-</body>
 
+</body>
 </html>
 <?php ob_end_flush(); ?>
