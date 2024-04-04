@@ -109,7 +109,12 @@
     /* Make the likertScale input fill its parent container */
 }
 
-#mainPageBtn {
+#goToMainPage:hover {
+    background-color: #4CAF50;
+    color: white;
+}
+
+#goToMainPage  {
     margin: 0 10px;
     padding: 10px 20px;
     font-size: 0.8vw;

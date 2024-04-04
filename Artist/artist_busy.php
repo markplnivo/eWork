@@ -295,6 +295,12 @@ ob_start();
 			overflow-y: hidden;
 		}
 
+		#goToUploadPage:disabled {
+			background-color: #ccc;
+			color: #666;
+			cursor: not-allowed;
+		}
+
 		#goToUploadPage {
 			grid-area: 1 / 2 / 2 / 3;
 			padding: 10px;
@@ -339,6 +345,43 @@ ob_start();
 
 		.time-leftTitle {
 			grid-column: 1 / span 3;
+		}
+
+		.tooltip {
+			display: none;
+			position: absolute;
+			background-color: #333;
+			color: white;
+			padding: 5px 10px;
+			border-radius: 5px;
+			pointer-events: none;
+		}
+
+		.tooltip-button[disabled]:hover::after {
+			content: attr(data-tooltip);
+			/* This attribute will hold the tooltip text */
+			position: relative;
+			white-space: nowrap;
+			bottom: 100%;
+			left: 50%;
+			transform: translateX(-50%);
+			background-color: black;
+			color: white;
+			padding: 5px 10px;
+			border-radius: 6px;
+			z-index: 1;
+		}
+
+		/* Tooltip arrow */
+		.tooltip-button[disabled]:hover::before {
+			content: "";
+			position: absolute;
+			top: 100%;
+			left: 50%;
+			margin-left: -5px;
+			border-width: 5px;
+			border-style: solid;
+			border-color: black transparent transparent transparent;
 		}
 	</style>
 </head>
@@ -533,7 +576,8 @@ ob_start();
 
 		<div class="table_container">
 
-			<button id="goToUploadPage">Go to Upload Page</button>
+			<button id="goToUploadPage" class="tooltip-button" disabled>Go to Upload Page</button>
+			<div id="tooltip" style="display: none; position: absolute; background-color: black; color: white; padding: 5px 10px; border-radius: 6px; z-index: 100;">Completion percentage must be 100% before going to upload page.</div>
 
 			<div class="timeContainer">
 				<div class="ArtistOnlyDeadline">
@@ -602,9 +646,10 @@ ob_start();
 							<span id="likertSpan">0%</span>
 							<input id="likertScale" type="range" min="0" max="100" step="25" value="<?php echo $completionPercentage; ?>" name="completionPercentage" />
 						</div>
-						<!-- <input type="submit" name="submitLikert" value="Submit" class="submitButton"> -->
 					</form>
 				</div>
+			<?php else : ?>
+				<button id="goToUploadPage">Go to Upload Page</button>
 			<?php endif; ?>
 
 
@@ -638,8 +683,28 @@ ob_start();
 		var slider = document.getElementById('likertScale');
 		var disable_UploadButton = document.getElementById('goToUploadPage');
 
+
+		const tooltip = document.createElement('div');
+		tooltip.id = 'tooltip';
+		tooltip.style.cssText = 'display: none; position: absolute; background-color: black; color: white; padding: 5px 10px; border-radius: 6px; z-index: 100; pointer-events: none;';
+		tooltip.textContent = 'Completion percentage must be 100% before going to upload page.';
+		document.body.appendChild(tooltip);
+	
+		const goToUploadButton = document.getElementById('goToUploadPage');
+		goToUploadButton.addEventListener('mousemove', function(e) {
+			if (goToUploadButton.disabled) {
+				tooltip.style.display = 'block';
+				tooltip.style.left = `${e.pageX + 10}px`; // Offset the tooltip slightly to avoid flicker
+				tooltip.style.top = `${e.pageY + 10}px`;
+			}
+		});
+
+		goToUploadButton.addEventListener('mouseout', function() {
+			tooltip.style.display = 'none';
+		});
+
 		// Initial check in case the slider's initial value is 100
-		//updateButtonState();
+		updateButtonState();
 
 		// Add event listener for slider changes
 		//slider.addEventListener('input', updateButtonState);
@@ -851,6 +916,17 @@ ob_start();
 			document.querySelectorAll('.ArtistOnlyDeadline').forEach(function(element) {
 				element.style.display = 'none';
 			});
+		}
+
+
+		function updateButtonState() {
+			if (jobTrackingMethod !== 'deadline') {
+				goToUploadPage.disabled = slider.value != 100;
+			}
+		}
+
+		if (jobTrackingMethod !== 'deadline') {
+			slider.addEventListener('input', updateButtonState);
 		}
 
 		/*

@@ -11,6 +11,7 @@ include "../logindbase.php";
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&display=swap" rel="stylesheet">
     <script src="https://kit.fontawesome.com/fa2481bda4.js" crossorigin="anonymous"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 </head>
 <meta charset="UTF-8">
 <title>Artists' Status</title>
@@ -211,7 +212,7 @@ include "../logindbase.php";
         border: none;
         border-radius: 5px;
         cursor: pointer;
-        margin-left:100px;
+        margin-left: 100px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
     }
 
@@ -227,6 +228,7 @@ include "../logindbase.php";
 
         <?php
         include "artist_menu.php";
+        $artistName = $_SESSION['username']; // Example: getting the artist name from the session
         ?>
 
         <h1 class="main-title">Job List</h1>
@@ -257,8 +259,8 @@ include "../logindbase.php";
             ?>
 
             <div class="view-buttons">
-                <button id="tableViewBtn">Table View</button>
-                <button id="cardViewBtn">Card View</button>
+                <button id="statusBtn">Start Break</button>
+                <span>You are on break. Work orders cannot be started while on break.</span>
             </div>
 
             <div id="jobDetailsPopup" class="popup-overlay" style="display:none;">
@@ -284,9 +286,6 @@ include "../logindbase.php";
         </div>
 
         <?php
-
-
-        $artistName = $_SESSION['username']; // Example: getting the artist name from the session
 
         // Prepare the SQL statement to check if the current_jobID is not null for the current artist
         $sql = "SELECT current_jobID FROM tbl_artist_status WHERE artist_name = ? AND current_jobID IS NOT NULL";
@@ -448,6 +447,49 @@ include "../logindbase.php";
 
     <script>
         $(document).ready(function() {
+            var artistName = "<?php echo htmlspecialchars($artistName, ENT_QUOTES, 'UTF-8'); ?>"; // Get the artist name from PHP and sanitize it
+
+            checkArtistStatus();
+
+            function checkArtistStatus() {
+                $.ajax({
+                    type: "POST",
+                    url: "check_artist_status.php", // This PHP file returns the artist's status.
+                    data: {
+                        artistName: artistName
+                    }, // Dynamically set the artist name.
+                    success: function(response) {
+                        // Assuming the response is the artist's status
+                        if (response.trim() === "on_break") {
+                            $("#submitButton").prop('disabled', true).css('background-color', 'grey');
+                            console.log("Artist is on break. Job selection disabled.");
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("An error occurred: " + status + ", " + error);
+                    }
+                });
+            }
+
+            $("#statusBtn").click(function() {
+                var statusToUpdate = $(this).text() === "Start Break" ? "on_break" : "open";
+
+                $.ajax({
+                    type: "POST",
+                    url: "update_artist_status.php",
+                    data: {
+                        artistName: artistName,
+                        artistStatus: statusToUpdate
+                    },
+                    success: function(response) {
+                        // Toggle button text based on the current state.
+                        var newText = statusToUpdate === "on_break" ? "End Break" : "Start Break";
+                        $("#statusBtn").text(newText);
+                        console.log(response); // Log server response.
+                    }
+                });
+            });
+
             $("#tableView table tbody tr").click(function() {
                 if ($(this).hasClass('infoRow')) {
                     return false; // Prevent popup overlay for info row
@@ -468,7 +510,6 @@ include "../logindbase.php";
                         detailsHtml += '<p><strong>Creator Name:</strong> ' + jobDetails.creator_name + '</p>';
                         detailsHtml += '<p><strong>Time Created:</strong> ' + jobDetails.time_created + '</p>';
                         detailsHtml += '<p><strong>Job Brief:</strong> ' + jobDetails.job_brief + '</p>';
-                        // Add more details as needed
                         detailsHtml += '</div>';
                         $("#jobDetails").html(detailsHtml);
                     },
