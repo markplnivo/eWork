@@ -1,9 +1,15 @@
+<?php ob_start(); ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
+    <link rel="stylesheet" href="chart.css">
+    <meta charset="UTF-8">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@^3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/date-fns"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
 </head>
-<meta charset="UTF-8">
 <title>Artists' Status</title>
 <style>
     *,
@@ -86,8 +92,7 @@
         background-color: #dbaf00;
     }
 
-    .table_container,
-    .card_container {
+    .table_container {
         display: grid;
         background-color: #919191;
         grid-area: 3 / 2 / -1 / -1;
@@ -137,24 +142,19 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        margin-right:5%;
+        margin-right: 5%;
     }
 
-    .pagination-container a, label{
+    .pagination-container a,
+    label {
         margin: 0 10px;
         color: black;
         font-weight: bold;
         text-decoration: none;
     }
 
-    .card {
-        border: 1px solid #ddd;
-        padding: 10px;
-        margin: 10px;
-        display: inline-block;
-        box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
-        border-radius: 8px;
-        background-color: rgba(64, 64, 64, 0.4);
+    .chart_container {
+        overflow-x: auto;
     }
 </style>
 
@@ -191,23 +191,23 @@
             $total_pages = ceil($row['total'] / $results_per_page);
 
             $current_page = basename($_SERVER['PHP_SELF']);
-
             ?>
+
 
             <div class="view-buttons">
                 <button id="tableViewBtn">Table View</button>
-                <button id="cardViewBtn">Card View</button>
+                <button id="chartViewBtn">Chart View</button>
             </div>
-            
+
             <?php
-                echo "<div class='pagination-container'>";
-                echo "<label>Page</label>";
-                for ($i = 1; $i <= $total_pages; $i++) {
-                    echo "<a href='$current_page?page=$i' class='page-link'>" . $i . "</a> ";
-                }
-                echo "<input type='text' id='searchInput' placeholder='Search for names...'>";
-                echo "</div>";
-                ?>
+            echo "<div class='pagination-container'>";
+            echo "<label>Page</label>";
+            for ($i = 1; $i <= $total_pages; $i++) {
+                echo "<a href='$current_page?page=$i' class='page-link'>" . $i . "</a> ";
+            }
+            echo "<input type='text' id='searchInput' placeholder='Search for names...'>";
+            echo "</div>";
+            ?>
 
         </div>
 
@@ -220,60 +220,196 @@
         $result = $conn->query($sql);
 
 
-        echo '<div class="table_container" id="tableView">';
-        // Display the table
-        echo "<table>";
-        echo "<tr><th>Job ID</th><th>Creator Name</th><th>Artist Assigned</tr>";
-        while ($row = $result->fetch_assoc()) {
-            echo "<tr>";
-            echo "<td>" . $row['job_id'] . "</td>";
-            echo "<td>" . $row['creator_name'] . "</td>";
-            echo "<td>" . $row['assigned_artist'] . "</td>";
-            echo "</tr>";
-        }
-        echo "</table>";
-        echo '</div>';
+        ?>
+        <div class="table_container" id="tableView">
+            <table>
+                <tr>
+                    <th>Job ID</th>
+                    <th>Creator Name</th>
+                    <th>Artist Assigned</th>
+                </tr>
+                <?php while ($row = $result->fetch_assoc()) : ?>
+                    <tr>
+                        <td><?php echo $row['job_id']; ?></td>
+                        <td><?php echo $row['creator_name']; ?></td>
+                        <td><?php echo $row['assigned_artist']; ?></td>
+                    </tr>
+                <?php endwhile; ?>
+            </table>
+        </div>
 
-        echo '<div class="card_container" id="cardView" style="display: none;">';
-        foreach ($result as $row) {
-            echo "<div class='card' style='width: 250px; height: 250px;'>";
-            echo "<p>Job ID: " . $row['job_id'] . "</p>";
-            echo "<p>Creator Name: " . $row['creator_name'] . "</p>";
-            echo "<p>Assigned Artist: " . $row['assigned_artist'] . "</p>";
-            // Add more data as needed
-            echo "</div>";
-        }
-        echo '</div>';
+        <div class="chart_container" id="chartView" style="display: none;">
+            <div id="chartSortBy">
+                <label>Sort chart data by:</label>
+                <button onclick="fetchJobsData('day')">Day</button>
+                <button onclick="fetchJobsData('week')">Week</button>
+                <button onclick="fetchJobsData('month')">Month</button>
+                <button onclick="fetchJobsData('year')">Year</button>
+            </div>
+            <div class="canvasContainer">
+                <canvas id="jobsProgressChart"></canvas>
+            </div>
+        </div>
 
-
+        <?php
         // Close the database connection
         $conn->close();
-        echo "</div>";
-        echo "</div>";
         ?>
     </div>
+
 </body>
 
-<script>
+<script type="text/javascript">
+    const ctx = document.getElementById('jobsProgressChart').getContext('2d');
+
+    // Fetch job data from the server
+
+    async function fetchJobsInProgress() {
+        console.log('Starting to fetch jobs data'); // Expected output: "Starting to fetch jobs data"
+
+        try {
+            const response = await fetch('jobsprogress_chart.php');
+            const jobsData = await response.json();
+
+            if (jobsData.error) {
+                console.error(jobsData.error);
+                return;
+            }
+
+            console.log('Fetched jobs data:', jobsData); // Expected output: The fetched data array or an error object
+
+            // Prepare data for charting
+            renderChart(jobsData);
+        } catch (error) {
+            console.error('Error fetching jobs in progress:', error);
+        }
+    }
+
+    function renderChart(jobsData) {
+        console.log('Rendering chart with data:', jobsData); // Expected output: The data array used to render the chart
+
+        new Chart(ctx, {
+            type: 'line', // Change to 'line' type for an area chart
+            data: {
+                labels: jobsData.map(job => job.date),
+                datasets: [{
+                    label: 'Number of Jobs in Progress',
+                    data: jobsData.map(job => parseInt(job.count)),
+                    fill: true,
+                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Number of Jobs',
+                            color: '#000',
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            }
+                        },
+                        ticks: {
+                            color: '#000',
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            }
+                        }
+                    },
+                    x: {
+                        type: 'time',
+                        time: {
+                            parser: 'yyyy-MM-dd', // specify the correct parser for your datetime format
+                            unit: 'day',
+                            displayFormats: {
+                                day: 'yyyy-MM-dd'
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Date',
+                            color: '#000',
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            }
+                        },
+                        ticks: {
+                            color: '#000',
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            },
+                            autoSkip: true,
+                            maxTicksLimit: 20
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                },
+                hover: {
+                    mode: 'nearest',
+                    intersect: true
+                },
+            }
+        });
+    }
+
+    
+    // Switch between table and chart view
+    window.onload = function() {
+        fetchJobsInProgress(); // Fetch and render the chart as part of window load
+        // Other onload logic here
+        switchView(sessionStorage.getItem('currentView') || 'table');
+    }; // end of window.onload
+
+    // Show the chart view
+    function showChart() {
+        console.log('Showing chart view'); // Expected output: "Showing chart view" when the function is triggered
+
+        document.getElementById('chartView').style.display = 'flex';
+    } // end of showChart
+
+
+    // Switch between table and chart view
     document.getElementById('tableViewBtn').addEventListener('click', function() {
         sessionStorage.setItem('currentView', 'table');
         switchView('table');
     });
 
-    document.getElementById('cardViewBtn').addEventListener('click', function() {
-        sessionStorage.setItem('currentView', 'card');
-        switchView('card');
+    document.getElementById('chartViewBtn').addEventListener('click', function() {
+        sessionStorage.setItem('currentView', 'chart');
+        switchView('chart');
+        showChart();
     });
 
     function switchView(view) {
+        console.log('Switching view to:', view); // Expected output: "Switching view to: chart" or "table"
+
         if (view === 'table') {
             document.getElementById('tableView').style.display = 'block';
-            document.getElementById('cardView').style.display = 'none';
+            document.getElementById('chartView').style.display = 'none';
         } else {
             document.getElementById('tableView').style.display = 'none';
-            document.getElementById('cardView').style.display = 'block';
+            document.getElementById('chartView').style.display = 'flex';
+            showChart();
         }
-    }
+    } // end of switchView
 
     document.querySelectorAll('.page-link').forEach(function(link) {
         link.addEventListener('click', function(e) {
@@ -283,14 +419,9 @@
         });
     });
 
-    window.onload = function() {
-        var urlParams = new URLSearchParams(window.location.search);
-        var view = urlParams.get('view') || sessionStorage.getItem('currentView') || 'table';
-        switchView(view);
-    };
 
-        // Search Functionality
-        var searchInput = document.getElementById('searchInput');
+    // Search Functionality
+    var searchInput = document.getElementById('searchInput');
     searchInput.addEventListener('keyup', function() {
         var filter = searchInput.value.toUpperCase();
         var rows = document.getElementById('tableView').getElementsByTagName('tr');
@@ -303,9 +434,23 @@
                 } else {
                     rows[i].style.display = 'none';
                 }
-            } 
+            }
         }
-    });
+    }); // end of searchInput
+
+    
+    // Fetch job data based on time frame
+    function fetchJobsData(timeFrame) {
+        fetch(`jobsprogress_chart.php?timeFrame=${timeFrame}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                // Call renderChart or any function to update the chart with this data
+            })
+            .catch(error => console.error('Error fetching job data:', error));
+    } // end of fetchJobsData
+    
 </script>
 
 </html>
+<?php ob_end_flush(); ?>

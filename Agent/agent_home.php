@@ -228,8 +228,8 @@ include "../logindbase.php";
 
     #referencePreview,
     .imagePreview {
-        width: 250px;
-        height: 250px;
+        width: 10vw;
+        height: 10vw;
         margin-right: 10px;
     }
 </style>
@@ -355,6 +355,7 @@ $conn->close();
                 </select>
                 <!-- A hidden input field to store the selected template name -->
                 <input type="hidden" name="selectedTemplateName" id="selectedTemplateName">
+                <input type="hidden" name="selectedTemplateId" id="selectedTemplateId">
 
 
 
@@ -414,6 +415,10 @@ $conn->close();
                 event.preventDefault(); // Prevent the default form submission
 
                 var formData = new FormData(this);
+                if ($("#use-template").val() !== "Manually") {
+                    var templateId = $("#selectedTemplateId").val(); // Get templateId from the hidden input
+                    formData.append('templateId', templateId); // Append templateId to formData
+                }
                 // New logic to append process details using the structured naming convention
                 $('.process-row').each(function(index, processRow) {
                     var processId = $(processRow).data('process-id'); // Assuming processId is stored as data attribute
@@ -537,12 +542,12 @@ $conn->close();
             assignToSelect.addEventListener('change', function() {
                 if (this.value === "Assign an Artist") {
                     document.getElementById('artistOverlay').style.display = 'block';
-                } 
+                }
                 if (this.value === "Open to All") {
                     document.getElementById('selected-artist-name').value = null;
                     document.getElementById('artistOverlay').style.display = 'none'; // Hide the overlay if it was previously shown
                     selectedArtistDiv.innerHTML = ''; // Clear any selected artist information
-                } 
+                }
             });
             // Add event listener to the close button
             if (closeArtistButton) closeArtistButton.addEventListener('click', closeArtistOverlay);
@@ -636,6 +641,7 @@ $conn->close();
                         if (data.success) {
                             let htmlContent = `<h3>${data.templateName} Processes</h3><ul>`;
                             document.getElementById('selectedTemplateName').value = data.templateName;
+                            document.getElementById('selectedTemplateId').value = data.templateId;
                             data.processes.forEach((process, index) => {
                                 htmlContent += generateProcessHTML(process, index);
                             });

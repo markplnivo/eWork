@@ -1,94 +1,65 @@
 .jobInfo {
     border: 1px solid #ccc;
-    /* Add a border around the jobInfo container */
     padding: 20px;
-    /* Add padding to create some space inside the container */
-    /* Set a maximum width for the container */
     margin: 0 auto;
-    /* Center the container horizontally */
     background-color: #cfcfcf;
 }
 
 .jobInfo h3 {
     margin-top: 0;
-    /* Remove default margin from the h3 element */
     font-size: 20px;
-    /* Set font size for the heading */
     color: #333;
-    /* Set color for the heading */
+
 }
 
 .jobInfo ul {
     list-style-type: none;
-    /* Remove default list styles */
     padding: 0;
-    /* Remove default padding */
+
 }
 
 .jobInfo ul li {
     margin-bottom: 10px;
-    /* Add some space between list items */
-}
+ }
 
 .jobInfo ul li strong {
     display: inline-block;
-    /* Make the strong tag inline-block */
     width: 150px;
-    /* Set a fixed width for strong tags */
 }
 
 .jobInfo ul li strong::after {
     content: ":";
-    /* Add a colon after each strong tag */
     margin-right: 5px;
-    /* Add some space between the strong tag and the colon */
 }
 
 .jobBrief {
     border: 1px solid #ccc;
-    /* Add a border around the jobBrief container */
-    padding: 20px;
-    /* Add padding to create some space inside the container */
-    max-width: 400px;
-    /* Set a maximum width for the container */
-    margin: 0 auto;
-    /* Center the container horizontally */
     background-color: #cfcfcf;
 }
 
 .jobBrief strong {
     display: block;
-    /* Display strong tags as block elements */
     margin-bottom: 10px;
-    /* Add some space between strong tags */
 }
 
 .jobBrief strong::after {
     content: ":";
-    /* Add a colon after each strong tag */
     margin-right: 5px;
-    /* Add some space between the strong tag and the colon */
 }
 
 .likertContainer {
     border: 1px solid #ccc;
-    /* Add a border around the likertContainer */
     padding: 10px;
-    /* Add padding to create some space inside the container */
-    /* Set a maximum width for the container */
     margin: 0 auto;
-    /* Center the container horizontally */
     background-color: #cfcfcf;
 }
 
 .likert_scale {
     margin-bottom: 20px;
-    /* Add some space below the likert_scale */
 }
 
 #likertTitle {
     font-weight: bold;
-    /* Make the likertTitle text bold */
     margin-right:10px;
     font-size:1vw;
 }
@@ -177,12 +148,17 @@
 }
 
 .time-left>div {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
     padding: 5px;
     border-radius: 5px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     /* Soft shadow for depth */
     font-size: 0.8vw;
     /* Increase the font size to 20 pixels */
+    min-height: auto;
+    max-height: 4vh;
 }
 
 .days {

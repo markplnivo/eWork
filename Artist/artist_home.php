@@ -79,6 +79,8 @@ include "../logindbase.php";
         display: flex;
         place-self: start;
         padding: 10px 0;
+        justify-content: center;
+        align-items: center;
     }
 
     .view-buttons button {
@@ -219,6 +221,16 @@ include "../logindbase.php";
     #submitButton:hover {
         background-color: #dbaf00;
     }
+
+    #on_breakAlert {
+        display: none;
+        background-color: #ff0000;
+        color: #ffffff;
+        padding: 10px;
+        border-radius: 5px;
+        text-align: center;
+        font-size: 0.8vw;
+    }
 </style>
 
 
@@ -260,7 +272,7 @@ include "../logindbase.php";
 
             <div class="view-buttons">
                 <button id="statusBtn">Start Break</button>
-                <span>You are on break. Work orders cannot be started while on break.</span>
+                <span id="on_breakAlert">You are on break. Work orders cannot be started while on break.</span>
             </div>
 
             <div id="jobDetailsPopup" class="popup-overlay" style="display:none;">
@@ -396,7 +408,9 @@ include "../logindbase.php";
             $assignedArtist = $_SESSION['username'];
             $_SESSION['artist_currentJob'] = $selectedJobId;
 
-            $updateSql = "UPDATE tbl_jobs SET job_status = 'pending', assigned_artist = ? WHERE job_id = ?";
+
+            $updateSql = "UPDATE tbl_jobs SET job_status = 'pending', assigned_artist = ?, jobstart_datetime = NOW() WHERE job_id = ?";
+            //$updateSql = "UPDATE tbl_jobs SET job_status = 'pending', assigned_artist = ?, jobstart_datetime = DATE_ADD(NOW(), INTERVAL 8 HOUR) WHERE job_id = ?";
             $stmt = $conn->prepare($updateSql);
             $stmt->bind_param("si", $assignedArtist, $selectedJobId);
             $stmt->execute();
@@ -451,41 +465,31 @@ include "../logindbase.php";
 
             checkArtistStatus();
 
-            function checkArtistStatus() {
-                $.ajax({
-                    type: "POST",
-                    url: "check_artist_status.php", // This PHP file returns the artist's status.
-                    data: {
-                        artistName: artistName
-                    }, // Dynamically set the artist name.
-                    success: function(response) {
-                        // Assuming the response is the artist's status
-                        if (response.trim() === "on_break") {
-                            $("#submitButton").prop('disabled', true).css('background-color', 'grey');
-                            console.log("Artist is on break. Job selection disabled.");
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error("An error occurred: " + status + ", " + error);
-                    }
-                });
-            }
-
+            // Event handler for the break status toggle button
             $("#statusBtn").click(function() {
-                var statusToUpdate = $(this).text() === "Start Break" ? "on_break" : "open";
+                var currentText = $(this).text();
+                var newStatus = currentText === "Start Break" ? "on_break" : "open"; // Use "open" for the active status
 
                 $.ajax({
                     type: "POST",
                     url: "update_artist_status.php",
                     data: {
                         artistName: artistName,
-                        artistStatus: statusToUpdate
+                        artistStatus: newStatus
                     },
                     success: function(response) {
-                        // Toggle button text based on the current state.
-                        var newText = statusToUpdate === "on_break" ? "End Break" : "Start Break";
-                        $("#statusBtn").text(newText);
-                        console.log(response); // Log server response.
+                        // Toggle the button text based on the new status
+                        var buttonText = newStatus === "on_break" ? "End Break" : "Start Break";
+                        $("#statusBtn").text(buttonText);
+
+                        // Check the newStatus and adjust the "Start Selected Job" button accordingly
+                        if (newStatus === "open") { // Use "open" to check if the artist is available to work
+                            $("#submitButton").prop('disabled', false).css('background-color', ''); // Re-enable and reset color
+                            $("#on_breakAlert").hide();
+                        } else {
+                            $("#submitButton").prop('disabled', true).css('background-color', 'grey'); // Disable and grey out
+                            $("#on_breakAlert").show();
+                        }
                     }
                 });
             });
@@ -600,7 +604,33 @@ include "../logindbase.php";
 
 
 
-        }); //End of Javascript
+        }); // End of document ready
+
+        // Function to check the artist status
+        function checkArtistStatus() {
+            var artistName = "<?php echo htmlspecialchars($artistName, ENT_QUOTES, 'UTF-8'); ?>";
+            $.ajax({
+                type: "POST",
+                url: "check_artist_status.php",
+                data: {
+                    artistName: artistName
+                },
+                success: function(response) {
+                    if (response.trim() === "on_break") {
+                        $("#submitButton").prop('disabled', true).css('background-color', 'grey');
+                        $("#statusBtn").text("End Break"); // Assume the artist is on a break initially
+                        $("#on_breakAlert").show();
+                    } else if (response.trim() === "open") {
+                        $("#submitButton").prop('disabled', false).css('background-color', ''); // Re-enable if status is "open"
+                        $("#statusBtn").text("Start Break");
+                        $("#on_breakAlert").hide();
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("An error occurred: " + status + ", " + error);
+                }
+            });
+        }// End of checkArtistStatus function
     </script>
 
 </body>

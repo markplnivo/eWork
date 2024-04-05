@@ -2,6 +2,8 @@
 <html lang="en">
 
 <head>
+    <link rel="stylesheet" href="chart.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@latest"></script>
 </head>
 <meta charset="UTF-8">
 <title>Artists' Status</title>
@@ -86,8 +88,7 @@
         background-color: #dbaf00;
     }
 
-    .table_container,
-    .card_container {
+    .table_container {
         display: grid;
         background-color: #919191;
         grid-area: 3 / 2 / -1 / -1;
@@ -148,15 +149,6 @@
         text-decoration: none;
     }
 
-    .card {
-        border: 1px solid #ddd;
-        padding: 10px;
-        margin: 10px;
-        display: inline-block;
-        box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
-        border-radius: 8px;
-        background-color: rgba(64, 64, 64, 0.4);
-    }
 </style>
 
 <body>
@@ -193,11 +185,12 @@
 
             $current_page = basename($_SERVER['PHP_SELF']);
 
+
             ?>
 
             <div class="view-buttons">
                 <button id="tableViewBtn">Table View</button>
-                <button id="cardViewBtn">Card View</button>
+                <button id="chartViewBtn">Chart View</button>
             </div>
 
             <?php
@@ -215,68 +208,188 @@
         <?php
 
         // Retrieve data from the database
-        $sql = "SELECT job_id, creator_name, time_created, job_brief FROM tbl_jobs where job_status = 'Pending' LIMIT $start_from, $results_per_page";
+        $sql = "SELECT job_id, 
+        creator_name, 
+        time_created, 
+        job_status, 
+        assigned_artist, 
+        job_subject, 
+        job_brief, 
+        assigning_method, 
+        template_method, 
+        template_id, 
+        job_tracking_method, 
+        manual_deadline_date, 
+        manual_deadline_time, 
+        deadline_futureDateTime, 
+        jobstart_datetime 
+        FROM tbl_jobs WHERE job_status = 'pending' OR job_status = 'open' LIMIT $start_from, $results_per_page";
         $result = $conn->query($sql);
 
-        echo '<div class="table_container" id="tableView">';
-        // Display the table
-        echo "<table>";
-        echo "<tr><th>Job ID</th><th>Creator Name</th><th>Time Created</th><th>Description</th></tr>";
+        ?>
+        <div class="table_container" id="tableView">
+            <!-- Display the table -->
+            <table>
+                <tr>
+                    <th>Job ID</th>
+                    <th>Creator Name</th>
+                    <th>Time Created</th>
+                    <th>Description</th>
+                </tr>
+                <?php while ($row = $result->fetch_assoc()) { ?>
+                    <tr>
+                        <td><?php echo $row['job_id']; ?></td>
+                        <td><?php echo $row['creator_name']; ?></td>
+                        <td><?php echo $row['time_created']; ?></td>
+                        <td><?php echo $row['job_brief']; ?></td>
+                    </tr>
+                <?php } ?>
+            </table>
+        </div>
+        <?php
 
-        while ($row = $result->fetch_assoc()) {
-            echo "<tr>";
-            echo "<td>" . $row['job_id'] . "</td>";
-            echo "<td>" . $row['creator_name'] . "</td>";
-            echo "<td>" . $row['time_created'] . "</td>";
-            echo "<td>" . $row['job_brief'] . "</td>";
-            echo "</tr>";
-        }
+        ?>
+        <div class="chart_container" id="chartView" style="display: none;">
+            <div id="chartSortBy">
+                <label>Sort chart data by:</label>
+                <button onclick="fetchJobsData('day')">Day</button>
+                <button onclick="fetchJobsData('week')">Week</button>
+                <button onclick="fetchJobsData('month')">Month</button>
+                <button onclick="fetchJobsData('year')">Year</button>
+            </div>
+            <div class="canvasContainer">
+                <canvas id="jobStatusChart"></canvas>
+            </div>
+        </div>
 
-        echo "</table>";
-
-        echo '</div>';
-
-        echo '<div class="card_container" id="cardView" style="display: none;">';
-        foreach ($result as $row) {
-            echo "<div class='card' style='width: 250px; height: 250px;'>";
-            echo "<p>Job ID: " . $row['job_id'] . "</p>";
-            echo "<p>Creator Name: " . $row['creator_name'] . "</p>";
-            echo "<p>Time Created: " . $row['time_created'] . "</p>";
-            echo "<p>Job Brief: " . $row['job_brief'] . "</p>";
-            // Add more data as needed
-            echo "</div>";
-        }
-        echo '</div>';
-
-
+        <?php
         // Close the database connection
         $conn->close();
-        echo "</div>";
-        echo "</div>";
         ?>
     </div>
 </body>
 
-<script>
+</html>
+</div>
+
+</body>
+
+<script type="text/javascript">
+    // Chart.js
+    const ctx = document.getElementById('jobStatusChart').getContext('2d');
+
+    // Render the chart using Chart.js
+    function renderChart(data) {
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Open Jobs', 'Pending Jobs'],
+                datasets: [{
+                    label: 'Job Status Count',
+                    data: [data.open, data.pending],
+                    backgroundColor: [
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)'
+                    ],
+                    borderColor: [
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: '#000',
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            }
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: '#000',
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Job Orders by Status',
+                        font: {
+                            size: 20,
+                            weight: 'bold'
+                        },
+                        color: '#000'
+                    },
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    } // end of chartjs
+
+    // Fetch job data from the server
+    async function fetchJobData() {
+        try {
+            const response = await fetch('joblist_chart.php');
+            const jobData = await response.json();
+
+            const data = {
+                open: jobData.find(job => job.job_status === 'open')?.count || 0,
+                pending: jobData.find(job => job.job_status === 'pending')?.count || 0
+            };
+
+            renderChart(data);
+        } catch (error) {
+            console.error('Error fetching job data:', error);
+        }
+    } // end of fetchJobData
+
+    // Switch between table and chart view
+    window.onload = function() {
+        fetchJobData(); // Fetch and render the chart as part of window load
+        // Other onload logic here
+        switchView(sessionStorage.getItem('currentView') || 'table');
+    }; // end of window.onload
+
+    // Show the chart view
+    function showChart() {
+        document.getElementById('chartView').style.display = 'flex';
+    } // end of showChart
+
+
+    // Switch between table and chart view
     document.getElementById('tableViewBtn').addEventListener('click', function() {
         sessionStorage.setItem('currentView', 'table');
         switchView('table');
     });
 
-    document.getElementById('cardViewBtn').addEventListener('click', function() {
-        sessionStorage.setItem('currentView', 'card');
-        switchView('card');
+    document.getElementById('chartViewBtn').addEventListener('click', function() {
+        sessionStorage.setItem('currentView', 'chart');
+        switchView('chart');
+        showChart();
     });
 
     function switchView(view) {
         if (view === 'table') {
             document.getElementById('tableView').style.display = 'block';
-            document.getElementById('cardView').style.display = 'none';
+            document.getElementById('chartView').style.display = 'none';
         } else {
             document.getElementById('tableView').style.display = 'none';
-            document.getElementById('cardView').style.display = 'block';
+            document.getElementById('chartView').style.display = 'flex';
+            showChart();
         }
-    }
+    } // end of switchView
 
     document.querySelectorAll('.page-link').forEach(function(link) {
         link.addEventListener('click', function(e) {
@@ -285,12 +398,6 @@
             window.location.href = this.href + '&view=' + currentView;
         });
     });
-
-    window.onload = function() {
-        var urlParams = new URLSearchParams(window.location.search);
-        var view = urlParams.get('view') || sessionStorage.getItem('currentView') || 'table';
-        switchView(view);
-    };
 
 
     // Search Functionality
@@ -309,7 +416,22 @@
                 }
             }
         }
-    });
+    }); // end of searchInput
+
+    // Fetch job data based on time frame
+    function fetchJobsData(timeFrame) {
+        fetch(`joblist_chart.php?timeFrame=${timeFrame}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                // Call renderChart or any function to update the chart with this data
+            })
+            .catch(error => console.error('Error fetching job data:', error));
+    }// end of fetchJobsData
+
+
+
 </script>
 
 </html>
+<?php ob_end_flush(); ?>

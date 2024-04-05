@@ -1,5 +1,6 @@
 <?php
 ob_start();
+date_default_timezone_set('Asia/Taipei');
 ?>
 
 <!DOCTYPE html>
@@ -95,12 +96,12 @@ ob_start();
 		}
 
 		.table_container {
-			grid-template-rows: 10% 55% 35%;
+			grid-template-rows: minmax(auto, 11vh) 3fr 1fr;
 			grid-template-columns: repeat(3, minmax(20%, 35%));
 		}
 
 		.upload_container {
-			grid-template-rows: 10% 55% 35%;
+			grid-template-rows: minmax(auto, 11vh) 2fr 1fr;
 			grid-template-columns: repeat(3, minmax(20%, 35%));
 		}
 
@@ -113,28 +114,23 @@ ob_start();
 			height: 100%;
 		}
 
-		.table_container table {
+		table {
 			border-collapse: collapse;
-			margin: 25px 90px;
-			font-size: 0.9em;
-			min-width: 70vw;
-			min-height: 100px;
-			border-radius: 12px 12px 0px 0px;
 		}
 
-		.table_container th {
+		th {
 			background-color: #ffc400;
 			color: #000000;
 			text-align: left;
 			font-weight: bold;
 		}
 
-		.table_container td,
-		.table_container th {
+		td,
+		th {
 			padding: 12px 25px;
 		}
 
-		.table_container tr {
+		tr {
 			border-bottom: 1px solid #525252;
 		}
 
@@ -176,12 +172,27 @@ ob_start();
 			grid-area: 2 / 1 / 3 / 2;
 			grid-row: 2 / 3;
 			grid-column: 1 / span 2;
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			grid-template-rows: 5vh auto;
+			flex: 1 0 100%;
+		}
+
+		.jobInfo h3 {
+			grid-area: 1 / 1 / 2 / 3;
+			text-align: center;
+			font-size: 1.5vw;
+			height: auto;
+		}
+
+		.jobDetailFull {
+			min-height: 35vh;
+			grid-area: 2 / 1 / 3 / 2;
 		}
 
 		.jobBrief {
-			padding: 10px;
-			margin: 10px;
-			border-radius: 8px;
+			min-height: 35vh;
+			grid-area: 2 / 2 / 3 / 3;
 		}
 
 		.likertContainer {
@@ -191,7 +202,7 @@ ob_start();
 			grid-row: 3 / 4;
 			grid-column: 1 / span 2;
 			text-align: center;
-			height: 30%;
+			flex: 1 0 6vh;
 			overflow-y: hidden;
 			font-size: 0.8vw;
 		}
@@ -293,6 +304,9 @@ ob_start();
 			text-align: center;
 			background-color: #cfcfcf;
 			overflow-y: hidden;
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
 		}
 
 		#goToUploadPage:disabled {
@@ -304,7 +318,7 @@ ob_start();
 		#goToUploadPage {
 			grid-area: 1 / 2 / 2 / 3;
 			padding: 10px;
-			margin: 10px;
+			margin: 30px;
 			border-radius: 8px;
 			text-align: center;
 			background-color: #cfcfcf;
@@ -314,7 +328,7 @@ ob_start();
 		#goToMainPage {
 			grid-area: 1 / 2 / 2 / 3;
 			padding: 10px;
-			margin: 10px;
+			margin: 30px;
 			border-radius: 8px;
 			text-align: center;
 			background-color: #cfcfcf;
@@ -383,6 +397,31 @@ ob_start();
 			border-style: solid;
 			border-color: black transparent transparent transparent;
 		}
+
+		#on_breakAlert {
+			display: none;
+			background-color: #ff0000;
+			color: #ffffff;
+			padding: 10px;
+			border-radius: 5px;
+			text-align: center;
+			font-size: 0.8vw;
+		}
+
+		.jobInfo_Likert {
+			display: flex;
+			grid-row: 2 / 3;
+			grid-column: 1 / span 2;
+			flex-direction: column;
+		}
+
+		.templateDeadline_table {
+			font-size: 0.6vw;
+		}
+
+		.templatePicture {
+			height: 150px;
+		}
 	</style>
 </head>
 
@@ -391,7 +430,7 @@ ob_start();
 
 		<?php
 		include "artist_menu.php";
-
+		$artistName = $_SESSION['username'];
 		if ($_SESSION['busy'] == 'open') {
 			header("Location: ./artist_home.php");
 			exit();
@@ -421,10 +460,28 @@ ob_start();
 				} else {
 					// If current_jobID is null, set $_SESSION['busy'] to 'open'
 					$_SESSION['busy'] = 'open';
-					header("Location: agent_home.php");
+					header("Location: artist_home.php");
 					exit();
 				}
 			}
+			$stmt->close();
+
+			$artistValue = "Artist";
+			$sql = "SELECT jp.process_id, tp.process_name, jp.duration, jp.assigned_person
+        	FROM tbl_jobs_processes jp
+        	INNER JOIN tbl_template_processes tp ON jp.process_id = tp.process_id
+       	 	WHERE jp.job_id = ?
+        	ORDER BY assigned_person ASC";
+			$stmt = $conn->prepare($sql);
+			$stmt->bind_param("i", $_SESSION['artist_currentJob']);
+			$stmt->execute();
+			$result = $stmt->get_result();
+
+			$processes = [];
+			while ($row = $result->fetch_assoc()) {
+				$processes[] = $row; // Append each row to the processes array
+			}
+
 			$stmt->close();
 
 
@@ -438,7 +495,8 @@ ob_start();
 			manual_deadline_time, 
 			deadline_futureDateTime, 
 			template_id,
-			job_tracking_method
+			job_tracking_method,
+			jobstart_datetime
         	FROM tbl_jobs
         	WHERE job_id = ? AND assigned_artist = ?";
 			$stmt = $conn->prepare($sql);
@@ -456,11 +514,64 @@ ob_start();
 				$manualDeadlineTime,
 				$deadlineFutureDateTime,
 				$templateId,
-				$jobTrackingMethod
+				$jobTrackingMethod,
+				$jobstart_datetime
 			);
 			// Fetch the results
 			$stmt->fetch();
 			$stmt->close();
+
+			// Prepare the SQL statement
+			$sql = "SELECT tl.template_name, tl.filepath_templateimage
+			FROM tbl_templatelist tl
+			INNER JOIN tbl_jobs j ON tl.template_id = j.template_id
+			WHERE j.job_id = ?
+			LIMIT 1";
+
+			$stmt = $conn->prepare($sql);
+			$stmt->bind_param("i", $jobId);
+			$stmt->execute();
+			$result = $stmt->get_result();
+
+			$templateName = ''; // Initialize the variable to hold the template name
+			$filepathTemplateImage = ''; // Initialize the variable to hold the filepath of the template image
+
+			if ($row = $result->fetch_assoc()) {
+				// Assign the values to variables
+				$templateName = $row['template_name'];
+				$filepathTemplateImage = $row['filepath_templateimage'];
+			}
+
+			// Initialize the deadline variable
+			$deadline = '';
+
+			// Initialize total duration in hours
+			$totalDuration = 0;
+
+			// Convert the job start datetime to a DateTime object
+			$jobStart = new DateTime($jobstart_datetime);
+			// Loop through each process to sum up duration for processes assigned to 'Artist'
+			foreach ($processes as $process) {
+				if ($process['assigned_person'] === 'Artist') {
+					$totalDuration += $process['duration'];
+				}
+			}
+
+			// First, determine if there's a manual deadline, else use the future deadline
+			if (!empty($manualDeadlineDate) && !empty($manualDeadlineTime)) {
+				$deadline = $manualDeadlineDate . ' ' . $manualDeadlineTime;
+			} else {
+				$deadline = $deadlineFutureDateTime; // This may be NULL or a specific future datetime
+			}
+
+			// Then, check if $totalDuration is greater than 0 to adjust the deadline accordingly
+			if ($totalDuration > 0) {
+				$jobStart->add(new DateInterval('PT' . $totalDuration . 'M'));
+				$deadline = $jobStart->format('Y-m-d H:i:s');
+			}
+
+			// Display total duration and the chosen deadline
+		
 
 
 			// Check if the form is submitted
@@ -493,12 +604,6 @@ ob_start();
 			}
 
 			// Countdown timer
-			// Determine which deadline to use
-			if (!empty($manualDeadlineDate) && !empty($manualDeadlineTime)) {
-				$deadline = $manualDeadlineDate . ' ' . $manualDeadlineTime;
-			} else {
-				$deadline = $deadlineFutureDateTime;
-			}
 			// Current datetime
 			$now = new DateTime();
 			// Deadline datetime
@@ -506,11 +611,19 @@ ob_start();
 			// Time left
 			$timeLeft = $deadlineDateTime->diff($now);
 			// Display the countdown
+
+			$time_created_datetime = new DateTime($timeCreated);
+			$jobstart_datetime = new DateTime($jobstart_datetime);
+
+
+			$formatted_time_created = $time_created_datetime->format('F j, Y g:i A');
+			$formatted_jobstart_datetime = $jobstart_datetime->format('F j, Y g:i A');
+
 			?>
 
 			<div class="view-buttons">
-				<button id="tableViewBtn">Table View</button>
-				<button id="cardViewBtn">Card View</button>
+				<button id="statusBtn">Start Break</button>
+				<span id="on_breakAlert">You are on break. Work orders cannot be processed while on break.</span>
 			</div>
 		</div>
 
@@ -534,17 +647,48 @@ ob_start();
 
 			<div class="jobInfo">
 				<h3>Current Job Information</h3>
-				<ul>
-					<li><strong>Job ID:</strong> <?php echo $jobId; ?></li>
-					<li><strong>Created by Agent:</strong> <?php echo $createdByAgent; ?></li>
-					<li><strong>Time Created:</strong> <?php echo $timeCreated; ?></li>
-				</ul>
-
-				<div id="DEBUG BUTTON">
-					<form action="artist_busy.php" method="post" id="debugOpen">
-						<input type="submit" name="setOpen" value="debugOpen">
-					</form>
+				<div class="jobDetailFull">
+					<ul>
+						<li><strong>Job ID:</strong> <?php echo $jobId; ?></li>
+						<li><strong>Created by Agent:</strong> <?php echo $createdByAgent; ?></li>
+						<li><strong>Time Created:</strong> <?php echo $formatted_time_created; ?></li>
+						<li><strong>Job Start Time:</strong> <?php echo $formatted_jobstart_datetime; ?></li>
+						<div class="templateDeadline">
+							<?php if (!empty($processes)) : ?>
+								<?php if (!empty($templateName) && !empty($filepathTemplateImage)) : ?>
+									<img class="templatePicture" src="<?php echo htmlspecialchars($filepathTemplateImage); ?>" alt="Template Image">
+								<?php endif; ?>
+								<table class="templateDeadline_table">
+									<thead>
+										<tr>
+											<th>Process Name</th>
+											<th>Duration</th>
+											<th>Assigned To</th>
+											<!-- Add more headers based on the columns in tbl_jobs_processes you wish to display -->
+										</tr>
+									</thead>
+									<tbody>
+										<?php foreach ($processes as $process) : ?>
+											<tr>
+												<td><?php echo htmlspecialchars($process['process_name']); ?></td>
+												<td><?php echo htmlspecialchars($process['duration']); ?></td>
+												<td><?php echo htmlspecialchars($process['assigned_person']); ?></td>
+												<!-- Add more data cells as needed -->
+											</tr>
+										<?php endforeach; ?>
+									</tbody>
+								</table>
+							<?php endif; ?>
+						</div>
+						<div id="DEBUG BUTTON">
+							<form action="artist_busy.php" method="post" id="debugOpen">
+								<input type="submit" name="setOpen" value="debugOpen">
+							</form>
+						</div>
+					</ul>
 				</div>
+
+
 
 				<div class="jobBrief">
 					<strong>Job Subject:</strong> <?php echo $jobSubject; ?>
@@ -593,64 +737,96 @@ ob_start();
 				</div>
 			</div>
 
-			<div class="jobInfo">
-				<h3>Current Job Information</h3>
-				<ul>
-					<li><strong>Job ID:</strong> <?php echo $jobId; ?></li>
-					<li><strong>Created by Agent:</strong> <?php echo $createdByAgent; ?></li>
-					<li><strong>Time Created:</strong> <?php echo $timeCreated; ?></li>
-				</ul>
+			<div class=jobInfo_Likert>
+				<?php //PHP for likert scale
+				// Prepare the SQL query
+				$query = "SELECT completion_percentage FROM tbl_artist_status WHERE artist_name = ?";
+				if ($stmt = $conn->prepare($query)) {
+					$stmt->bind_param("s", $artistUsername);
+					$stmt->execute();
+					$stmt->bind_result($completionPercentage);
+					if ($stmt->fetch()) {
+						// $completionPercentage now has the value from the database
+					} else {
+						$completionPercentage = 0; // Default to 0 if not found
+					}
+					$stmt->close();
+				} else {
+					// Handle error
+					$completionPercentage = 0; // Default to 0 in case of an error
+				}
+				//End of PHP for likert scale
+				?>
 
-				<div id="DEBUG BUTTON">
-					<form action="artist_busy.php" method="post" id="debugOpen">
-						<input type="submit" name="setOpen" value="debugOpen">
-					</form>
-				</div>
+				<!-- Likert scale form -->
+				<?php if ($jobTrackingMethod != "deadline") : ?>
+					<div class="likertContainer">
+						<form action="artist_busy.php" method="post" id="likert_container">
+							<div class="likert_scale">
+								<p id="likertTitle"><strong>Completion Percentage:</strong></p>
+								<span id="likertSpan">0%</span>
+								<input id="likertScale" type="range" min="0" max="100" step="25" value="<?php echo $completionPercentage; ?>" name="completionPercentage" />
+							</div>
+						</form>
+					</div>
+				<?php else : ?>
+					<button id="goToUploadPage">Go to Upload Page</button>
+				<?php endif; ?>
 
-				<div class="jobBrief">
-					<strong>Job Subject:</strong> <?php echo $jobSubject; ?>
-					<br>
-					<strong>Job Brief:</strong> <?php echo $jobBrief; ?>
+				<div class="jobInfo">
+					<h3>Current Job Information</h3>
+					<div class="jobDetailFull">
+						<ul>
+							<li><strong>Job ID:</strong> <?php echo $jobId; ?></li>
+							<li><strong>Created by Agent:</strong> <?php echo $createdByAgent; ?></li>
+							<li><strong>Time Created:</strong> <?php echo $formatted_time_created; ?></li>
+							<li><strong>Job Start Time:</strong> <?php echo $formatted_jobstart_datetime; ?></li>
+							<div class="templateDeadline">
+								<?php if (!empty($processes)) : ?>
+									<?php if (!empty($templateName) && !empty($filepathTemplateImage)) : ?>
+										<img class="templatePicture" src="<?php echo htmlspecialchars($filepathTemplateImage); ?>" alt="Template Image">
+									<?php endif; ?>
+
+									<table class="templateDeadline_table">
+										<thead>
+											<tr>
+												<th>Process Name</th>
+												<th>Duration</th>
+												<th>Assigned To</th>
+												<!-- Add more headers based on the columns in tbl_jobs_processes you wish to display -->
+											</tr>
+										</thead>
+										<tbody>
+											<?php foreach ($processes as $process) : ?>
+												<tr>
+
+													<td><?php echo htmlspecialchars($process['process_name']); ?></td>
+													<td><?php echo htmlspecialchars($process['duration']); ?></td>
+													<td><?php echo htmlspecialchars($process['assigned_person']); ?></td>
+													<!-- Add more data cells as needed -->
+												</tr>
+											<?php endforeach; ?>
+										</tbody>
+									</table>
+								<?php endif; ?>
+							</div>
+							<div id="DEBUG BUTTON">
+								<form action="artist_busy.php" method="post" id="debugOpen">
+									<input type="submit" name="setOpen" value="debugOpen">
+								</form>
+							</div>
+						</ul>
+					</div>
+
+
+
+					<div class="jobBrief">
+						<strong>Job Subject:</strong> <?php echo $jobSubject; ?>
+						<br>
+						<strong>Job Brief:</strong> <?php echo $jobBrief; ?>
+					</div>
 				</div>
 			</div>
-
-
-
-
-			<?php //PHP for likert scale
-			// Prepare the SQL query
-			$query = "SELECT completion_percentage FROM tbl_artist_status WHERE artist_name = ?";
-			if ($stmt = $conn->prepare($query)) {
-				$stmt->bind_param("s", $artistUsername);
-				$stmt->execute();
-				$stmt->bind_result($completionPercentage);
-				if ($stmt->fetch()) {
-					// $completionPercentage now has the value from the database
-				} else {
-					$completionPercentage = 0; // Default to 0 if not found
-				}
-				$stmt->close();
-			} else {
-				// Handle error
-				$completionPercentage = 0; // Default to 0 in case of an error
-			}
-			//End of PHP for likert scale
-			?>
-
-			<!-- Likert scale form -->
-			<?php if ($jobTrackingMethod != "deadline") : ?>
-				<div class="likertContainer">
-					<form action="artist_busy.php" method="post" id="likert_container">
-						<div class="likert_scale">
-							<p id="likertTitle"><strong>Completion Percentage:</strong></p>
-							<span id="likertSpan">0%</span>
-							<input id="likertScale" type="range" min="0" max="100" step="25" value="<?php echo $completionPercentage; ?>" name="completionPercentage" />
-						</div>
-					</form>
-				</div>
-			<?php else : ?>
-				<button id="goToUploadPage">Go to Upload Page</button>
-			<?php endif; ?>
 
 
 			<!-- Reference images container -->
@@ -689,7 +865,7 @@ ob_start();
 		tooltip.style.cssText = 'display: none; position: absolute; background-color: black; color: white; padding: 5px 10px; border-radius: 6px; z-index: 100; pointer-events: none;';
 		tooltip.textContent = 'Completion percentage must be 100% before going to upload page.';
 		document.body.appendChild(tooltip);
-	
+
 		const goToUploadButton = document.getElementById('goToUploadPage');
 		goToUploadButton.addEventListener('mousemove', function(e) {
 			if (goToUploadButton.disabled) {
@@ -701,6 +877,39 @@ ob_start();
 
 		goToUploadButton.addEventListener('mouseout', function() {
 			tooltip.style.display = 'none';
+		});
+
+		var artistName = "<?php echo htmlspecialchars($artistName, ENT_QUOTES, 'UTF-8'); ?>"; // Get the artist name from PHP and sanitize it
+
+		checkArtistStatus();
+
+		// Event handler for the break status toggle button
+		$("#statusBtn").click(function() {
+			var currentText = $(this).text();
+			var newStatus = currentText === "Start Break" ? "on_break" : "open"; // Use "open" for the active status
+
+			$.ajax({
+				type: "POST",
+				url: "update_artist_status.php",
+				data: {
+					artistName: artistName,
+					artistStatus: newStatus
+				},
+				success: function(response) {
+					// Toggle the button text based on the new status
+					var buttonText = newStatus === "on_break" ? "End Break" : "Start Break";
+					$("#statusBtn").text(buttonText);
+
+					// Check the newStatus and adjust the "Start Selected Job" button accordingly
+					if (newStatus === "open") { // Use "open" to check if the artist is available to work
+						//$("#submitButton").prop('disabled', false).css('background-color', ''); // Re-enable and reset color
+						$("#on_breakAlert").hide();
+					} else {
+						//$("#submitButton").prop('disabled', true).css('background-color', 'grey'); // Disable and grey out
+						$("#on_breakAlert").show();
+					}
+				}
+			});
 		});
 
 		// Initial check in case the slider's initial value is 100
@@ -918,29 +1127,22 @@ ob_start();
 			});
 		}
 
-
-		function updateButtonState() {
-			if (jobTrackingMethod !== 'deadline') {
-				goToUploadPage.disabled = slider.value != 100;
-			}
-		}
-
-		if (jobTrackingMethod !== 'deadline') {
-			slider.addEventListener('input', updateButtonState);
-		}
-
-		/*
 		// Function to update the button state based on the slider value
 		function updateButtonState() {
-			if (slider.value == 100) {
-				disable_UploadButton.disabled = false; // Enable disable_UploadButton
-				// Optionally reset styles if needed
+			// If jobTrackingMethod is not 'Artist', enable the button
+			// Otherwise, disable or enable based on the slider value
+			if (jobTrackingMethod !== 'Artist') {
+				goToUploadPage.disabled = false;
 			} else {
-				disable_UploadButton.disabled = true; // Disable disable_UploadButton
+				// Assuming the slider value indicates completion (100%)
+				goToUploadPage.disabled = slider.value != 100;
 			}
-
 		} // End of updateButtonState function
-		*/
+
+		// Add event listener for the slider input event
+		if (slider) { // Check if slider exists to avoid errors
+			slider.addEventListener('input', updateButtonState);
+		} // End of slider input event
 
 	}); // End of DOMContentLoaded
 
@@ -958,6 +1160,32 @@ ob_start();
 		document.querySelector('.upload_container').style.display = isUploadVisible ? 'grid' : 'none';
 		document.querySelector('.table_container').style.display = isUploadVisible ? 'none' : 'grid';
 	} // End of applyVisibility function
+
+	// Function to check the artist status and disable/enable the submit button
+	function checkArtistStatus() {
+		var artistName = "<?php echo htmlspecialchars($artistName, ENT_QUOTES, 'UTF-8'); ?>";
+		$.ajax({
+			type: "POST",
+			url: "check_artist_status.php",
+			data: {
+				artistName: artistName
+			},
+			success: function(response) {
+				if (response.trim() === "on_break") {
+					//$("#submitButton").prop('disabled', true).css('background-color', 'grey');
+					$("#statusBtn").text("End Break"); // Assume the artist is on a break initially
+					$("#on_breakAlert").show();
+				} else if (response.trim() === "open") {
+					//$("#submitButton").prop('disabled', false).css('background-color', ''); // Re-enable if status is "open"
+					$("#statusBtn").text("Start Break");
+					$("#on_breakAlert").hide();
+				}
+			},
+			error: function(xhr, status, error) {
+				console.error("An error occurred: " + status + ", " + error);
+			}
+		});
+	} // End of checkArtistStatus function
 </script>
 
 

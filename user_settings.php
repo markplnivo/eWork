@@ -96,21 +96,22 @@ if (isset($_POST["updateSettingsButton"])) {
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
         }
 
-        #userSettingsContainer{
-            width:100%;
-            height:60%;
+        #userSettingsContainer {
+            width: 100%;
+            height: 60%;
             display: grid;
             grid-template-rows: auto auto;
             grid-area: 1 / 2 / 2 / 3;
         }
 
-        #userSettingsContainer > h2:nth-child(1){
+        #userSettingsContainer>h2:nth-child(1) {
             grid-area: 1 / 1 / 2 / -1;
         }
 
-        #userSettingsContainer > form:nth-child(2){
+        #userSettingsContainer>form:nth-child(2) {
             grid-area: 2 / 1 / 3 / -1;
         }
+
         #password_input {
             grid-column: 2 / 3;
             grid-row: 1 / 2;
@@ -253,6 +254,7 @@ if (isset($_POST['updatePassword'])) {
     <div id="userSettingsContainer">
         <h2>User Settings</h2>
         <form action="/ework_collab/user_settings.php" method="post" enctype="multipart/form-data">
+            <button id="backButton">Go Back</button>
             <div class="formLayout">
                 <!-- Profile Image Upload Section -->
                 <div>
@@ -262,12 +264,12 @@ if (isset($_POST['updatePassword'])) {
                     <!-- Update Profile Picture Button -->
                     <input type="submit" value="Update Profile Picture" name="updateProfilePicture">
                 </div>
-                
+
                 <!-- Old Password Input -->
                 <div>
                     <label for="oldPassword">Old Password:</label>
                     <input type="password" name="oldPassword" id="oldPassword">
-                <!-- Password Update Section -->
+                    <!-- Password Update Section -->
                     <label for="newPassword">New Password:</label>
                     <input type="password" name="newPassword" id="newPassword">
                     <!-- Update Password Button -->
@@ -277,8 +279,10 @@ if (isset($_POST['updatePassword'])) {
         </form>
     </div>
 
-    <script>
+    <script type="text/javascript">
         document.addEventListener('DOMContentLoaded', function() {
+
+            // JavaScript for image preview
             document.getElementById('profileImage').addEventListener('change', function(event) {
                 if (event.target.files && event.target.files[0]) {
                     var reader = new FileReader();
@@ -287,8 +291,15 @@ if (isset($_POST['updatePassword'])) {
                     };
                     reader.readAsDataURL(event.target.files[0]);
                 }
-            });
-        });
+            });//end of profileImage change event
+
+            // JavaScript for back button
+            document.getElementById('backButton').addEventListener('click', function() {
+                window.history.back();
+            });//end of back button click event
+
+            
+        }); //end of DOMContentLoaded
     </script>
 </body>
 

@@ -17,6 +17,7 @@ $deadlineDate = $conn->real_escape_string($_POST['deadline_date']);
 $deadlineTime = $conn->real_escape_string($_POST['deadline_time']);
 $futureDateTime = $conn->real_escape_string($_POST['futureDateTime']);
 
+
 // Only attempt to retrieve the template_id if 'use-template' is not set to "Manually"
 if ($useTemplate !== "Manually") {
     // Retrieve the template_id using the selected template name
@@ -77,11 +78,11 @@ if ($stmtInsert = $conn->prepare($insertSql)) {
         
         // Process additional job details if provided
         $processDetails = $_POST['processes'] ?? [];
-        $insertProcessSql = "INSERT INTO tbl_jobs_processes (job_id, process_id, duration, assigned_person) VALUES (?, ?, ?, ?)";
+        $insertProcessSql = "INSERT INTO tbl_jobs_processes (job_id, process_id, duration, assigned_person, template_id) VALUES (?, ?, ?, ?, ?)";
         
         foreach ($processDetails as $process) {
             if ($stmtProcess = $conn->prepare($insertProcessSql)) {
-                $stmtProcess->bind_param("iiis", $jobId, $process['id'], $process['duration'], $process['option']);
+                $stmtProcess->bind_param("iiisi", $jobId, $process['id'], $process['duration'], $process['option'], $templateId);
                 
                 if (!$stmtProcess->execute()) {
                     // Log or handle error for process detail insertion
