@@ -1,83 +1,7 @@
+<?php ob_start(); ?>
+
 <!DOCTYPE html>
 <html>
-<?php include "superadmin_menu.php" ?>
-<?php
-
-if (isset($_POST['remove_selected'])) {
-    // Check if any rows were selected for removal
-    if (isset($_POST['selected_rows']) && is_array($_POST['selected_rows'])) {
-        // Create a string of placeholders based on the number of selected rows
-        $placeholders = implode(',', array_fill(0, count($_POST['selected_rows']), '?'));
-
-        // Prepare the SQL statement to delete the records from the original table
-        $deleteSql = "DELETE FROM tbl_recyclebin_account_request WHERE email IN ($placeholders)";
-
-        // Create a prepared statement
-        if ($stmt = $conn->prepare($deleteSql)) {
-            // Bind each email to its own placeholder
-            $stmt->bind_param(str_repeat('s', count($_POST['selected_rows'])), ...$_POST['selected_rows']);
-
-            // Execute the statement to delete the selected rows from the original table
-            $stmt->execute();
-
-            // Close the prepared statement
-            $stmt->close();
-        }
-
-        $_POST['selected_rows'] = array();
-        header("Location: superadmin_recyclebin.php");
-        exit(); // Terminate script execution after redirection
-    }
-}
-
-if (isset($_POST['restore_selected'])) {
-    // Check if any rows were selected for restoration
-    if (isset($_POST['selected_rows']) && is_array($_POST['selected_rows'])) {
-        // Create a string of placeholders based on the number of selected rows
-        $placeholders = implode(',', array_fill(0, count($_POST['selected_rows']), '?'));
-
-        // Prepare the SQL statement to insert the records back into the original table
-        $restoreSql = "INSERT INTO tbl_account_request (firstname, lastname, job_description, email, contact_number, user_password, request_time, username) 
-            SELECT firstname, lastname, job_description, email, contact_number, user_password, request_time, username
-            FROM tbl_recyclebin_account_request 
-            WHERE email IN ($placeholders)";
-
-        // Create a prepared statement
-        if ($stmt = $conn->prepare($restoreSql)) {
-            // Bind each email to its own placeholder
-            $stmt->bind_param(str_repeat('s', count($_POST['selected_rows'])), ...$_POST['selected_rows']);
-
-            // Execute the statement to restore the selected rows
-            $stmt->execute();
-
-            // Close the prepared statement
-            $stmt->close();
-        }
-
-        // Prepare the SQL statement to delete the rows from the recyclebin table
-        $deleteSql = "DELETE FROM tbl_recyclebin_account_request WHERE email IN ($placeholders)";
-
-        // Create a prepared statement
-        if ($stmt = $conn->prepare($deleteSql)) {
-            // Bind each email to its own placeholder
-            $stmt->bind_param(str_repeat('s', count($_POST['selected_rows'])), ...$_POST['selected_rows']);
-
-            // Execute the statement to delete the selected rows from the recyclebin table
-            $stmt->execute();
-
-            // Close the prepared statement
-            $stmt->close();
-        }
-
-        $_POST['selected_rows'] = array();
-        header("Location: superadmin_recyclebin.php");
-        exit(); // Terminate script execution after redirection
-    }
-}
-
-    ?>
-
-
 <head>
     <title>Superadmin</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -148,7 +72,7 @@ if (isset($_POST['restore_selected'])) {
 
         th {
             background-color: #ffc400;
-            color: #0;
+            color: #000;
         }
 
         tr {
@@ -235,6 +159,7 @@ if (isset($_POST['restore_selected'])) {
     </header>
 
     <?php
+    include "superadmin_menu.php";
     $limit = 5; // Number of entries to show in a page.
     // Look for a GET variable page if not found default is 1.  
     if (isset($_GET["page"])) {
@@ -299,9 +224,82 @@ if (isset($_POST['restore_selected'])) {
     </div>
     </div>
 
-  
-
 </body>
+
+<?php
+if (isset($_POST['remove_selected'])) {
+    // Check if any rows were selected for removal
+    if (isset($_POST['selected_rows']) && is_array($_POST['selected_rows'])) {
+        // Create a string of placeholders based on the number of selected rows
+        $placeholders = implode(',', array_fill(0, count($_POST['selected_rows']), '?'));
+
+        // Prepare the SQL statement to delete the records from the original table
+        $deleteSql = "DELETE FROM tbl_recyclebin_account_request WHERE email IN ($placeholders)";
+
+        // Create a prepared statement
+        if ($stmt = $conn->prepare($deleteSql)) {
+            // Bind each email to its own placeholder
+            $stmt->bind_param(str_repeat('s', count($_POST['selected_rows'])), ...$_POST['selected_rows']);
+
+            // Execute the statement to delete the selected rows from the original table
+            $stmt->execute();
+
+            // Close the prepared statement
+            $stmt->close();
+        }
+
+        $_POST['selected_rows'] = array();
+        header("Location: superadmin_recyclebin.php");
+        exit(); // Terminate script execution after redirection
+    }
+}
+
+if (isset($_POST['restore_selected'])) {
+    // Check if any rows were selected for restoration
+    if (isset($_POST['selected_rows']) && is_array($_POST['selected_rows'])) {
+        // Create a string of placeholders based on the number of selected rows
+        $placeholders = implode(',', array_fill(0, count($_POST['selected_rows']), '?'));
+
+        // Prepare the SQL statement to insert the records back into the original table
+        $restoreSql = "INSERT INTO tbl_account_request (firstname, lastname, job_description, email, contact_number, user_password, request_time, username) 
+            SELECT firstname, lastname, job_description, email, contact_number, user_password, request_time, username
+            FROM tbl_recyclebin_account_request 
+            WHERE email IN ($placeholders)";
+
+        // Create a prepared statement
+        if ($stmt = $conn->prepare($restoreSql)) {
+            // Bind each email to its own placeholder
+            $stmt->bind_param(str_repeat('s', count($_POST['selected_rows'])), ...$_POST['selected_rows']);
+
+            // Execute the statement to restore the selected rows
+            $stmt->execute();
+
+            // Close the prepared statement
+            $stmt->close();
+        }
+
+        // Prepare the SQL statement to delete the rows from the recyclebin table
+        $deleteSql = "DELETE FROM tbl_recyclebin_account_request WHERE email IN ($placeholders)";
+
+        // Create a prepared statement
+        if ($stmt = $conn->prepare($deleteSql)) {
+            // Bind each email to its own placeholder
+            $stmt->bind_param(str_repeat('s', count($_POST['selected_rows'])), ...$_POST['selected_rows']);
+
+            // Execute the statement to delete the selected rows from the recyclebin table
+            $stmt->execute();
+
+            // Close the prepared statement
+            $stmt->close();
+        }
+
+        $_POST['selected_rows'] = array();
+        header("Location: superadmin_recyclebin.php");
+        exit(); // Terminate script execution after redirection
+    }
+}
+
+    ?>
 
 <script>
     // Get the input element and table
@@ -342,3 +340,4 @@ if (isset($_POST['restore_selected'])) {
 
 
 </html>
+<?php ob_end_flush(); ?>

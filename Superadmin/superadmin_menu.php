@@ -1,3 +1,4 @@
+<?php ob_start(); ?>
 <?php
 include "../session_handler.php";
 include "../logindbase.php";
@@ -193,3 +194,4 @@ if ($_SESSION['position'] != 'Superadmin') {
 </body>
 
 </html>
+<?php ob_end_flush(); ?>

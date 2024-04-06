@@ -1,80 +1,8 @@
+<?php ob_start(); ?>
+
 <!DOCTYPE html>
 <html>
-<?php
-include "superadmin_menu.php";
-?>
-<?php
-if (isset($_POST['remove_selected'])) {
-    // Check if any rows were selected for removal
-    if (isset($_POST['selected_rows']) && is_array($_POST['selected_rows'])) {
-        // Create a string of placeholders based on the number of selected rows
-        $placeholders = implode(',', array_fill(0, count($_POST['selected_rows']), '?'));
 
-        // Prepare the SQL statement to insert the records into the recyclebin table
-        $insertSql = "INSERT INTO tbl_recyclebin_account_request (firstname, lastname, job_description, email, contact_number, user_password, request_time, username)
-                  SELECT user_firstname, user_lastname, job_position, user_email, user_contactnumber, user_password, NOW(), username
-                  FROM tbl_userlist 
-                  WHERE user_email IN ($placeholders)";
-
-        // Create a prepared statement
-        if ($stmt = $conn->prepare($insertSql)) {
-            // Bind each email to its own placeholder
-            $stmt->bind_param(str_repeat('s', count($_POST['selected_rows'])), ...$_POST['selected_rows']);
-
-            // Execute the statement to insert the selected rows into the recyclebin table
-            $stmt->execute();
-        }
-
-        // Prepare the SQL statement to delete the records from the original table
-        $deleteSql = "DELETE FROM tbl_userlist WHERE user_email IN ($placeholders)";
-
-        // Create a prepared statement
-        if ($stmt = $conn->prepare($deleteSql)) {
-            // Bind each email to its own placeholder
-            $stmt->bind_param(str_repeat('s', count($_POST['selected_rows'])), ...$_POST['selected_rows']);
-
-            // Execute the statement to delete the selected rows from the original table
-            $stmt->execute();
-
-            // Close the prepared statement
-            $stmt->close();
-        }
-
-        $_POST['selected_rows'] = array();
-        header("Location: superadmin_userlist.php");
-        exit(); // Terminate script execution after redirection
-    }
-}
-
-if (isset($_POST['change_role'])) {
-    // Check if any rows were selected for role update
-    if (isset($_POST['selected_rows']) && is_array($_POST['selected_rows'])) {
-        foreach ($_POST['selected_rows'] as $email) {
-            $roleField = 'role_' . str_replace('.', '_', $email); // Construct the field name
-            if (isset($_POST[$roleField])) {
-                $newRole = $_POST[$roleField];
-
-                $updateSql = "UPDATE tbl_userlist SET job_position = ? WHERE user_email = ?";
-                if ($stmt = $conn->prepare($updateSql)) {
-                    $stmt->bind_param('ss', $newRole, $email);
-                    if (!$stmt->execute()) {
-                        echo "Error executing update statement: " . $stmt->error;
-                    }
-                    $stmt->close();
-                } else {
-                    echo "Error preparing update statement: " . $conn->error;
-                }
-            }
-        }
-        $_POST['selected_rows'] = array();
-        header("Location: superadmin_userlist.php");
-        exit();
-    }
-}
-
-
-
-?>
 
 <head>
     <title>Superadmin</title>
@@ -145,7 +73,7 @@ if (isset($_POST['change_role'])) {
 
         th {
             background-color: #ffc400;
-            color: #0;
+            color: #000;
         }
 
         tr {
@@ -243,6 +171,9 @@ if (isset($_POST['change_role'])) {
     </header>
 
     <?php
+    
+    include "superadmin_menu.php";
+    
     $limit = 10; // Number of entries to show in a page.
     // Look for a GET variable page if not found default is 1.  
     if (isset($_GET["page"])) {
@@ -315,8 +246,80 @@ if (isset($_POST['change_role'])) {
     </div>
     </div>
 
-
 </body>
+
+<?php
+if (isset($_POST['remove_selected'])) {
+    // Check if any rows were selected for removal
+    if (isset($_POST['selected_rows']) && is_array($_POST['selected_rows'])) {
+        // Create a string of placeholders based on the number of selected rows
+        $placeholders = implode(',', array_fill(0, count($_POST['selected_rows']), '?'));
+
+        // Prepare the SQL statement to insert the records into the recyclebin table
+        $insertSql = "INSERT INTO tbl_recyclebin_account_request (firstname, lastname, job_description, email, contact_number, user_password, request_time, username)
+                  SELECT user_firstname, user_lastname, job_position, user_email, user_contactnumber, user_password, NOW(), username
+                  FROM tbl_userlist 
+                  WHERE user_email IN ($placeholders)";
+
+        // Create a prepared statement
+        if ($stmt = $conn->prepare($insertSql)) {
+            // Bind each email to its own placeholder
+            $stmt->bind_param(str_repeat('s', count($_POST['selected_rows'])), ...$_POST['selected_rows']);
+
+            // Execute the statement to insert the selected rows into the recyclebin table
+            $stmt->execute();
+        }
+
+        // Prepare the SQL statement to delete the records from the original table
+        $deleteSql = "DELETE FROM tbl_userlist WHERE user_email IN ($placeholders)";
+
+        // Create a prepared statement
+        if ($stmt = $conn->prepare($deleteSql)) {
+            // Bind each email to its own placeholder
+            $stmt->bind_param(str_repeat('s', count($_POST['selected_rows'])), ...$_POST['selected_rows']);
+
+            // Execute the statement to delete the selected rows from the original table
+            $stmt->execute();
+
+            // Close the prepared statement
+            $stmt->close();
+        }
+
+        $_POST['selected_rows'] = array();
+        header("Location: superadmin_userlist.php");
+        exit(); // Terminate script execution after redirection
+    }
+}
+
+if (isset($_POST['change_role'])) {
+    // Check if any rows were selected for role update
+    if (isset($_POST['selected_rows']) && is_array($_POST['selected_rows'])) {
+        foreach ($_POST['selected_rows'] as $email) {
+            $roleField = 'role_' . str_replace('.', '_', $email); // Construct the field name
+            if (isset($_POST[$roleField])) {
+                $newRole = $_POST[$roleField];
+
+                $updateSql = "UPDATE tbl_userlist SET job_position = ? WHERE user_email = ?";
+                if ($stmt = $conn->prepare($updateSql)) {
+                    $stmt->bind_param('ss', $newRole, $email);
+                    if (!$stmt->execute()) {
+                        echo "Error executing update statement: " . $stmt->error;
+                    }
+                    $stmt->close();
+                } else {
+                    echo "Error preparing update statement: " . $conn->error;
+                }
+            }
+        }
+        $_POST['selected_rows'] = array();
+        header("Location: superadmin_userlist.php");
+        exit();
+    }
+}
+
+
+
+?>
 
 <script>
     // Get the input element and table
@@ -355,3 +358,4 @@ if (isset($_POST['change_role'])) {
     });
 </script>
 </html>
+<?php ob_end_flush(); ?>
