@@ -156,6 +156,12 @@
     .chart_container {
         overflow-x: auto;
     }
+
+    .canvasContainer {
+        width:80%;
+        height:auto;
+        align-self: center;
+    }
 </style>
 
 <body>
@@ -259,14 +265,13 @@
 
 </body>
 
+
 <script type="text/javascript">
+    let jobsProgressChartInstance = null; // Hold the chart instance globally
     const ctx = document.getElementById('jobsProgressChart').getContext('2d');
 
-    // Fetch job data from the server
-
     async function fetchJobsInProgress() {
-        console.log('Starting to fetch jobs data'); // Expected output: "Starting to fetch jobs data"
-
+        console.log('Starting to fetch jobs data');
         try {
             const response = await fetch('jobsprogress_chart.php');
             const jobsData = await response.json();
@@ -276,9 +281,7 @@
                 return;
             }
 
-            console.log('Fetched jobs data:', jobsData); // Expected output: The fetched data array or an error object
-
-            // Prepare data for charting
+            console.log('Fetched jobs data:', jobsData);
             renderChart(jobsData);
         } catch (error) {
             console.error('Error fetching jobs in progress:', error);
@@ -286,10 +289,14 @@
     }
 
     function renderChart(jobsData) {
-        console.log('Rendering chart with data:', jobsData); // Expected output: The data array used to render the chart
+        console.log('Rendering chart with data:', jobsData);
+        // Destroy the existing chart instance if it exists
+        if (jobsProgressChartInstance) {
+            jobsProgressChartInstance.destroy();
+        }
 
-        new Chart(ctx, {
-            type: 'line', // Change to 'line' type for an area chart
+        jobsProgressChartInstance = new Chart(ctx, {
+            type: 'line',
             data: {
                 labels: jobsData.map(job => job.date),
                 datasets: [{
@@ -326,7 +333,7 @@
                     x: {
                         type: 'time',
                         time: {
-                            parser: 'yyyy-MM-dd', // specify the correct parser for your datetime format
+                            parser: 'yyyy-MM-dd',
                             unit: 'day',
                             displayFormats: {
                                 day: 'yyyy-MM-dd'
@@ -370,23 +377,15 @@
         });
     }
 
-    
-    // Switch between table and chart view
     window.onload = function() {
-        fetchJobsInProgress(); // Fetch and render the chart as part of window load
-        // Other onload logic here
+        fetchJobsInProgress();
         switchView(sessionStorage.getItem('currentView') || 'table');
-    }; // end of window.onload
+    };
 
-    // Show the chart view
     function showChart() {
-        console.log('Showing chart view'); // Expected output: "Showing chart view" when the function is triggered
-
         document.getElementById('chartView').style.display = 'flex';
-    } // end of showChart
+    }
 
-
-    // Switch between table and chart view
     document.getElementById('tableViewBtn').addEventListener('click', function() {
         sessionStorage.setItem('currentView', 'table');
         switchView('table');
@@ -395,21 +394,25 @@
     document.getElementById('chartViewBtn').addEventListener('click', function() {
         sessionStorage.setItem('currentView', 'chart');
         switchView('chart');
-        showChart();
     });
 
     function switchView(view) {
-        console.log('Switching view to:', view); // Expected output: "Switching view to: chart" or "table"
-
         if (view === 'table') {
             document.getElementById('tableView').style.display = 'block';
             document.getElementById('chartView').style.display = 'none';
+            // Optionally, destroy the chart when switching away from the chart view
+            if (jobsProgressChartInstance) {
+                jobsProgressChartInstance.destroy();
+                jobsProgressChartInstance = null;
+            }
         } else {
             document.getElementById('tableView').style.display = 'none';
             document.getElementById('chartView').style.display = 'flex';
             showChart();
+            // Refetch and render the chart data when switching back to chart view
+            fetchJobsInProgress();
         }
-    } // end of switchView
+    }
 
     document.querySelectorAll('.page-link').forEach(function(link) {
         link.addEventListener('click', function(e) {
@@ -419,15 +422,12 @@
         });
     });
 
-
-    // Search Functionality
     var searchInput = document.getElementById('searchInput');
     searchInput.addEventListener('keyup', function() {
         var filter = searchInput.value.toUpperCase();
         var rows = document.getElementById('tableView').getElementsByTagName('tr');
-
         for (var i = 0; i < rows.length; i++) {
-            var td = rows[i].getElementsByTagName('td')[0]; // Search by Job ID
+            var td = rows[i].getElementsByTagName('td')[0];
             if (td) {
                 if (td.textContent.toUpperCase().indexOf(filter) > -1) {
                     rows[i].style.display = '';
@@ -436,21 +436,19 @@
                 }
             }
         }
-    }); // end of searchInput
+    });
 
-    
-    // Fetch job data based on time frame
     function fetchJobsData(timeFrame) {
         fetch(`jobsprogress_chart.php?timeFrame=${timeFrame}`)
             .then(response => response.json())
             .then(data => {
                 console.log(data);
-                // Call renderChart or any function to update the chart with this data
+                renderChart(data);
             })
             .catch(error => console.error('Error fetching job data:', error));
-    } // end of fetchJobsData
-    
+    }
 </script>
+
 
 </html>
 <?php ob_end_flush(); ?>

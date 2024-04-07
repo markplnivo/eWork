@@ -1,0 +1,17 @@
+Create 15 insert queries for tbl_jobs with these columns, do not use data such as job id from the previous prompt.
+
+ job_id 	creator_name 	time_created 	job_status 	assigned_artist 	job_subject 	job_brief 	assigning_method 	template_method 	template_id
+used to retrieve template name 	job_tracking_method 	manual_deadline_date 	manual_deadline_time 	deadline_futureDateTime 	jobstart_datetime 	jobend_datetime 
+
+creator_name should only be agent
+job_status should only be either open or pending
+assigned_artist should only be artist
+job_subject should be limited to 50 chars
+job_brief should be limited to 50 chars
+assigning_method should be either 'Open to All' or 'Assign an Artist'
+template_method should be either 'Template' or 'Manually'
+template_id should be either 17,16,or 18
+job_tracking_method should be either Artist or Deadline
+jobstart_datetime should follow formatting like this '2024-04-05 08:02:09'
+manual_deadline_date, manual_deadline_time, deadline_futureDateTime should be null
+jobend_datetime should not be null and should span from days weeks months

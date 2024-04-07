@@ -1,0 +1,39 @@
+.chart_container {
+    /* Light grey background */
+    padding: 20px;
+    display: flex;
+    /* Initially hidden */
+    background-color: #919191;
+    justify-content: center;
+    height: auto;
+    flex-direction: column;
+}
+
+.canvasContainer {
+    /* Additional styling for the canvas container if needed */
+    flex: 1 0 60%;
+    height: 80%;
+    display: flex;
+    justify-content: center;
+}
+
+#chartSortBy {
+    margin: auto;
+    background-color: rgba(82, 82, 82, 0.9);
+    border-radius: 5px;
+}
+
+#chartSortBy label {
+    color: #ffffff;
+}
+
+#chartSortBy button {
+    margin: 10px;
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    background-color: #ffc400;
+    color: #000000;
+}

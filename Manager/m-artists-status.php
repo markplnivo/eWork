@@ -2,6 +2,8 @@
 <html lang="en">
 
 <head>
+    <link rel="stylesheet" href="chart.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <meta charset="UTF-8">
 <title>Artists' Status</title>
@@ -86,8 +88,7 @@
         background-color: #dbaf00;
     }
 
-    .table_container,
-    .card_container {
+    .table_container {
         display: grid;
         background-color: #919191;
         grid-area: 3 / 2 / -1 / -1;
@@ -147,16 +148,6 @@
         font-weight: bold;
         text-decoration: none;
     }
-
-    .card {
-        border: 1px solid #ddd;
-        padding: 10px;
-        margin: 10px;
-        display: inline-block;
-        box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
-        border-radius: 8px;
-        background-color: rgba(64, 64, 64, 0.4);
-    }
 </style>
 
 <body>
@@ -197,7 +188,7 @@
 
             <div class="view-buttons">
                 <button id="tableViewBtn">Table View</button>
-                <button id="cardViewBtn">Card View</button>
+                <button id="chartViewBtn">Chart View</button>
             </div>
 
             <?php
@@ -236,66 +227,124 @@
         // Retrieve data from the database
         $sql = "SELECT artist_name, artist_status, artist_id FROM tbl_artist_status LIMIT $start_from, $results_per_page";
         $result = $conn->query($sql);
+        ?>
 
+        <div class="table_container" id="tableView">
+            <table>
+                <tr>
+                    <th>Artist ID</th>
+                    <th>Artist Name</th>
+                    <th>Status</th>
+                    <th>Job Percentage</th>
+                </tr>
+                <?php while ($row = $result->fetch_assoc()) : ?>
+                    <tr>
+                        <td><?php echo $row['artist_id']; ?></td>
+                        <td><?php echo $row['artist_name']; ?></td>
+                        <td><?php echo $row['artist_status']; ?></td>
+                        <td></td>
+                    </tr>
+                <?php endwhile; ?>
+            </table>
+        </div>
 
-        echo '<div class="table_container" id="tableView">';
-        // Display the table
-        echo "<table>";
-        echo "<tr><th>Artist ID</th><th>Artist Name</th><th>Status</th><th>Job Percentage</th></tr>";
+        <div class="chart_container" id="chartView" style="display: none;">
+            <div class="canvasContainer">
+                <canvas id="artistStatusChart"></canvas>
+            </div>
+        </div>
 
-        while ($row = $result->fetch_assoc()) {
-            echo "<tr>";
-            echo "<td>" . $row['artist_id'] . "</td>";
-            echo "<td>" . $row['artist_name'] . "</td>";
-            echo "<td>" . $row['artist_status'] . "</td>";
-            echo "<td></td>";
-            echo "</tr>";
-        }
-
-        echo "</table>";
-
-        echo '</div>';
-
-        echo '<div class="card_container" id="cardView" style="display: none;">';
-        foreach ($result as $row) {
-            echo "<div class='card' style='width: 250px; height: 250px;'>";
-            echo "<p>Artist ID: " . $row['artist_id'] . "</p>";
-            echo "<p>Artist Name: " . $row['artist_name'] . "</p>";
-            echo "<p>Status: " . $row['artist_status'] . "</p>";
-            // Add more data as needed
-            echo "</div>";
-        }
-        echo '</div>';
-
-
+        <?php
         // Close the database connection
         $conn->close();
-        echo "</div>";
-        echo "</div>";
         ?>
     </div>
 </body>
 
 <script>
+    let artistStatusChart = null; // Holds chart instance
+    const ctx = document.getElementById('artistStatusChart').getContext('2d');
+
+    // Render chart
+    function renderChart(data) {
+        if (artistStatusChart) {
+            artistStatusChart.destroy();
+        } // Destroy the previous chart instance
+
+        window.artistStatusChart = new Chart(ctx, {
+            type: 'polarArea',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Artist Status',
+                    data: data.data,
+                    backgroundColor: data.colors,
+                    borderWidth: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                
+                }
+            }
+        });
+    }
+
+
+    async function fetchArtistStatusData() {
+        try {
+            const response = await fetch('artist_status_data.php'); // Adjust the path
+            const artistStatusData = await response.json();
+
+            const data = {
+                labels: artistStatusData.map(item => item.artist_status),
+                data: artistStatusData.map(item => parseInt(item.artist_status_count)),
+                colors: ['#FF6384', '#36A2EB', '#FFCE56'] // Example colors for 'busy', 'open', 'on_break'
+            };
+
+            renderChart(data);
+        } catch (error) {
+            console.error('Error fetching artist status data:', error);
+        }
+    }
+
+    window.onload = function() {
+        fetchArtistStatusData();
+        switchView(sessionStorage.getItem('currentView') || 'table');
+    };
+
+    function showChart() {
+        document.getElementById('chartView').style.display = 'flex';
+    }
+
+    function switchView(view) {
+        if (view === 'table') {
+            document.getElementById('tableView').style.display = 'block';
+            document.getElementById('chartView').style.display = 'none';
+
+            if (artistStatusChart) {
+                artistStatusChart.destroy();
+                artistStatusChart = null;
+            }
+        } else {
+            document.getElementById('tableView').style.display = 'none';
+            document.getElementById('chartView').style.display = 'flex';
+        }
+    }
+
     document.getElementById('tableViewBtn').addEventListener('click', function() {
         sessionStorage.setItem('currentView', 'table');
         switchView('table');
     });
 
-    document.getElementById('cardViewBtn').addEventListener('click', function() {
-        sessionStorage.setItem('currentView', 'card');
-        switchView('card');
+    document.getElementById('chartViewBtn').addEventListener('click', function() {
+        sessionStorage.setItem('currentView', 'chart');
+        switchView('chart');
     });
 
-    function switchView(view) {
-        if (view === 'table') {
-            document.getElementById('tableView').style.display = 'block';
-            document.getElementById('cardView').style.display = 'none';
-        } else {
-            document.getElementById('tableView').style.display = 'none';
-            document.getElementById('cardView').style.display = 'block';
-        }
-    }
+
 
     document.querySelectorAll('.page-link').forEach(function(link) {
         link.addEventListener('click', function(e) {
@@ -304,12 +353,6 @@
             window.location.href = this.href + '&view=' + currentView;
         });
     });
-
-    window.onload = function() {
-        var urlParams = new URLSearchParams(window.location.search);
-        var view = urlParams.get('view') || sessionStorage.getItem('currentView') || 'table';
-        switchView(view);
-    };
 
 
     // Search Functionality
@@ -326,9 +369,20 @@
                 } else {
                     rows[i].style.display = 'none';
                 }
-            } 
+            }
         }
     });
+
+    function fetchJobsData(timeframe) {
+        fetch(`artist_status_data.php?timeframe=${timeframe}`)
+            .then(response => response.json())
+            .then(data => {
+                renderChart(data);
+            })
+            .catch(error => {
+                console.error('Error fetching artist status data:', error);
+            });
+    }
 </script>
 
 </html>

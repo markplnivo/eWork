@@ -275,12 +275,19 @@
 </body>
 
 <script type="text/javascript">
-    // Chart.js
+    // Include Chart.js library
     const ctx = document.getElementById('jobStatusChart').getContext('2d');
+    let jobStatusChart = null; // This will hold the chart instance
 
     // Render the chart using Chart.js
     function renderChart(data) {
-        new Chart(ctx, {
+        // If an instance of the chart already exists, destroy it
+        if (jobStatusChart) {
+            jobStatusChart.destroy();
+        }
+
+        // Create a new chart instance
+        jobStatusChart = new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: ['Open Jobs', 'Pending Jobs'],
@@ -338,7 +345,7 @@
         });
     } // end of chartjs
 
-    // Fetch job data from the server
+    // Asynchronously fetch job data
     async function fetchJobData() {
         try {
             const response = await fetch('joblist_chart.php');
@@ -355,20 +362,29 @@
         }
     } // end of fetchJobData
 
-    // Switch between table and chart view
     window.onload = function() {
         fetchJobData(); // Fetch and render the chart as part of window load
-        // Other onload logic here
         switchView(sessionStorage.getItem('currentView') || 'table');
-    }; // end of window.onload
-
-    // Show the chart view
-    function showChart() {
-        document.getElementById('chartView').style.display = 'flex';
-    } // end of showChart
-
+    };
 
     // Switch between table and chart view
+    function switchView(view) {
+        if (view === 'table') {
+            document.getElementById('tableView').style.display = 'block';
+            document.getElementById('chartView').style.display = 'none';
+            // Optionally destroy the chart when switching away from chart view
+            if (jobStatusChart) {
+                jobStatusChart.destroy();
+                jobStatusChart = null;
+            }
+        } else {
+            document.getElementById('tableView').style.display = 'none';
+            document.getElementById('chartView').style.display = 'flex';
+            // Refetch data or show the existing chart when switching to chart view
+            fetchJobData();
+        }
+    }
+
     document.getElementById('tableViewBtn').addEventListener('click', function() {
         sessionStorage.setItem('currentView', 'table');
         switchView('table');
@@ -377,19 +393,7 @@
     document.getElementById('chartViewBtn').addEventListener('click', function() {
         sessionStorage.setItem('currentView', 'chart');
         switchView('chart');
-        showChart();
     });
-
-    function switchView(view) {
-        if (view === 'table') {
-            document.getElementById('tableView').style.display = 'block';
-            document.getElementById('chartView').style.display = 'none';
-        } else {
-            document.getElementById('tableView').style.display = 'none';
-            document.getElementById('chartView').style.display = 'flex';
-            showChart();
-        }
-    } // end of switchView
 
     document.querySelectorAll('.page-link').forEach(function(link) {
         link.addEventListener('click', function(e) {
@@ -399,7 +403,6 @@
         });
     });
 
-
     // Search Functionality
     var searchInput = document.getElementById('searchInput');
     searchInput.addEventListener('keyup', function() {
@@ -407,7 +410,7 @@
         var rows = document.getElementById('tableView').getElementsByTagName('tr');
 
         for (var i = 0; i < rows.length; i++) {
-            var td = rows[i].getElementsByTagName('td')[1]; // Assuming you want to search by the 'Artist Name' column
+            var td = rows[i].getElementsByTagName('td')[1];
             if (td) {
                 if (td.textContent.toUpperCase().indexOf(filter) > -1) {
                     rows[i].style.display = '';
@@ -416,7 +419,7 @@
                 }
             }
         }
-    }); // end of searchInput
+    });
 
     // Fetch job data based on time frame
     function fetchJobsData(timeFrame) {
@@ -424,14 +427,12 @@
             .then(response => response.json())
             .then(data => {
                 console.log(data);
-                // Call renderChart or any function to update the chart with this data
+                renderChart(data); // Update the chart with fetched data
             })
             .catch(error => console.error('Error fetching job data:', error));
-    }// end of fetchJobsData
-
-
-
+    }
 </script>
+
 
 </html>
 <?php ob_end_flush(); ?>

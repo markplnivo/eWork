@@ -98,8 +98,7 @@ include "../logindbase.php";
         background-color: #dbaf00;
     }
 
-    .table_container,
-    .card_container {
+    .table_container {
         display: grid;
         background-color: #919191;
         grid-area: 3 / 2 / -1 / -1;
@@ -152,16 +151,6 @@ include "../logindbase.php";
         color: black;
         font-weight: bold;
         text-decoration: none;
-    }
-
-    .card {
-        border: 1px solid #ddd;
-        padding: 10px;
-        margin: 10px;
-        display: inline-block;
-        box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
-        border-radius: 8px;
-        background-color: rgba(64, 64, 64, 0.4);
     }
 
     input[type='radio'] {
@@ -353,9 +342,9 @@ include "../logindbase.php";
             WHERE job_status = 'open' 
             AND (assigning_method = 'Open to All' OR (assigned_artist = '$artistName'))
             ORDER BY 
-            COALESCE(NULLIF(assigned_artist, '') IS NOT NULL, FALSE) DESC,
+            (assigned_artist = '$artistName') DESC, 
             CASE WHEN effective_deadline IS NULL THEN 1 ELSE 0 END, 
-            effective_deadline ASC
+            effective_deadline ASC 
             LIMIT $start_from, $results_per_page";
 
         $result_jobs = $conn->query($sql_jobs);
@@ -438,24 +427,9 @@ include "../logindbase.php";
 
         $current_page_jobs = basename($_SERVER['PHP_SELF']);
 
-        echo '<div class="card_container" id="cardView" style="display: none;">';
-        foreach ($result as $row) {
-            echo "<div class='card' style='width: 250px; height: 250px;'>";
-            echo "<p>Job ID: " . $row['job_id'] . "</p>";
-            echo "<p>Creator Name: " . $row['creator_name'] . "</p>";
-            echo "<p>Time Created: " . $row['time_created'] . "</p>";
-            echo "<p>Job Brief: " . $row['job_brief'] . "</p>";
-            // Add more data as needed
-            echo "</div>";
-        }
-        echo '</div>';
-
 
         // Close the database connection
         $conn->close();
-        echo "
-    </div>";
-        echo "</div>";
         ?>
     </div>
 

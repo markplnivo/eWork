@@ -571,22 +571,36 @@ date_default_timezone_set('Asia/Taipei');
 			}
 
 			// Display total duration and the chosen deadline
-		
+
 
 
 			// Check if the form is submitted
 			if (isset($_POST["submit_CompleteJob"])) {
 				$artistUsername = $_SESSION['username'];
-				$_SESSION['busy'] = 'open';
+				$currentJobId = $_SESSION['artist_currentJob']; // Ensure this session variable is set when the job is assigned
 
+
+				// First, update the artist's status
 				$updateStatusSql = "UPDATE tbl_artist_status SET artist_status = 'open', completion_percentage = 0, current_jobID = null WHERE artist_name = ?";
 				$stmt = $conn->prepare($updateStatusSql);
 				$stmt->bind_param("s", $artistUsername);
 				$stmt->execute();
 				$stmt->close();
-				header("Location: ./artist_home.php");
-				exit();
+
+				// Then, mark the current job as completed
+				$updateJobStatusSql = "UPDATE tbl_jobs SET job_status = 'completed' WHERE job_id = ? AND job_status <> 'completed'";
+				$stmt = $conn->prepare($updateJobStatusSql);
+				$stmt->bind_param("i", $currentJobId);
+				$stmt->execute();
+				$stmt->close();
+
+				$_SESSION['artist_currentJob'] = null; // Reset the current job ID
+				$_SESSION['busy'] = 'open'; // Set the artist status to 'open'
+				echo "<script>console.log('Job has completed');</script>";
+				//header("Location: ./artist_home.php");
+
 			}
+
 
 			if (isset($_POST["setOpen"])) {
 				$artistUsername = $_SESSION['username'];
@@ -702,9 +716,12 @@ date_default_timezone_set('Asia/Taipei');
 				<form id="progressImageUploadForm" action="artist_busy.php" method="post" enctype="multipart/form-data">
 					<div class="progressImageContainer">
 						<label for="progressImage">Upload Your Work Below:</label>
+
 						<img id="defaultProgressImagePreview" src="../upload/default_reference.jpg" alt="Design Reference Preview" />
 						<div id="progressImagePreviewContainer"></div>
 						<input type="file" id="progressImage" name="progressImage[]" accept="image/*" multiple>
+						<label for="progressImage">Max size of each image must not exceed 5MB</label>
+						<label for="progressImage">Allowed filetypes: .jpeg/.png/.gif</label>
 					</div>
 				</form>
 			</div>
@@ -719,7 +736,6 @@ date_default_timezone_set('Asia/Taipei');
 
 
 		<div class="table_container">
-
 			<button id="goToUploadPage" class="tooltip-button" disabled>Go to Upload Page</button>
 			<div id="tooltip" style="display: none; position: absolute; background-color: black; color: white; padding: 5px 10px; border-radius: 6px; z-index: 100;">Completion percentage must be 100% before going to upload page.</div>
 
@@ -1023,38 +1039,81 @@ date_default_timezone_set('Asia/Taipei');
 			}
 		}); // End of file input change event
 
-		// Handling form submission for file uploading
 		$('#progressImageUploadForm').on('submit', function(e) {
 			e.preventDefault();
 
-			var form = this;
 			var jobId = <?php echo json_encode($jobId); ?>; // Ensure $jobId is defined and accessible
 			var files = $('#progressImage')[0].files;
+			var allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+			var invalidFiles = [];
+			var oversizedFiles = [];
+			const MAX_SIZE = 5 * 1024 * 1024; // 5 MB in bytes
+
+			// Validate file types and sizes before upload
+			for (let i = 0; i < files.length; i++) {
+				if (!allowedTypes.includes(files[i].type)) {
+					invalidFiles.push(files[i].name);
+				}
+				if (files[i].size > MAX_SIZE) {
+					oversizedFiles.push(files[i].name);
+				}
+			}
+
+			// If any invalid files are found, alert the user and halt the process
+			if (invalidFiles.length > 0) {
+				alert("Invalid file type detected: " + invalidFiles.join(", ") + ". Please select only images with .jpeg, .png, or .gif extensions.");
+				return; // Stop the submission process
+			}
+
+			// If any oversized files are found, alert the user and halt the process
+			if (oversizedFiles.length > 0) {
+				alert("Oversized file(s) detected: " + oversizedFiles.join(", ") + ". Each file must be no larger than 5MB.");
+				return; // Stop the submission process
+			}
+
 			if (files.length > 0) {
 				var uploadPromises = Array.from(files).map(function(file) {
 					var fileData = new FormData();
-					fileData.append("progressImage[]", file); // Add each file under the same name
-					fileData.append("job_id", jobId); // Add the job ID for each file
-					console.log("Uploading file:", file.name); // Log the file name for debugging
+					fileData.append("progressImage[]", file);
+					fileData.append("job_id", jobId);
+					console.log("Uploading file:", file.name);
 					return $.ajax({
-						url: 'upload_progress_file.php', // Endpoint for file upload
+						url: 'upload_progress_file.php',
 						type: 'POST',
 						data: fileData,
 						processData: false,
-						contentType: false
+						contentType: false,
+						success: function(data) {
+							console.log(data); // Log server response
+						},
+						error: function(xhr, status, error) {
+							console.error("Error uploading file:", error);
+						}
 					});
 				});
 
 				Promise.all(uploadPromises).then(function() {
 					console.log("All files uploaded successfully.");
-					var hiddenInput = document.createElement('input');
-					hiddenInput.type = 'hidden';
-					hiddenInput.name = 'submit_CompleteJob';
-					hiddenInput.value = 'Upload & Complete'; // The value of your submit button
-					form.appendChild(hiddenInput);
-					// Update UI or refresh the page as needed
-					//window.location.reload(true);
-					form.submit(); // Submit the form after all files are uploaded
+					resetUploadVisibility(); // Call function to reset upload visibility
+
+					// Complete the job via Ajax after all files have been successfully uploaded
+					$.ajax({
+						url: 'complete_job.php',
+						type: 'POST',
+						data: {}, // Add data if needed
+						success: function(response) {
+							var res = JSON.parse(response);
+							if (res.success) {
+								console.log(res.message);
+								window.location.href = './artist_home.php'; // Redirect to the artist home page
+							} else {
+								console.error("Failed to complete the job:", res.message);
+							}
+						},
+						error: function(xhr, status, error) {
+							console.error("Error completing the job:", error);
+						}
+					});
 				}).catch(function(error) {
 					console.error("Error during file upload:", error);
 					alert("An error occurred during the file upload.");
@@ -1062,7 +1121,9 @@ date_default_timezone_set('Asia/Taipei');
 			} else {
 				alert("Please select files to upload.");
 			}
-		}); // End of form submission event
+		}); // End of form submission for file uploading
+
+
 
 
 		// Submit the form when the range value changes
@@ -1153,6 +1214,10 @@ date_default_timezone_set('Asia/Taipei');
 			$('.likert_scale span').text(getValRange + '%');
 		});
 	}); // End of range value function
+
+	function resetUploadVisibility() {
+		localStorage.setItem("isUploadVisible", "false");
+	}
 
 	// Function to apply visibility based on the state
 	function applyVisibility() {
