@@ -5,7 +5,7 @@ include "../session_handler.php";
 $jobId = isset($_POST['jobId']) ? $_POST['jobId'] : '';
 $response = [];
 if ($jobId) {
-    $query = "SELECT job_id, creator_name, job_brief, jobstart_datetime, jobend_datetime FROM tbl_jobs WHERE job_id = ?";
+    $query = "SELECT job_id, creator_name, job_brief, jobstart_datetime, jobend_datetime FROM tbl_jobs WHERE job_id = ? and job_status = 'completed'";
     $stmt = $conn->prepare($query);
     $stmt->bind_param("i", $jobId);
     $stmt->execute();

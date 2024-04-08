@@ -47,9 +47,9 @@
         font-family: 'Oswald', sans-serif;
         color: hsla(0, 0%, 100%, 0.74);
         z-index: 1;
-        font-size: 5rem;
+        font-size: 2vw;
         place-self: center center;
-        -webkit-text-stroke: 4px black;
+        -webkit-text-stroke: 1px black;
         letter-spacing: calc(1em / 9);
     }
 
@@ -97,7 +97,6 @@
 
 <body>
     <div class="main">
-
 
         <?php
         include "manager_menu.php";
@@ -165,7 +164,7 @@
             $sqlCount = "SELECT COUNT(*) AS total 
              FROM tbl_jobs 
              WHERE job_status = 'completed' 
-             AND (creator_name LIKE ? OR assigned_artist LIKE ? OR job_brief LIKE ?)";
+             AND (creator_name LIKE ? OR assigned_artist LIKE ? OR job_subject LIKE ?)";
 
             $stmtCount = $conn->prepare($sqlCount);
             $stmtCount->bind_param('sss', $searchTermSql, $searchTermSql, $searchTermSql);
@@ -175,10 +174,10 @@
             $total_pages = ceil($rowCount['total'] / $results_per_page);
 
             // Fetch filtered and paginated data
-            $sql = "SELECT job_id, creator_name, assigned_artist, job_brief, jobstart_datetime, jobend_datetime 
+            $sql = "SELECT job_id, creator_name, assigned_artist, job_subject, jobstart_datetime, jobend_datetime 
                 FROM tbl_jobs 
                 WHERE job_status = 'completed' 
-                AND (creator_name LIKE ? OR assigned_artist LIKE ? OR job_brief LIKE ?)
+                AND (creator_name LIKE ? OR assigned_artist LIKE ? OR job_subject LIKE ?)
                 ORDER BY $sortBy $sortOrder 
                 LIMIT $start_from, $results_per_page";
 
@@ -212,9 +211,9 @@
             <table>
                 <tr class="infoRow">
                     <th onclick="sortTable('job_id')">Job ID</th>
-                    <th onclick="sortTable('creator_name')">Creator Name</th>
+                    <th onclick="sortTable('creator_name')">Job Agent</th>
                     <th onclick="sortTable('assigned_artist')">Artist Assigned</th>
-                    <th onclick="sortTable('job_brief')">Description</th>
+                    <th onclick="sortTable('job_subject')">Job Title</th>
                     <th onclick="sortTable('jobstart_datetime')">Job Start Date</th>
                     <th onclick="sortTable('jobend_datetime')">Job End Date</th>
                 </tr>
@@ -223,7 +222,7 @@
                         <td><?php echo $row['job_id']; ?></td>
                         <td><?php echo $row['creator_name']; ?></td>
                         <td><?php echo $row['assigned_artist']; ?></td>
-                        <td><?php echo $row['job_brief']; ?></td>
+                        <td><?php echo $row['job_subject']; ?></td>
                         <td><?php echo date('M d, h:i A', strtotime($row['jobstart_datetime'])); ?></td>
                         <td><?php echo date('M d, h:i A', strtotime($row['jobend_datetime'])); ?></td>
                     </tr>
@@ -248,7 +247,7 @@
     </div>
 </body>
 
-<script>
+<script type="text/javascript">
     // Job details popup
     $(document).ready(function() {
         $("#tableView table tbody tr").click(function() {
@@ -334,7 +333,6 @@
             e.stopPropagation();
         }); //end of click
 
-        // Click event to enlarge the image
 
 
     }); //end of document ready
@@ -434,6 +432,18 @@
         });
     }
 
+    // Close the popup when clicking outside of it
+    $(document).on('click', function(e) {
+                if (!$(e.target).closest('.popup-content-left').length &&
+                    !$(e.target).closest('.popup-content-right').length &&
+                    !$(e.target).hasClass('gallery-image')) {
+                    // Minimize any enlarged image
+                    $('.gallery-image').removeClass('enlarged');
+                    // Hide the popup overlay
+                    $("#jobDetailsPopup").hide();
+                }
+            });//end of document click
+
     // Asynchronously fetch job data
     async function fetchJobHistoryData() {
         try {
@@ -444,7 +454,7 @@
             console.log('Job data fetched successfully');
         } catch (error) {
             console.error('Error fetching job history data:', error);
-        }
+        } 
     }
 
     window.onload = function() {

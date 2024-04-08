@@ -1,5 +1,4 @@
 .table_container {
-    padding: 20px;
     display: flex;
     justify-content: center;
     height: auto;
@@ -13,9 +12,9 @@
 .table_container table {
     border-collapse: collapse;
     margin: 25px 90px;
-    font-size: 0.9em;
+    font-size: 0.6vw;
     min-width: 90%;
-    min-height: 100px;
+    min-height: 1vh;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
 }
 

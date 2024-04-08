@@ -1,14 +1,16 @@
 <?php ob_start(); ?>
-
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-    <link rel="stylesheet" href="chart.css">
+    <link rel="stylesheet" href="m-popup.css">
+    <link rel="stylesheet" href="m-chart.css">
+    <link rel="stylesheet" href="m-table.css">
     <meta charset="UTF-8">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@^3"></script>
     <script src="https://cdn.jsdelivr.net/npm/date-fns"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 </head>
 <title>Artists' Status</title>
 <style>
@@ -92,76 +94,70 @@
         background-color: #dbaf00;
     }
 
-    .table_container {
-        display: grid;
-        background-color: #919191;
-        grid-area: 3 / 2 / -1 / -1;
-        width: 100%;
-        height: 100%;
-    }
-
-    .table_container table {
-        border-collapse: collapse;
-        margin: 25px 90px;
-        font-size: 0.9em;
-        min-width: 70vw;
-        min-height: 100px;
-        border-radius: 12px 12px 0px 0px;
-    }
-
-    .table_container th {
-        background-color: #ffc400;
-        color: #000000;
-        text-align: left;
-        font-weight: bold;
-    }
-
-    .table_container td,
-    .table_container th {
-        padding: 12px 25px;
-    }
-
-    .table_container tr {
-        border-bottom: 1px solid #525252;
-    }
-
-    .table_container tr:nth-of-type(even) {
-        background-color: #cfcfcf;
-    }
-
-    .table_container tr:last-of-type {
-        border-bottom: 4px solid #dbaf00;
-    }
-
-    .pagination-container {
-        grid-area: 2 / 1 / 3 / -1;
-        place-self: center end;
-        background-color: rgba(82, 82, 82, 0.9);
-        height: 30px;
-        width: auto;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin-right: 5%;
-    }
-
-    .pagination-container a,
-    label {
-        margin: 0 10px;
-        color: black;
-        font-weight: bold;
-        text-decoration: none;
-    }
 
     .chart_container {
         overflow-x: auto;
     }
 
     .canvasContainer {
-        width:80%;
-        height:auto;
+        width: 80%;
+        height: auto;
         align-self: center;
     }
+
+    
+    @keyframes swipeGradient {
+        0% {
+            background-position: 0%;
+        }
+
+        100% {
+            background-position: -100%;
+        }
+    }
+
+    .deadline-artist:hover {
+        background-image: linear-gradient(to left, #FFD700 10%, #bfbfbf 50%);
+        background-position: -100%;
+        background-size: 200%;
+        animation: swipeGradient 0.5s linear forwards;
+    }
+
+    .deadline-artist {
+        background-image: linear-gradient(to left, #FFD700 10%, #cfcfcf 50%);
+        background-position: -100%;
+        background-size: 200%;
+        animation: swipeGradient 0.5s linear forwards;
+    }
+
+    .deadline-past:hover {
+        background-image: linear-gradient(to left, #FF6347 10%, #bfbfbf 50%);
+        background-position: -100%;
+        background-size: 200%;
+        animation: swipeGradient 0.5s linear forwards;
+    }
+
+    .deadline-past {
+        background-image: linear-gradient(to left, #FF6347 10%, #cfcfcf 50%);
+        background-position: -100%;
+        background-size: 200%;
+        animation: swipeGradient 0.5s linear forwards;
+    }
+
+    .deadline-warning:hover {
+        background-image: linear-gradient(to left, #FFA500 10%, #bfbfbf 50%);
+        background-position: -100%;
+        background-size: 200%;
+        animation: swipeGradient 0.5s linear forwards;
+    }
+
+    .deadline-warning {
+        background-image: linear-gradient(to left, #FFA500 10%, #cfcfcf 50%);
+        background-position: -100%;
+        background-size: 200%;
+        animation: swipeGradient 0.5s linear forwards;
+    }
+
 </style>
 
 <body>
@@ -191,7 +187,7 @@
 
             $start_from = ($page - 1) * $results_per_page;
             // Pagination links
-            $sql = "SELECT COUNT(*) AS total FROM tbl_jobs";
+            $sql = "SELECT COUNT(*) AS total FROM tbl_jobs where job_status = 'pending'";
             $result = $conn->query($sql);
             $row = $result->fetch_assoc();
             $total_pages = ceil($row['total'] / $results_per_page);
@@ -205,6 +201,18 @@
                 <button id="chartViewBtn">Chart View</button>
             </div>
 
+
+            <div id="jobDetailsPopup" class="popup-overlay" style="display:none;">
+                <div class="popup-content-left">
+                    <span class="close-btn">&times;</span>
+                    <div id="jobDetails"></div>
+                </div>
+                <div class="popup-content-right">
+                    <div id="jobImages"></div>
+                </div>
+            </div>
+
+
             <?php
             echo "<div class='pagination-container'>";
             echo "<label>Page</label>";
@@ -217,28 +225,110 @@
 
         </div>
 
+
+
         <?php
-
-
-
         // Retrieve data from the database
-        $sql = "SELECT job_id, creator_name, assigned_artist FROM tbl_jobs where job_status = 'In Progress' LIMIT $start_from, $results_per_page";
+        $sql = "SELECT job_id, creator_name, assigned_artist, job_subject, jobstart_datetime, jobend_datetime, manual_deadline_date, manual_deadline_time, deadline_futuredatetime FROM tbl_jobs WHERE job_status = 'pending' LIMIT $start_from, $results_per_page";
         $result = $conn->query($sql);
 
+        // Function to calculate deadline
+        function calculateDeadlineDateTime($row, $conn)
+        {
+            // Original calculation logic remains the same
+            if ($row['manual_deadline_date'] !== null && $row['manual_deadline_time'] !== null) {
+                return new DateTime($row['manual_deadline_date'] . ' ' . $row['manual_deadline_time']);
+            } elseif ($row['deadline_futuredatetime'] !== null) {
+                return new DateTime($row['deadline_futuredatetime']);
+            } else {
+                // Fetch completion_percentage as fallback
+                $artistQuery = "SELECT completion_percentage FROM tbl_artist_status WHERE artist_name = ?";
+                $stmt = $conn->prepare($artistQuery);
+                $stmt->bind_param("s", $row['assigned_artist']);
+                $stmt->execute();
+                $artistResult = $stmt->get_result();
+                if ($artistResult->num_rows > 0) {
+                    $artistRow = $artistResult->fetch_assoc();
+                    $stmt->close();
+                    return $artistRow['completion_percentage'];
+                }
+                $stmt->close();
+                return 'N/A'; // Or however you want to handle no deadline
+            }
+        } // End of calculateDeadline function
 
+        // Function to determine row color based on deadline
+        function determineRowColor($deadline)
+        {
+            // Check if $deadline is a DateTime object
+            if ($deadline instanceof DateTime) {
+                $today = new DateTime(); // Today's date
+                $halfDeadline = clone $deadline;
+
+                // Calculate halfway to the deadline from today
+                $interval = $today->diff($deadline);
+                $daysTillDeadline = $interval->days;
+                $halfDays = floor($daysTillDeadline / 2);
+                $halfDeadline->sub(new DateInterval("P{$halfDays}D"));
+
+                // Apply coloring based on conditions
+                if ($deadline < $today) {
+                    return 'deadline-past';
+                } elseif ($today > $deadline) {
+                    return 'deadline-warning';
+                }
+            }
+            // If $deadline is not a DateTime object (e.g., a string or percentage), handle accordingly
+            // This part depends on how you want to treat non-date values. As an example:
+            elseif ($deadline !== 'N/A') {
+                // If completion_percentage is returned and it's less than 100, you might want to color it differently
+                return 'deadline-artist'; // Example color for non-date values
+            }
+            // Default styling or lack thereof for 'N/A' or other conditions
+            return '';
+        } // End of determineRowColor function
         ?>
+
         <div class="table_container" id="tableView">
+            <div id="timeSortOptions">
+                <label>Sort table data by:</label>
+                <button onclick="sortByTime('day')">Day</button>
+                <button onclick="sortByTime('week')">Week</button>
+                <button onclick="sortByTime('month')">Month</button>
+                <button onclick="sortByTime('year')">Year</button>
+            </div>
             <table>
-                <tr>
-                    <th>Job ID</th>
-                    <th>Creator Name</th>
-                    <th>Artist Assigned</th>
+                <tr class="infoRow">
+                    <th onclick="sortTable('job_id')">Job ID</th>
+                    <th onclick="sortTable('creator_name')">Job Agent</th>
+                    <th onclick="sortTable('assigned_artist')">Artist Assigned</th>
+                    <th onclick="sortTable('job_subject')">Job Title</th>
+                    <th onclick="sortTable('jobstart_datetime')">Job Start Date</th>
+                    <th onclick="sortTable('deadline')">Job Deadline</th>
                 </tr>
                 <?php while ($row = $result->fetch_assoc()) : ?>
-                    <tr>
+                    <?php
+                    $deadlineDateTime = calculateDeadlineDateTime($row, $conn); // Get the deadline
+                    $rowColor = determineRowColor($deadlineDateTime); // Determine row color based on deadline
+
+                    // Check if $deadlineDateTime is a DateTime object before formatting
+                    if ($deadlineDateTime instanceof DateTime) {
+                        $formattedDeadline = $deadlineDateTime->format('F j, Y g:i:s A');
+                    } else {
+                        // If $deadlineDateTime is not a DateTime object, use it as is (assuming it's a string or integer)
+                        $formattedDeadline = $deadlineDateTime;
+                    }
+
+                    $jobStartDateTime = new DateTime($row['jobstart_datetime']);
+                    $formattedJobStart = $jobStartDateTime->format('F j, Y g:i:s A');
+                    ?>
+                    <tr class="<?php echo htmlspecialchars($rowColor); ?>">
                         <td><?php echo $row['job_id']; ?></td>
                         <td><?php echo $row['creator_name']; ?></td>
                         <td><?php echo $row['assigned_artist']; ?></td>
+                        <td><?php echo $row['job_subject']; ?></td>
+                        <td><?php echo $formattedJobStart; ?></td>
+                        <td><?php echo $formattedDeadline; ?></td>
                     </tr>
                 <?php endwhile; ?>
             </table>
@@ -267,6 +357,106 @@
 
 
 <script type="text/javascript">
+    $(document).ready(function() {
+        $("#tableView table tbody tr").click(function() {
+            if ($(this).hasClass('infoRow')) {
+                return false; // Prevent popup overlay for info row
+            }
+            var jobId = $(this).find("td:first").text(); // Assuming Job ID is in the first column
+
+            // Fetch job details for jobs in progress
+            $.ajax({
+                url: 'fetch_jobsinprogress_details.php',
+                type: 'POST',
+                data: {
+                    jobId: jobId
+                },
+                success: function(data) {
+                    console.log(data);
+                    var jobDetails = JSON.parse(data);
+                    var detailsHtml = '<div class="job-order-details">' +
+                        '<p><strong>Job ID:</strong> ' + jobDetails.job_id + '</p>' +
+                        '<p><strong>Job Agent:</strong> ' + jobDetails.creator_name + '</p>' +
+                        '<p><strong>Job Title:</strong> ' + jobDetails.job_subject + '</p>' +
+                        '<p><strong>Artist Assigned:</strong> ' + jobDetails.assigned_artist + '</p>' +
+                        '<p><strong>Job Start Date:</strong> ' + jobDetails.jobstart_datetime + '</p>' +
+                        '<p><strong>Job Deadline:</strong> ' + jobDetails.deadline + '</p>' +
+                        // Include additional details fetched
+                        '</div>';
+                    $("#jobDetails").html(detailsHtml);
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error fetching job details: " + error);
+                }
+            });
+
+            // Fetch reference images for jobs in progress
+            $.ajax({
+                url: 'fetch_jobsinprogressreference_images.php',
+                type: 'POST',
+                data: {
+                    jobId: jobId
+                },
+                success: function(data) {
+                    var images = JSON.parse(data);
+                    var imagesHtml = '<div class="image-gallery">';
+                    if (images.length === 0) {
+                        images.push('http://localhost/eWork_collab/upload/default_reference.jpg'); // Adjust default image path as necessary
+                    }
+                    images.forEach((url, index) => {
+                        var animationDelay = index * 150; // 150ms delay increment for each image
+                        imagesHtml += `<img src="${url}" alt="Image" class="gallery-image" style="animation-delay: ${animationDelay}ms;">`;
+                    });
+                    imagesHtml += '</div>';
+                    $("#jobImages").html(imagesHtml);
+                    $("#jobDetailsPopup").show();
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error fetching images: " + error);
+                }
+            });
+        });
+
+        // Click event to enlarge the image
+        $(document).on('click', '.gallery-image', function(e) {
+            if ($(this).hasClass('enlarged')) {
+                $(this).removeClass('enlarged');
+            } else {
+                $('.gallery-image').removeClass('enlarged');
+                $(this).addClass('enlarged');
+            }
+            e.stopPropagation();
+        }); // End of click event to enlarge the image
+
+        // Click anywhere on the page to minimize the enlarged image
+        $(document).click(function(e) {
+            if (!$(e.target).is('.gallery-image')) {
+                $('.gallery-image.enlarged').removeClass('enlarged');
+            }
+        }); //end of click
+
+        // Close the popup when clicking the close button
+        $(".close-btn").click(function(e) {
+            $("#jobDetailsPopup").hide();
+            e.stopPropagation();
+        }); //end of click
+
+        // Close the popup when clicking outside of it
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('.popup-content-left').length &&
+                !$(e.target).closest('.popup-content-right').length &&
+                !$(e.target).hasClass('gallery-image')) {
+                // Minimize any enlarged image
+                $('.gallery-image').removeClass('enlarged');
+                // Hide the popup overlay
+                $("#jobDetailsPopup").hide();
+            }
+        }); //end of document click
+
+    }); // End of document ready
+
+
+
     let jobsProgressChartInstance = null; // Hold the chart instance globally
     const ctx = document.getElementById('jobsProgressChart').getContext('2d');
 
@@ -398,7 +588,7 @@
 
     function switchView(view) {
         if (view === 'table') {
-            document.getElementById('tableView').style.display = 'block';
+            document.getElementById('tableView').style.display = 'flex';
             document.getElementById('chartView').style.display = 'none';
             // Optionally, destroy the chart when switching away from the chart view
             if (jobsProgressChartInstance) {

@@ -197,14 +197,14 @@ if ($_SESSION['position'] != 'Manager') {
         </ul>
     </div>
 
-    <?php
+</body>
+
+<?php
     if (isset($_POST['logoutButton'])) {
         logoutUser();
         header("Location: ../login_page.php");
         exit();
     }
     ?>
-</body>
-
 </html>
 <?php ob_end_flush(); ?>
