@@ -93,6 +93,58 @@
     .view-buttons button:hover {
         background-color: #dbaf00;
     }
+
+    @keyframes swipeGradient {
+        0% {
+            background-position: 0%;
+        }
+
+        100% {
+            background-position: -100%;
+        }
+    }
+
+    .deadline-past:hover {
+        background-image: linear-gradient(to left, #FF6347 10%, #bfbfbf 50%);
+        background-position: -100%;
+        background-size: 200%;
+        animation: swipeGradient 0.5s linear forwards;
+    }
+
+    .deadline-past {
+        background-image: linear-gradient(to left, #FF6347 10%, #cfcfcf 50%);
+        background-position: -100%;
+        background-size: 200%;
+        animation: swipeGradient 0.5s linear forwards;
+    }
+
+    .deadline-artist:hover {
+        background-image: linear-gradient(to left, #b0c4de 10%, #bfbfbf 50%);
+        background-position: -100%;
+        background-size: 200%;
+        animation: swipeGradient 0.5s linear forwards;
+    }
+
+    .deadline-artist {
+        background-image: linear-gradient(to left, #b0c4de 10%, #cfcfcf 50%);
+        background-position: -100%;
+        background-size: 200%;
+        animation: swipeGradient 0.5s linear forwards;
+    }
+
+    .deadline-safe:hover {
+        background-image: linear-gradient(to left, #98fb98 10%, #bfbfbf 50%);
+        background-position: -100%;
+        background-size: 200%;
+        animation: swipeGradient 0.5s linear forwards;
+    }
+
+    .deadline-safe {
+        background-image: linear-gradient(to left, #98fb98 10%, #cfcfcf 50%);
+        background-position: -100%;
+        background-size: 200%;
+        animation: swipeGradient 0.5s linear forwards;
+    }
 </style>
 
 <body>
@@ -148,7 +200,6 @@
 
 
 
-
             <?php
             // Initialize variables
             $results_per_page = 15;
@@ -174,17 +225,50 @@
             $total_pages = ceil($rowCount['total'] / $results_per_page);
 
             // Fetch filtered and paginated data
-            $sql = "SELECT job_id, creator_name, assigned_artist, job_subject, jobstart_datetime, jobend_datetime 
-                FROM tbl_jobs 
-                WHERE job_status = 'completed' 
-                AND (creator_name LIKE ? OR assigned_artist LIKE ? OR job_subject LIKE ?)
-                ORDER BY $sortBy $sortOrder 
-                LIMIT $start_from, $results_per_page";
+            $sql = "SELECT job_id, 
+                creator_name, 
+                assigned_artist, 
+                job_subject, 
+                jobstart_datetime, 
+                jobend_datetime,
+                IF(manual_deadline_date IS NOT NULL AND manual_deadline_time IS NOT NULL, 
+                   CONCAT(manual_deadline_date, ' ', manual_deadline_time),
+                   IF(deadline_futuredatetime IS NOT NULL, 
+                      deadline_futuredatetime, 
+                      '100%')) AS deadline
+             FROM tbl_jobs 
+             WHERE job_status = 'completed'     
+                    AND (creator_name LIKE ? OR assigned_artist LIKE ? OR job_subject LIKE ?)
+             ORDER BY $sortBy $sortOrder 
+             LIMIT $start_from, $results_per_page";
 
             $stmt = $conn->prepare($sql);
             $stmt->bind_param('sss', $searchTermSql, $searchTermSql, $searchTermSql);
             $stmt->execute();
             $result = $stmt->get_result();
+
+            // Function to determine the row class based on job end date and deadline
+            function getRowClass($jobEndDatetime, $deadline)
+            {
+                // Check if deadline is a date or "Artist Deadline"
+                if (strtotime($deadline) === false) {
+                    // Not a date, so check for specific non-date conditions
+                    return 'deadline-artist';
+                } else {
+                    // It's a date, compare with job end date
+                    $jobEndTimestamp = strtotime($jobEndDatetime);
+                    $deadlineTimestamp = strtotime($deadline);
+
+                    if ($jobEndTimestamp <= $deadlineTimestamp) {
+                        // Finished before or exactly at the deadline
+                        return 'deadline-safe';
+                    } else {
+                        // Finished after the deadline
+                        return 'deadline-past';
+                    }
+                }
+            } //end of getRowClass
+
             ?>
 
             <div class="pagination-container">
@@ -216,15 +300,24 @@
                     <th onclick="sortTable('job_subject')">Job Title</th>
                     <th onclick="sortTable('jobstart_datetime')">Job Start Date</th>
                     <th onclick="sortTable('jobend_datetime')">Job End Date</th>
+                    <th onclick="sortTable('deadline')">Deadline</th>
                 </tr>
                 <?php while ($row = $result->fetch_assoc()) : ?>
-                    <tr>
+                    <?php
+                    // Determine the row class
+                    $rowClass = getRowClass($row['jobend_datetime'], $row['deadline']);
+
+                    // Check if 'deadline' is a valid datetime and format it; otherwise, display as is
+                    $formattedDeadline = strtotime($row['deadline']) ? date('M d Y, g:i A', strtotime($row['deadline'])) : $row['deadline'];
+                    ?>
+                    <tr class="<?php echo htmlspecialchars($rowClass); ?>">
                         <td><?php echo $row['job_id']; ?></td>
                         <td><?php echo $row['creator_name']; ?></td>
                         <td><?php echo $row['assigned_artist']; ?></td>
                         <td><?php echo $row['job_subject']; ?></td>
-                        <td><?php echo date('M d, h:i A', strtotime($row['jobstart_datetime'])); ?></td>
-                        <td><?php echo date('M d, h:i A', strtotime($row['jobend_datetime'])); ?></td>
+                        <td><?php echo $row['jobstart_datetime'] ? date('M d Y, g:i A', strtotime($row['jobstart_datetime'])) : 'Artist Deadline'; ?></td>
+                        <td><?php echo $row['jobend_datetime'] ? date('M d Y, g:i A', strtotime($row['jobend_datetime'])) : 'Artist Deadline'; ?></td>
+                        <td><?php echo htmlspecialchars($formattedDeadline); ?></td>
                     </tr>
                 <?php endwhile; ?>
             </table>
@@ -257,7 +350,7 @@
             var jobId = $(this).find("td:first").text(); // Assuming Job ID is in the first column
             // Fetch job details for completed jobs
             $.ajax({
-                url: 'fetch_completed_job_details.php',
+                url: './ajax_completed/fetch_completed_job_details.php',
                 type: 'POST',
                 data: {
                     jobId: jobId
@@ -280,7 +373,7 @@
 
             // Fetch reference images for completed jobs
             $.ajax({
-                url: 'fetch_completed_job_images.php',
+                url: './ajax_completed/fetch_completed_job_images.php',
                 type: 'POST',
                 data: {
                     jobId: jobId
@@ -434,27 +527,28 @@
 
     // Close the popup when clicking outside of it
     $(document).on('click', function(e) {
-                if (!$(e.target).closest('.popup-content-left').length &&
-                    !$(e.target).closest('.popup-content-right').length &&
-                    !$(e.target).hasClass('gallery-image')) {
-                    // Minimize any enlarged image
-                    $('.gallery-image').removeClass('enlarged');
-                    // Hide the popup overlay
-                    $("#jobDetailsPopup").hide();
-                }
-            });//end of document click
+        if (!$(e.target).closest('.popup-content-left').length &&
+            !$(e.target).closest('.popup-content-right').length &&
+            !$(e.target).hasClass('gallery-image')) {
+            // Minimize any enlarged image
+            $('.gallery-image').removeClass('enlarged');
+            // Hide the popup overlay
+            $("#jobDetailsPopup").hide();
+        }
+    }); //end of document click
 
     // Asynchronously fetch job data
     async function fetchJobHistoryData() {
         try {
-            const response = await fetch('jobhistory_chart.php');
+            const response = await fetch('./ajax_completed/jobhistory_chart.php');
             const jobData = await response.json();
+            console.log("attempting to fetch job data" + jobData);
             renderChart(jobData); // Use the renderChart function to display fetched data
             console.log(jobData);
             console.log('Job data fetched successfully');
         } catch (error) {
             console.error('Error fetching job history data:', error);
-        } 
+        }
     }
 
     window.onload = function() {
@@ -522,7 +616,7 @@
 
     // timeframe buttons for fetching data
     function fetchJobsData(timeFrame) {
-        fetch(`jobhistory_chart.php?timeFrame=${timeFrame}`)
+        fetch(`./ajax_completed/jobhistory_chart.php?timeFrame=${timeFrame}`)
             .then(response => response.json())
             .then(data => {
                 console.log(data);

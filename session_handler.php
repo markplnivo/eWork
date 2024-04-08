@@ -1,5 +1,7 @@
 <?php
 session_start();
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
 function loginUser($username, $position, $user_id) {
     $_SESSION['username'] = $username;

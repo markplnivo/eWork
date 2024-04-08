@@ -158,6 +158,21 @@
         animation: swipeGradient 0.5s linear forwards;
     }
 
+    .deadline-safe:hover {
+        background-image: linear-gradient(to left, #98fb98 10%, #bfbfbf 50%);
+        background-position: -100%;
+        background-size: 200%;
+        animation: swipeGradient 0.5s linear forwards;
+    }
+
+    .deadline-safe {
+        background-image: linear-gradient(to left, #98fb98 10%, #cfcfcf 50%);
+        background-position: -100%;
+        background-size: 200%;
+        animation: swipeGradient 0.5s linear forwards;
+
+    }
+
 </style>
 
 <body>
@@ -193,6 +208,14 @@
             $total_pages = ceil($row['total'] / $results_per_page);
 
             $current_page = basename($_SERVER['PHP_SELF']);
+
+            echo "<div class='pagination-container'>";
+            echo "<label>Page</label>";
+            for ($i = 1; $i <= $total_pages; $i++) {
+                echo "<a href='$current_page?page=$i' class='page-link'>" . $i . "</a> ";
+            }
+            echo "<input type='text' id='searchInput' placeholder='Search for names...'>";
+            echo "</div>";
             ?>
 
 
@@ -211,17 +234,6 @@
                     <div id="jobImages"></div>
                 </div>
             </div>
-
-
-            <?php
-            echo "<div class='pagination-container'>";
-            echo "<label>Page</label>";
-            for ($i = 1; $i <= $total_pages; $i++) {
-                echo "<a href='$current_page?page=$i' class='page-link'>" . $i . "</a> ";
-            }
-            echo "<input type='text' id='searchInput' placeholder='Search for names...'>";
-            echo "</div>";
-            ?>
 
         </div>
 
@@ -277,6 +289,9 @@
                 } elseif ($today > $deadline) {
                     return 'deadline-warning';
                 }
+                else {
+                    return 'deadline-safe';
+                }
             }
             // If $deadline is not a DateTime object (e.g., a string or percentage), handle accordingly
             // This part depends on how you want to treat non-date values. As an example:
@@ -313,14 +328,14 @@
 
                     // Check if $deadlineDateTime is a DateTime object before formatting
                     if ($deadlineDateTime instanceof DateTime) {
-                        $formattedDeadline = $deadlineDateTime->format('F j, Y g:i:s A');
+                        $formattedDeadline = $deadlineDateTime->format('F j Y, g:i A');
                     } else {
                         // If $deadlineDateTime is not a DateTime object, use it as is (assuming it's a string or integer)
                         $formattedDeadline = $deadlineDateTime;
                     }
 
                     $jobStartDateTime = new DateTime($row['jobstart_datetime']);
-                    $formattedJobStart = $jobStartDateTime->format('F j, Y g:i:s A');
+                    $formattedJobStart = $jobStartDateTime->format('F j Y, g:i A');
                     ?>
                     <tr class="<?php echo htmlspecialchars($rowColor); ?>">
                         <td><?php echo $row['job_id']; ?></td>
@@ -366,7 +381,7 @@
 
             // Fetch job details for jobs in progress
             $.ajax({
-                url: 'fetch_jobsinprogress_details.php',
+                url: './ajax_progress/fetch_jobsinprogress_details.php',
                 type: 'POST',
                 data: {
                     jobId: jobId
@@ -392,7 +407,7 @@
 
             // Fetch reference images for jobs in progress
             $.ajax({
-                url: 'fetch_jobsinprogressreference_images.php',
+                url: './ajax_progress/fetch_jobsinprogressreference_images.php',
                 type: 'POST',
                 data: {
                     jobId: jobId
@@ -463,7 +478,7 @@
     async function fetchJobsInProgress() {
         console.log('Starting to fetch jobs data');
         try {
-            const response = await fetch('jobsprogress_chart.php');
+            const response = await fetch('./ajax_progress/jobsprogress_chart.php');
             const jobsData = await response.json();
 
             if (jobsData.error) {
@@ -629,7 +644,7 @@
     });
 
     function fetchJobsData(timeFrame) {
-        fetch(`jobsprogress_chart.php?timeFrame=${timeFrame}`)
+        fetch(`./ajax_progress/jobsprogress_chart.php?timeFrame=${timeFrame}`)
             .then(response => response.json())
             .then(data => {
                 console.log(data);

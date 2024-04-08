@@ -544,12 +544,19 @@ date_default_timezone_set('Asia/Taipei');
 
 			// Initialize the deadline variable
 			$deadline = '';
-
 			// Initialize total duration in hours
 			$totalDuration = 0;
-
+			$timeLeft = null;
 			// Convert the job start datetime to a DateTime object
-			$jobStart = new DateTime($jobstart_datetime);
+			// Ensure $jobstart_datetime is not null or empty before creating a DateTime object
+			if (!empty($jobstart_datetime)) {
+				$jobStart = new DateTime($jobstart_datetime);
+			} else {
+				// Handle the case where $jobstart_datetime is null or empty
+				// For example, set $jobStart to the current time or another default
+				$jobStart = new DateTime(); // Defaults to the current time
+			}
+
 			// Loop through each process to sum up duration for processes assigned to 'Artist'
 			foreach ($processes as $process) {
 				if ($process['assigned_person'] === 'Artist') {
@@ -557,20 +564,64 @@ date_default_timezone_set('Asia/Taipei');
 				}
 			}
 
-			// First, determine if there's a manual deadline, else use the future deadline
+			// Determine if there's a manual deadline, else use the future deadline
 			if (!empty($manualDeadlineDate) && !empty($manualDeadlineTime)) {
 				$deadline = $manualDeadlineDate . ' ' . $manualDeadlineTime;
+			} elseif (!empty($deadlineFutureDateTime)) {
+				$deadline = $deadlineFutureDateTime; // Ensure this is not null or empty
 			} else {
-				$deadline = $deadlineFutureDateTime; // This may be NULL or a specific future datetime
+				// Handle cases where both deadline indicators are null or empty
+				$deadline = null; // Or set a default value if applicable
 			}
 
-			// Then, check if $totalDuration is greater than 0 to adjust the deadline accordingly
-			if ($totalDuration > 0) {
+			// Adjust the deadline based on the total duration if greater than 0
+			if ($totalDuration > 0 && isset($jobStart)) {
 				$jobStart->add(new DateInterval('PT' . $totalDuration . 'M'));
 				$deadline = $jobStart->format('Y-m-d H:i:s');
 			}
 
-			// Display total duration and the chosen deadline
+			// Ensure $deadline is not null or empty before attempting to use it
+			if (!empty($deadline)) {
+				$deadlineDateTime = new DateTime($deadline);
+				// Current datetime
+				$now = new DateTime();
+				// Time left
+				$timeLeft = $deadlineDateTime->diff($now);
+			} else {
+				// Handle case where $deadline is still null or empty
+				echo "<script>
+						var timeLeftElements = document.querySelectorAll('.time-left');
+						timeLeftElements.forEach(function(element) {
+							element.style.display = 'none';
+						});
+					</script>";
+			}
+			// Assuming $timeCreated is fetched from the database and not null or empty
+			if (!empty($timeCreated)) {
+				$time_created_datetime = new DateTime($timeCreated);
+				$formatted_time_created = $time_created_datetime->format('F j, Y g:i A');
+
+				// Ensure $jobstart_datetime is converted to a DateTime object before formatting
+				if (!empty($jobstart_datetime)) {
+					$jobStartDateTimeObj = new DateTime($jobstart_datetime);
+					$formatted_jobstart_datetime = $jobStartDateTimeObj->format('F j, Y g:i A');
+				} else {
+					// Handle case where $jobstart_datetime is null or empty
+					$formatted_jobstart_datetime = "Job Start Date not available";
+				}
+			} else {
+				// Handle case where $timeCreated is null or empty
+				// For example, by setting default values or displaying an error/message
+				$formatted_time_created = "Time Created not available";
+
+				// Similar handling for $jobstart_datetime as above
+				if (!empty($jobstart_datetime)) {
+					$jobStartDateTimeObj = new DateTime($jobstart_datetime);
+					$formatted_jobstart_datetime = $jobStartDateTimeObj->format('F j, Y g:i A');
+				} else {
+					$formatted_jobstart_datetime = "Job Start Date not available";
+				}
+			}
 
 
 
@@ -617,22 +668,6 @@ date_default_timezone_set('Asia/Taipei');
 				exit();
 			}
 
-			// Countdown timer
-			// Current datetime
-			$now = new DateTime();
-			// Deadline datetime
-			$deadlineDateTime = new DateTime($deadline);
-			// Time left
-			$timeLeft = $deadlineDateTime->diff($now);
-			// Display the countdown
-
-			$time_created_datetime = new DateTime($timeCreated);
-			$jobstart_datetime = new DateTime($jobstart_datetime);
-
-
-			$formatted_time_created = $time_created_datetime->format('F j, Y g:i A');
-			$formatted_jobstart_datetime = $jobstart_datetime->format('F j, Y g:i A');
-
 			?>
 
 			<div class="view-buttons">
@@ -650,13 +685,24 @@ date_default_timezone_set('Asia/Taipei');
 					<b>This job is being tracked by input from Artist.</b>
 					<b>Use the progress slider below to update the completion percentage.</b>
 				</div>
-
-				<div class="time-left">
-					<b class="time-leftTitle">Time Left Until Deadline:</b>
-					<div class="days"><?php echo $timeLeft->format('%a') . ' day(s)'; ?></div>
-					<div class="hours"><?php echo $timeLeft->format('%h') . ' hours'; ?></div>
-					<div class="minutes"><?php echo $timeLeft->format('%i') . ' minutes'; ?></div>
-				</div>
+				<?php
+				// Display total duration and the chosen deadline
+				if ($timeLeft !== null) {
+					echo '<div class="time-left">
+							<b class="time-leftTitle">Time Left Until Deadline:</b>
+							<div class="days">' . $timeLeft->format('%a') . ' day(s)</div>
+							<div class="hours">' . $timeLeft->format('%h') . ' hours</div>
+							<div class="minutes">' . $timeLeft->format('%i') . ' minutes</div>
+						  </div>';
+				} else {
+					echo "<script>
+						var timeLeftElements = document.querySelectorAll('.time-left');
+						timeLeftElements.forEach(function(element) {
+							element.style.display = 'none';
+						});
+					</script>";
+				}
+				?>
 			</div><!-- End of upload_timeContainer div -->
 
 			<div class="jobInfo">
@@ -745,12 +791,24 @@ date_default_timezone_set('Asia/Taipei');
 					<b>Use the progress slider below to update the completion percentage.</b>
 				</div>
 
-				<div class="time-left">
-					<b class="time-leftTitle">Time Left Until Deadline:</b>
-					<div class="days"><?php echo $timeLeft->format('%a') . ' day(s)'; ?></div>
-					<div class="hours"><?php echo $timeLeft->format('%h') . ' hours'; ?></div>
-					<div class="minutes"><?php echo $timeLeft->format('%i') . ' minutes'; ?></div>
-				</div>
+				<?php
+				// Display total duration and the chosen deadline
+				if ($timeLeft !== null) {
+					echo '<div class="time-left">
+							<b class="time-leftTitle">Time Left Until Deadline:</b>
+							<div class="days">' . $timeLeft->format('%a') . ' day(s)</div>
+							<div class="hours">' . $timeLeft->format('%h') . ' hours</div>
+							<div class="minutes">' . $timeLeft->format('%i') . ' minutes</div>
+						  </div>';
+				} else {
+					echo "<script>
+						var timeLeftElements = document.querySelectorAll('.time-left');
+						timeLeftElements.forEach(function(element) {
+							element.style.display = 'none';
+						});
+					</script>";
+				}
+				?>
 			</div>
 
 			<div class=jobInfo_Likert>
