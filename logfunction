@@ -1,0 +1,25 @@
+function logActivity(attempt) {
+    attempt = attempt || 1; // Default to first attempt
+    $.ajax({
+        url: 'log_activity.php',
+        type: 'POST',
+        data: {
+            actionType: 'Job Order Created',
+            subjectType: 'Job',
+            logDetails: 'Job created successfully.'
+        },
+        success: function(logResponse) {
+            console.log("Activity logged successfully.", logResponse);
+        },
+        error: function(logError) {
+            console.error("Error logging activity:", logError);
+            if (attempt < 3) { // Retry up to 3 times
+                console.log(`Retrying... Attempt ${attempt + 1}`);
+                logActivity(attempt + 1);
+            }
+        }
+    });
+}
+
+// Usage
+logActivity(); // Initial call

@@ -196,7 +196,7 @@ include "session_handler.php";
 
                 // Fetch the result
                 $stmt->fetch();
-
+                $stmt->close();
                 // Check if a row was returned
                 if ($result1 !== null) {
                     $username = $result1;

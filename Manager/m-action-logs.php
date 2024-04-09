@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+    <link rel="stylesheet" href="m-table.css">
 </head>
 <meta charset="UTF-8">
 <title>Artists' Status</title>
@@ -86,47 +87,6 @@
         background-color: #dbaf00;
     }
 
-    .table_container,
-    .card_container {
-        display: grid;
-        background-color: #919191;
-        grid-area: 3 / 2 / -1 / -1;
-        width: 100%;
-        height: 100%;
-    }
-
-    .table_container table {
-        border-collapse: collapse;
-        margin: 25px 90px;
-        font-size: 0.9em;
-        min-width: 70vw;
-        min-height: 100px;
-        border-radius: 12px 12px 0px 0px;
-    }
-
-    .table_container th {
-        background-color: #ffc400;
-        color: #000000;
-        text-align: left;
-        font-weight: bold;
-    }
-
-    .table_container td,
-    .table_container th {
-        padding: 12px 25px;
-    }
-
-    .table_container tr {
-        border-bottom: 1px solid #525252;
-    }
-
-    .table_container tr:nth-of-type(even) {
-        background-color: #cfcfcf;
-    }
-
-    .table_container tr:last-of-type {
-        border-bottom: 4px solid #dbaf00;
-    }
 
     .pagination-container {
         grid-area: 2 / 1 / 3 / -1;
@@ -146,16 +106,6 @@
         color: black;
         font-weight: bold;
         text-decoration: none;
-    }
-
-    .card {
-        border: 1px solid #ddd;
-        padding: 10px;
-        margin: 10px;
-        display: inline-block;
-        box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
-        border-radius: 8px;
-        background-color: rgba(64, 64, 64, 0.4);
     }
 </style>
 
@@ -186,7 +136,7 @@
 
             $start_from = ($page - 1) * $results_per_page;
             // Pagination links
-            $sql = "SELECT COUNT(*) AS total FROM tbl_artist_status";
+            $sql = "SELECT COUNT(*) AS total FROM tbl_actionlogs";
             $result = $conn->query($sql);
             $row = $result->fetch_assoc();
             $total_pages = ceil($row['total'] / $results_per_page);
@@ -214,51 +164,45 @@
 
         <?php
 
-
         // Retrieve data from the database
-        $sql = "SELECT artist_name, artist_status, artist_id FROM tbl_artist_status LIMIT $start_from, $results_per_page";
+        $sql = "SELECT action, user_id, username, time, subject_id, subject_type, details, ip_address FROM tbl_actionlogs LIMIT $start_from, $results_per_page";
         $result = $conn->query($sql);
-
-
-        echo '<div class="table_container" id="tableView">';
-        // Display the table
-        echo "<table>";
-        echo "<tr><th>Artist ID</th><th>Artist Name</th><th>Status</th><th>Job Percentage</th></tr>";
-
-        while ($row = $result->fetch_assoc()) {
-            echo "<tr>";
-            echo "<td>" . $row['artist_id'] . "</td>";
-            echo "<td>" . $row['artist_name'] . "</td>";
-            echo "<td>" . $row['artist_status'] . "</td>";
-            echo "<td></td>";
-            echo "</tr>";
-        }
-
-        echo "</table>";
-
-        echo '</div>';
-
-        echo '<div class="card_container" id="cardView" style="display: none;">';
-        foreach ($result as $row) {
-            echo "<div class='card' style='width: 250px; height: 250px;'>";
-            echo "<p>Artist ID: " . $row['artist_id'] . "</p>";
-            echo "<p>Artist Name: " . $row['artist_name'] . "</p>";
-            echo "<p>Status: " . $row['artist_status'] . "</p>";
-            // Add more data as needed
-            echo "</div>";
-        }
-        echo '</div>';
-
-
-        // Close the database connection
-        $conn->close();
-        echo "</div>";
-        echo "</div>";
         ?>
+
+        <div class="table_container" id="tableView">
+            <!-- Display the table -->
+            <table>
+                <tr>
+                    <th>Action</th>
+                    <th>User ID</th>
+                    <th>Username</th>
+                    <th>Time</th>
+                    <th>Subject</th>
+                    <th>Subject Type</th>
+                    <th>Subject Details</th>
+                    <th>IP Address</th>
+                </tr>
+                <?php
+                while ($row = $result->fetch_assoc()) {
+                    echo "<tr>";
+                    echo "<td>" . $row['action'] . "</td>";
+                    echo "<td>" . $row['user_id'] . "</td>";
+                    echo "<td>" . $row['username'] . "</td>";
+                    echo "<td>" . $row['time'] . "</td>";
+                    echo "<td>" . $row['subject_id'] . "</td>";
+                    echo "<td>" . $row['subject_type'] . "</td>";
+                    echo "<td>" . $row['details'] . "</td>";
+                    echo "<td>" . $row['ip_address'] . "</td>";
+                    echo "</tr>";
+                }
+                $conn->close();
+                ?>
+            </table>
+        </div>
     </div>
 </body>
 
-<script>
+<script type="text/javascript">
     document.getElementById('tableViewBtn').addEventListener('click', function() {
         sessionStorage.setItem('currentView', 'table');
         switchView('table');
@@ -308,7 +252,7 @@
                 } else {
                     rows[i].style.display = 'none';
                 }
-            } 
+            }
         }
     });
 </script>

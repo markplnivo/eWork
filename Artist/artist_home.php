@@ -229,6 +229,7 @@ include "../logindbase.php";
 
         <?php
         include "artist_menu.php";
+        require_once "../action_logger.php";
         $artistName = $_SESSION['username']; // Example: getting the artist name from the session
         ?>
 
@@ -250,7 +251,7 @@ include "../logindbase.php";
 
             $start_from = ($page - 1) * $results_per_page;
             // Pagination links
-            $sql = "SELECT COUNT(*) AS total FROM tbl_jobs WHERE job_status = 'open' OR assigned_artist = '{$_SESSION['username']}'";
+            $sql = "SELECT COUNT(*) AS total FROM tbl_jobs WHERE (assigning_method = 'Open to All' AND job_status = 'open') OR (job_status = 'open' AND assigned_artist = '{$_SESSION['username']}')";
             $result = $conn->query($sql);
             $row = $result->fetch_assoc();
             $total_pages = ceil($row['total'] / $results_per_page);
@@ -301,7 +302,7 @@ include "../logindbase.php";
             header("Location: ./artist_busy.php");
             exit(); // Don't forget to exit to stop the script execution after the redirect
         } else {
-            $_SESSION['busy'] = 'open';
+            $_SESSION['busy'] = 'online';
         }
         $stmt->close();
 
@@ -323,6 +324,7 @@ include "../logindbase.php";
         $stmt->close();
 
         if ($_SESSION['busy'] == 'busy') {
+            echo "<script>console.log('Artist is busy.');</script>";
             header("Location: ./artist_busy.php");
             exit();
         }
@@ -413,9 +415,29 @@ include "../logindbase.php";
             $stmtArtistStatus = $conn->prepare($updateArtistStatusSql);
             $stmtArtistStatus->bind_param("is", $selectedJobId, $assignedArtist);
             $stmtArtistStatus->execute();
+            /*
+            if ($stmtArtistStatus->execute()) {
+                // If the artist_status update is successful, proceed to update tbl_user_status
+                $updateUserStatusSql = "UPDATE tbl_user_status SET status = 'busy' WHERE username = ?";
+                $stmtUserStatus = $conn->prepare($updateUserStatusSql);
+                $stmtUserStatus->bind_param("s", $assignedArtist);
+                $stmtUserStatus->execute();
+                $stmtUserStatus->close();
+            }
+            */
+
+            $logAction = "Started on a job order";
+            $logSubjectId = $selectedJobId;
+            $logSubjectType = "Job";
+            $logDetails = "Job ID: $selectedJobId assigned to $assignedArtist";
+            logAction($logAction, $logSubjectId, $logSubjectType, $logDetails);
+
+
             $stmtArtistStatus->close();
             header("Location: ./artist_busy.php");
+            exit();
         }
+
 
 
         // Pagination links for open jobs
@@ -442,7 +464,7 @@ include "../logindbase.php";
             // Event handler for the break status toggle button
             $("#statusBtn").click(function() {
                 var currentText = $(this).text();
-                var newStatus = currentText === "Start Break" ? "on_break" : "open"; // Use "open" for the active status
+                var newStatus = currentText === "Start Break" ? "on_break" : "online"; // Use "open" for the active status
 
                 $.ajax({
                     type: "POST",
@@ -457,7 +479,7 @@ include "../logindbase.php";
                         $("#statusBtn").text(buttonText);
 
                         // Check the newStatus and adjust the "Start Selected Job" button accordingly
-                        if (newStatus === "open") { // Use "open" to check if the artist is available to work
+                        if (newStatus === "online") { // Use "open" to check if the artist is available to work
                             $("#submitButton").prop('disabled', false).css('background-color', ''); // Re-enable and reset color
                             $("#on_breakAlert").hide();
                         } else {
@@ -594,7 +616,7 @@ include "../logindbase.php";
                         $("#submitButton").prop('disabled', true).css('background-color', 'grey');
                         $("#statusBtn").text("End Break"); // Assume the artist is on a break initially
                         $("#on_breakAlert").show();
-                    } else if (response.trim() === "open") {
+                    } else if (response.trim() === "online") {
                         $("#submitButton").prop('disabled', false).css('background-color', ''); // Re-enable if status is "open"
                         $("#statusBtn").text("Start Break");
                         $("#on_breakAlert").hide();

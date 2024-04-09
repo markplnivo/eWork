@@ -1,9 +1,4 @@
 <?php
-error_log(print_r($_POST, true));
-error_log(print_r($_FILES, true));
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
-
 // Include your database configuration
 include "../logindbase.php";
 include "../session_handler.php";

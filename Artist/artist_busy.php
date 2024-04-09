@@ -165,13 +165,19 @@ date_default_timezone_set('Asia/Taipei');
 			background-color: rgba(64, 64, 64, 0.4);
 		}
 
+		.jobInfo_color {
+			grid-area: 2 / 1 / 3 / 2;
+			grid-row: 2 / 3;
+			grid-column: 1 / span 2;
+			background-color: #f0eee9;
+			box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5);
+			border-radius: 5px;
+		}
+
 		.jobInfo {
 			padding: 10px;
 			margin: 10px;
 			border-radius: 8px;
-			grid-area: 2 / 1 / 3 / 2;
-			grid-row: 2 / 3;
-			grid-column: 1 / span 2;
 			display: grid;
 			grid-template-columns: 1fr 1fr;
 			grid-template-rows: 5vh auto;
@@ -188,6 +194,7 @@ date_default_timezone_set('Asia/Taipei');
 		.jobDetailFull {
 			min-height: 35vh;
 			grid-area: 2 / 1 / 3 / 2;
+			background-color: #cfcfcf;
 		}
 
 		.jobBrief {
@@ -283,7 +290,8 @@ date_default_timezone_set('Asia/Taipei');
 			margin: 10px;
 			border-radius: 8px;
 			text-align: center;
-			background-color: #cfcfcf;
+			background-color: #f0eee9;
+			box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5);
 			height: 80%;
 		}
 
@@ -302,11 +310,12 @@ date_default_timezone_set('Asia/Taipei');
 			margin: 10px;
 			border-radius: 8px;
 			text-align: center;
-			background-color: #cfcfcf;
 			overflow-y: hidden;
 			display: flex;
 			flex-direction: column;
 			justify-content: center;
+			background-color: #f0eee9;
+			box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5);
 		}
 
 		#goToUploadPage:disabled {
@@ -321,7 +330,8 @@ date_default_timezone_set('Asia/Taipei');
 			margin: 30px;
 			border-radius: 8px;
 			text-align: center;
-			background-color: #cfcfcf;
+			background-color: #f0eee9;
+			box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5);
 		}
 
 
@@ -331,7 +341,8 @@ date_default_timezone_set('Asia/Taipei');
 			margin: 30px;
 			border-radius: 8px;
 			text-align: center;
-			background-color: #cfcfcf;
+			background-color: #f0eee9;
+			box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5);
 			font-size: 0.8vw;
 		}
 
@@ -409,10 +420,14 @@ date_default_timezone_set('Asia/Taipei');
 		}
 
 		.jobInfo_Likert {
+			margin-left: 10px;
 			display: flex;
 			grid-row: 2 / 3;
 			grid-column: 1 / span 2;
 			flex-direction: column;
+			box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5);
+			background-color: #f0eee9;
+			border-radius: 5px;
 		}
 
 		.templateDeadline_table {
@@ -422,6 +437,11 @@ date_default_timezone_set('Asia/Taipei');
 		.templatePicture {
 			height: 150px;
 		}
+
+		#jobImages {
+			background-color: #f0eee9;
+			box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5);
+		}
 	</style>
 </head>
 
@@ -430,8 +450,9 @@ date_default_timezone_set('Asia/Taipei');
 
 		<?php
 		include "artist_menu.php";
+		require_once "../action_logger.php";
 		$artistName = $_SESSION['username'];
-		if ($_SESSION['busy'] == 'open') {
+		if ($_SESSION['busy'] == 'online') {
 			header("Location: ./artist_home.php");
 			exit();
 		}
@@ -458,8 +479,8 @@ date_default_timezone_set('Asia/Taipei');
 					$_SESSION['artist_currentJob'] = $row['current_jobID'];
 					$_SESSION['busy'] = 'busy';
 				} else {
-					// If current_jobID is null, set $_SESSION['busy'] to 'open'
-					$_SESSION['busy'] = 'open';
+					// If current_jobID is null, set $_SESSION['busy'] to 'online'
+					$_SESSION['busy'] = 'online';
 					header("Location: artist_home.php");
 					exit();
 				}
@@ -626,6 +647,7 @@ date_default_timezone_set('Asia/Taipei');
 
 
 			// Check if the form is submitted
+			/*
 			if (isset($_POST["submit_CompleteJob"])) {
 				$artistUsername = $_SESSION['username'];
 				$currentJobId = $_SESSION['artist_currentJob']; // Ensure this session variable is set when the job is assigned
@@ -651,15 +673,15 @@ date_default_timezone_set('Asia/Taipei');
 				//header("Location: ./artist_home.php");
 
 			}
-
+			*/
 
 			if (isset($_POST["setOpen"])) {
 				$artistUsername = $_SESSION['username'];
-				$_SESSION['busy'] = 'open';
+				$_SESSION['busy'] = 'online';
 				// Update artist_status to "open" and completion_percentage to 0
 
 
-				$updateStatusSql = "UPDATE tbl_artist_status SET artist_status = 'open', completion_percentage = 0, current_jobID = null WHERE artist_name = ?";
+				$updateStatusSql = "UPDATE tbl_artist_status SET artist_status = 'online', completion_percentage = 0, current_jobID = null WHERE artist_name = ?";
 				$stmt = $conn->prepare($updateStatusSql);
 				$stmt->bind_param("s", $artistUsername);
 				$stmt->execute();
@@ -705,55 +727,57 @@ date_default_timezone_set('Asia/Taipei');
 				?>
 			</div><!-- End of upload_timeContainer div -->
 
-			<div class="jobInfo">
-				<h3>Current Job Information</h3>
-				<div class="jobDetailFull">
-					<ul>
-						<li><strong>Job ID:</strong> <?php echo $jobId; ?></li>
-						<li><strong>Created by Agent:</strong> <?php echo $createdByAgent; ?></li>
-						<li><strong>Time Created:</strong> <?php echo $formatted_time_created; ?></li>
-						<li><strong>Job Start Time:</strong> <?php echo $formatted_jobstart_datetime; ?></li>
-						<div class="templateDeadline">
-							<?php if (!empty($processes)) : ?>
-								<?php if (!empty($templateName) && !empty($filepathTemplateImage)) : ?>
-									<img class="templatePicture" src="<?php echo htmlspecialchars($filepathTemplateImage); ?>" alt="Template Image">
-								<?php endif; ?>
-								<table class="templateDeadline_table">
-									<thead>
-										<tr>
-											<th>Process Name</th>
-											<th>Duration</th>
-											<th>Assigned To</th>
-											<!-- Add more headers based on the columns in tbl_jobs_processes you wish to display -->
-										</tr>
-									</thead>
-									<tbody>
-										<?php foreach ($processes as $process) : ?>
+			<div class="jobInfo_color">
+				<div class="jobInfo">
+					<h3>Current Job Information</h3>
+					<div class="jobDetailFull">
+						<ul>
+							<li><strong>Job ID:</strong> <?php echo $jobId; ?></li>
+							<li><strong>Created by Agent:</strong> <?php echo $createdByAgent; ?></li>
+							<li><strong>Time Created:</strong> <?php echo $formatted_time_created; ?></li>
+							<li><strong>Job Start Time:</strong> <?php echo $formatted_jobstart_datetime; ?></li>
+							<div class="templateDeadline">
+								<?php if (!empty($processes)) : ?>
+									<?php if (!empty($templateName) && !empty($filepathTemplateImage)) : ?>
+										<img class="templatePicture" src="<?php echo htmlspecialchars($filepathTemplateImage); ?>" alt="Template Image">
+									<?php endif; ?>
+									<table class="templateDeadline_table">
+										<thead>
 											<tr>
-												<td><?php echo htmlspecialchars($process['process_name']); ?></td>
-												<td><?php echo htmlspecialchars($process['duration']); ?></td>
-												<td><?php echo htmlspecialchars($process['assigned_person']); ?></td>
-												<!-- Add more data cells as needed -->
+												<th>Process Name</th>
+												<th>Duration</th>
+												<th>Assigned To</th>
+												<!-- Add more headers based on the columns in tbl_jobs_processes you wish to display -->
 											</tr>
-										<?php endforeach; ?>
-									</tbody>
-								</table>
-							<?php endif; ?>
-						</div>
-						<div id="DEBUG BUTTON">
-							<form action="artist_busy.php" method="post" id="debugOpen">
-								<input type="submit" name="setOpen" value="debugOpen">
-							</form>
-						</div>
-					</ul>
-				</div>
+										</thead>
+										<tbody>
+											<?php foreach ($processes as $process) : ?>
+												<tr>
+													<td><?php echo htmlspecialchars($process['process_name']); ?></td>
+													<td><?php echo htmlspecialchars($process['duration']); ?></td>
+													<td><?php echo htmlspecialchars($process['assigned_person']); ?></td>
+													<!-- Add more data cells as needed -->
+												</tr>
+											<?php endforeach; ?>
+										</tbody>
+									</table>
+								<?php endif; ?>
+							</div>
+							<div id="DEBUG BUTTON">
+								<form action="artist_busy.php" method="post" id="debugOpen">
+									<input type="submit" name="setOpen" value="debugOpen">
+								</form>
+							</div>
+						</ul>
+					</div>
 
 
 
-				<div class="jobBrief">
-					<strong>Job Subject:</strong> <?php echo $jobSubject; ?>
-					<br>
-					<strong>Job Brief:</strong> <?php echo $jobBrief; ?>
+					<div class="jobBrief">
+						<strong>Job Subject:</strong> <?php echo $jobSubject; ?>
+						<br>
+						<strong>Job Brief:</strong> <?php echo $jobBrief; ?>
+					</div>
 				</div>
 			</div>
 
@@ -960,7 +984,7 @@ date_default_timezone_set('Asia/Taipei');
 		// Event handler for the break status toggle button
 		$("#statusBtn").click(function() {
 			var currentText = $(this).text();
-			var newStatus = currentText === "Start Break" ? "on_break" : "open"; // Use "open" for the active status
+			var newStatus = currentText === "Start Break" ? "on_break" : "busy"; // Use "busy" for the active status
 
 			$.ajax({
 				type: "POST",
@@ -975,7 +999,7 @@ date_default_timezone_set('Asia/Taipei');
 					$("#statusBtn").text(buttonText);
 
 					// Check the newStatus and adjust the "Start Selected Job" button accordingly
-					if (newStatus === "open") { // Use "open" to check if the artist is available to work
+					if (newStatus === "busy") { // Use "busy" to check if the artist is available to work
 						//$("#submitButton").prop('disabled', false).css('background-color', ''); // Re-enable and reset color
 						$("#on_breakAlert").hide();
 					} else {
@@ -1153,7 +1177,7 @@ date_default_timezone_set('Asia/Taipei');
 				Promise.all(uploadPromises).then(function() {
 					console.log("All files uploaded successfully.");
 					resetUploadVisibility(); // Call function to reset upload visibility
-
+					logActivity(); // Call function to log the activity
 					// Complete the job via Ajax after all files have been successfully uploaded
 					$.ajax({
 						url: 'complete_job.php',
@@ -1298,7 +1322,7 @@ date_default_timezone_set('Asia/Taipei');
 					//$("#submitButton").prop('disabled', true).css('background-color', 'grey');
 					$("#statusBtn").text("End Break"); // Assume the artist is on a break initially
 					$("#on_breakAlert").show();
-				} else if (response.trim() === "open") {
+				} else if (response.trim() === "busy") {
 					//$("#submitButton").prop('disabled', false).css('background-color', ''); // Re-enable if status is "open"
 					$("#statusBtn").text("Start Break");
 					$("#on_breakAlert").hide();
@@ -1309,6 +1333,31 @@ date_default_timezone_set('Asia/Taipei');
 			}
 		});
 	} // End of checkArtistStatus function
+
+	// Function to log activity with AJAX
+	function logActivity(attempt) {
+		attempt = attempt || 1; // Default to first attempt
+		$.ajax({
+			url: 'log_activity.php',
+			type: 'POST',
+			data: {
+				actionType: 'Job Order Ended',
+				subjectId: <?php echo json_encode($jobId); ?>,
+				subjectType: 'Job',
+				logDetails: 'Job order ended.'
+			},
+			success: function(logResponse) {
+				console.log("Activity logged successfully.", logResponse);
+			},
+			error: function(logError) {
+				console.error("Error logging activity:", logError);
+				if (attempt < 3) { // Retry up to 3 times
+					console.log(`Retrying... Attempt ${attempt + 1}`);
+					logActivity(attempt + 1);
+				}
+			}
+		});
+	}// End of logActivity function
 </script>
 
 

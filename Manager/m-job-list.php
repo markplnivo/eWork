@@ -130,7 +130,7 @@
     }
 
     .jobopen {
-        background-image: linear-gradient(to left, #b0c4de 10%, #bfbfbf 50%);
+        background-image: linear-gradient(to left, #b0c4de 10%, #cfcfcf 50%);
         background-position: 0;
         background-size: 200%;
         animation: swipeGradient 0.5s linear forwards;
@@ -144,7 +144,7 @@
     }
 
     .pending_noupdate {
-        background-image: linear-gradient(to left, #ffcccb 10%, #bfbfbf 50%);
+        background-image: linear-gradient(to left, #ffcccb 10%, #cfcfcf 50%);
         background-position: 0;
         background-size: 200%;
         animation: swipeGradient 0.5s linear forwards;
@@ -158,7 +158,7 @@
     }
 
     .pending_update {
-        background-image: linear-gradient(to left, #ed9121 10%, #bfbfbf 50%);
+        background-image: linear-gradient(to left, #ed9121 10%, #cfcfcf 50%);
         background-position: 0;
         background-size: 200%;
         animation: swipeGradient 0.5s linear forwards;
@@ -172,7 +172,7 @@
     }
 
     .using_deadline {
-        background-image: linear-gradient(to left, #ffffe0 10%, #bfbfbf 50%);
+        background-image: linear-gradient(to left, #ffffe0 10%, #cfcfcf 50%);
         background-position: 0;
         background-size: 200%;
         animation: swipeGradient 0.5s linear forwards;
@@ -281,7 +281,7 @@
             <table>
                 <tr>
                     <th>Job ID</th>
-                    <th>Creator Name</th>
+                    <th>Job Agent</th>
                     <th>Time Created</th>
                     <th>Deadline</th>
                     <th>Tracking Method</th>

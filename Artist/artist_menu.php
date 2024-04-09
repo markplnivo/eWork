@@ -1,7 +1,8 @@
 <?php ob_start(); ?>
 <?php
-include "../session_handler.php";
 include "../logindbase.php";
+include "../session_handler.php";
+
 
 if (!isLoggedIn()) {
     header("Location: ../login_page.php");
@@ -194,7 +195,7 @@ if ($_SESSION['position'] != 'Artist') {
             <?php if (isset($_SESSION['busy']) && $_SESSION['busy'] == 'busy') : ?>
                 <li id="sidebar_link">Busy</li>
             <?php else : ?>
-                <li id="sidebar_link">Jobs</li>
+                <li id="sidebar_link">Jobs List</li>
             <?php endif; ?>
         </ul>
     </div>

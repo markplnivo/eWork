@@ -9,7 +9,7 @@ $currentJobId = $_SESSION['artist_currentJob'];
 
 
 // First, update the artist's status
-$updateStatusSql = "UPDATE tbl_artist_status SET artist_status = 'open', completion_percentage = 0, current_jobID = null WHERE artist_name = ?";
+$updateStatusSql = "UPDATE tbl_artist_status SET artist_status = 'online', completion_percentage = 0, current_jobID = null WHERE artist_name = ?";
 $stmt = $conn->prepare($updateStatusSql);
 $stmt->bind_param("s", $artistUsername);
 $stmt->execute();
@@ -23,6 +23,6 @@ $stmt->execute();
 $stmt->close();
 
 $_SESSION['artist_currentJob'] = null;
-$_SESSION['busy'] = 'open';
+$_SESSION['busy'] = 'online';
 
 echo json_encode(['success' => true, 'message' => 'Job has been completed.']);

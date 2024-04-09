@@ -390,7 +390,6 @@ $conn->close();
 
     <?php
 
-
     ?>
     <script type="text/javascript">
         document.addEventListener("DOMContentLoaded", function() {
@@ -408,8 +407,9 @@ $conn->close();
             var manualTimeInput = document.getElementById('manual-time-input');
             var templateDetailsDiv = document.getElementById('templateDetails');
 
-            /*** FORM UPLOAD AND IMAGE UPLOAD ***/
 
+
+            /*** FORM UPLOAD AND IMAGE UPLOAD ***/
             //Form upload and receive job id for image file upload
             $("#jobForm").submit(function(event) {
                 event.preventDefault(); // Prevent the default form submission
@@ -419,6 +419,7 @@ $conn->close();
                     var templateId = $("#selectedTemplateId").val(); // Get templateId from the hidden input
                     formData.append('templateId', templateId); // Append templateId to formData
                 }
+
                 // New logic to append process details using the structured naming convention
                 $('.process-row').each(function(index, processRow) {
                     var processId = $(processRow).data('process-id'); // Assuming processId is stored as data attribute
@@ -429,6 +430,7 @@ $conn->close();
                     formData.append(`processes[${index}][option]`, option);
                 });
                 console.log([...formData]);
+
                 // AJAX call to create the job entry and potentially get job_id
                 $.ajax({
                     url: 'create_job.php', // actual endpoint
@@ -437,8 +439,26 @@ $conn->close();
                     processData: false,
                     contentType: false,
                     success: function(response) {
-                        var job_id = JSON.parse(response).job_id; // Parse response to get job_id
-                        console.log("Job created successfully with ID:", job_id);
+                        var responseJSON = JSON.parse(response);
+                        var job_id = responseJSON.job_id; // Parse response to get job_id
+                        // Log the activity for job creation
+                        $.ajax({
+                            url: 'log_activity.php',
+                            type: 'POST',
+                            data: {
+                                actionType: 'Job Order Creation',
+                                subjectId: job_id,
+                                subjectType: 'Job',
+                                logDetails: 'Job order created successfully.'
+                            },
+                            success: function(logResponse) {
+                                console.log("Activity logged successfully.", logResponse);
+                            },
+                            error: function(logError) {
+                                console.error("Error logging activity:", logError);
+                            }
+                        }); // End of log activity AJAX call
+                        confirm("Job created successfully with ID: " + job_id + ".");
                         // Check if there are files to upload
                         var files = $("#referenceImage")[0].files;
                         if (files.length > 0) {
@@ -458,23 +478,22 @@ $conn->close();
                             });
 
                             // Wait for all file uploads to complete
-                            Promise.all(uploadPromises).then(() => {
+                            Promise.all(uploadPromises).then(function() {
                                 console.log("All files uploaded successfully.");
                                 $('#jobForm').trigger("reset");
                                 window.location.reload(true); // refresh the page
-                            }).catch((error) => {
-                                console.log([...formData]);
+                            }).catch(function(error) {
                                 console.error("Error during file upload:", error);
                                 alert("An error occurred during the file upload.");
                             });
                         } else {
                             // If no files, just show success log and reset form
+                            
                             $('#jobForm').trigger("reset");
                             window.location.reload(true);
                         }
                     }, // End of success callback
                     error: function() {
-
                         console.log("Error creating job.");
                         alert("Error creating job.");
                     }

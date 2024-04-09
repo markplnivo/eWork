@@ -189,7 +189,7 @@ if ($_SESSION['position'] != 'Manager') {
             <li><a id="sidebar_link" href="./m-jobs-in-progress.php"><i id="sidebar_icons" class="fa-solid fa-bars-progress"></i>Jobs In Progress</a></li>
             <li><a id="sidebar_link" href="./m-job-history.php"><i id="sidebar_icons" class="fa-solid fa-clock-rotate-left"></i>Job History</a></li>
             <li><a id="sidebar_link" href="./m-job-list.php"><i id="sidebar_icons" class="fa-solid fa-list"></i>Job List</a></li>
-            <li><a id="sidebar_link" href="./m-artists-status.php"><i id="sidebar_icons" class="fa-solid fa-palette"></i>Artists Status</a></li>
+            <li><a id="sidebar_link" href="./m-employee-status.php"><i id="sidebar_icons" class="fa-solid fa-palette"></i>Employee Status</a></li>
             <li><a id="sidebar_link" href="./m-action-logs.php"><i id="sidebar_icons" class="fa-solid fa-person-circle-exclamation"></i>Action Logs</a></li>
             <li><a id="sidebar_link" href="./m-remove-jobs.php"><i id="sidebar_icons" class="fa-solid fa-trash"></i>Remove Jobs</a></li>
             <li><a id="sidebar_link" href="./m-recyclebin.php"><i id="sidebar_icons" class="fa-solid fa-recycle"></i>Recycle Bin</a></li>
