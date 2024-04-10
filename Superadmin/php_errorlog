@@ -1,0 +1,5 @@
+[06-Apr-2024 12:26:32 UTC] PHP Fatal error:  Uncaught TypeError: mysqli_query(): Argument #1 ($mysql) must be of type mysqli, null given in /home/customer/www/ework.portfoliomjp.com/public_html/Superadmin/index.php:304
+Stack trace:
+#0 /home/customer/www/ework.portfoliomjp.com/public_html/Superadmin/index.php(304): mysqli_query(NULL, 'SELECT firstnam...')
+#1 {main}
+  thrown in /home/customer/www/ework.portfoliomjp.com/public_html/Superadmin/index.php on line 304

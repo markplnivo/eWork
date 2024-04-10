@@ -30,17 +30,17 @@ include "session_handler.php";
         }
 
         .card {
-            background-image: linear-gradient(163deg, #00ff75 0%, #3700ff 100%);
+            background-image: linear-gradient(163deg, goldenrod 0%, whitesmoke 100%);
             border-radius: 10px;
             transition: all 0.3s;
             width: 30vw;
             height: 50vh;
             margin: auto;
-            box-shadow: 0 0 10px 1px rgba(0, 255, 117, 0.3);
+            box-shadow: 0 0 10px 1px papayawhip;
             overflow: hidden;
         }
         .card:hover {
-            box-shadow: 0 0 30px 1px rgba(0, 255, 117, 0.3);
+            box-shadow: 0 0 30px 1px papayawhip;
             transform: scale(1.1);
         }
         
@@ -48,7 +48,7 @@ include "session_handler.php";
             font-family: Segoe, 'Segoe UI', 'DejaVu Sans', 'Trebuchet MS', Verdana, sans-serif;
             display: grid;
             grid-template-columns: 1fr;
-            grid-template-rows: 100px auto;
+            grid-template-rows: auto auto auto;
             place-self: center;
             border: 1px solid #ccc;
             border-radius: 5px;
@@ -82,6 +82,8 @@ include "session_handler.php";
             height: 100%;
             object-fit: cover;
         }
+        
+
         .container h2 {
             text-align: center;
             width: 100%;
@@ -126,7 +128,7 @@ include "session_handler.php";
             outline: none;
             transition: 0.4s ease-in-out;
             color: white;
-            background-color: #007bff;
+            background-color: lightsteelblue;
             text-align: center;
             text-decoration: none;
             cursor: pointer;
@@ -147,6 +149,8 @@ include "session_handler.php";
             font-size: 16px;
         }
 
+        
+
 
     </style>
 </head>
@@ -158,7 +162,7 @@ include "session_handler.php";
                 <img src="./ic.png" alt="Icon">
             </div>
             <h2>eWork Login</h2>
-            <form action="login_page.php" method="post">
+            <form id="loginForm" action="login_page.php" method="post">
                 <div class="userandpass">
                     <i class="fas fa-user"></i>
                     <input type="text" name="username" id="username" required placeholder="Username">
@@ -181,6 +185,7 @@ include "session_handler.php";
         if (isset($_POST['username']) && isset($_POST['password'])) {
             $username = $_POST['username'];
             $password = $_POST['password'];
+          
 
             // Create a prepared statement
             $stmt = $conn->prepare("SELECT username, job_position, user_id FROM tbl_userlist WHERE BINARY username = ? AND BINARY user_password = ?");
@@ -223,11 +228,8 @@ include "session_handler.php";
                     }
                 } else {
                     // Failed login, display an error message to the user
-                    echo '<div style="color: red;">Invalid username or password.</div>';
+                    echo '<script>alert("Invalid username/password combination.");</script>';
                 }
-
-                // Close the statement
-                $stmt->close();
             } else {
                 // Error preparing the statement
                 echo "Statement preparation error.";

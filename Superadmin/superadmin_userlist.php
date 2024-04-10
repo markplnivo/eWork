@@ -16,7 +16,7 @@
             color: #FFFFFF;
             display: grid;
             grid-template-rows: 10vh 1fr 10vh;
-            grid-template-columns: 0.5fr auto 0.5fr;
+            grid-template-columns: 300px auto 0.5fr;
             height: 100%;
             grid-gap: 50px;
         }

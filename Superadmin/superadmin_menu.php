@@ -127,7 +127,7 @@ if ($_SESSION['position'] != 'Superadmin') {
   }
 
   body.menu-open {
-    grid-template-columns: 250px auto 0.5fr;
+    grid-template-columns: 300px auto 0.5fr;
     transition: grid-template-columns 0.3s ease-in-out;
   }
 	

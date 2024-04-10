@@ -105,7 +105,7 @@
         align-self: center;
     }
 
-    
+
     @keyframes swipeGradient {
         0% {
             background-position: 0%;
@@ -170,9 +170,7 @@
         background-position: -100%;
         background-size: 200%;
         animation: swipeGradient 0.5s linear forwards;
-
     }
-
 </style>
 
 <body>
@@ -182,6 +180,7 @@
         <?php
         include "manager_menu.php";
         include "../logindbase.php";
+        include "sms.php";
         ?>
 
         <h1 class="main-title">Jobs in Progress</h1>
@@ -229,6 +228,7 @@
                 <div class="popup-content-left">
                     <span class="close-btn">&times;</span>
                     <div id="jobDetails"></div>
+                    <button id="openOverlay">Send an SMS Notification</button>
                 </div>
                 <div class="popup-content-right">
                     <div id="jobImages"></div>
@@ -288,8 +288,7 @@
                     return 'deadline-past';
                 } elseif ($today > $deadline) {
                     return 'deadline-warning';
-                }
-                else {
+                } else {
                     return 'deadline-safe';
                 }
             }
@@ -370,8 +369,10 @@
 
 </body>
 
-
+<script src="sms.js"></script>
 <script type="text/javascript">
+    var sessionUsername = <?php echo json_encode($_SESSION['username']); ?>;
+
     $(document).ready(function() {
         $("#tableView table tbody tr").click(function() {
             if ($(this).hasClass('infoRow')) {
@@ -389,6 +390,20 @@
                 success: function(data) {
                     console.log(data);
                     var jobDetails = JSON.parse(data);
+                    fetchArtistContactNumber(jobDetails.assigned_artist);
+
+                    var jobMessage = "Imprint Customs SMS Notification" + 
+                    " sent by:" + sessionUsername + 
+                    " Requesting update on Job ID: " + jobDetails.job_id + " - " + jobDetails.job_subject + " Please provide an update on the progress. Thank you.";
+                    // Update the dropdown option with the new message
+                    $("#presetMessage").empty(); // Clear existing options if needed
+                    $("#presetMessage").append($('<option>', {
+                        value: jobMessage,
+                        text: jobMessage
+                    }));
+
+                    $("#artistName").text(jobDetails.assigned_artist);
+
                     var detailsHtml = '<div class="job-order-details">' +
                         '<p><strong>Job ID:</strong> ' + jobDetails.job_id + '</p>' +
                         '<p><strong>Job Agent:</strong> ' + jobDetails.creator_name + '</p>' +
@@ -460,6 +475,7 @@
         $(document).on('click', function(e) {
             if (!$(e.target).closest('.popup-content-left').length &&
                 !$(e.target).closest('.popup-content-right').length &&
+                !$(e.target).closest('.overlay-content').length &&
                 !$(e.target).hasClass('gallery-image')) {
                 // Minimize any enlarged image
                 $('.gallery-image').removeClass('enlarged');
@@ -641,7 +657,7 @@
                 }
             }
         }
-    });
+    }); // End of searchInput event listener
 
     function fetchJobsData(timeFrame) {
         fetch(`./ajax_progress/jobsprogress_chart.php?timeFrame=${timeFrame}`)
@@ -651,7 +667,28 @@
                 renderChart(data);
             })
             .catch(error => console.error('Error fetching job data:', error));
-    }
+    } // End of fetchJobsData function
+
+    function fetchArtistContactNumber(artistName) {
+        $.ajax({
+            url: './sms_getartistcontact.php', // Path to your PHP script
+            type: 'POST',
+            dataType: 'json', // Expecting a JSON response
+            data: {
+                artistName: artistName
+            },
+            success: function(response) {
+                console.log("Fetched artist contact number:", response);
+                // Assuming the response contains the contact number in a property named 'contactNumber'
+                $("#phoneNumber").text(response.contactNumber);
+                $("#phoneNumber").val(response.contactNumber);
+                // Update the input field
+            },
+            error: function(xhr, status, error) {
+                console.error("Error fetching artist contact number: " + error);
+            }
+        });
+    } // End of fetchArtistContactNumber function
 </script>
 
 

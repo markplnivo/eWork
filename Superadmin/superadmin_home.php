@@ -15,7 +15,7 @@ include "../logindbase.php";
             color: #FFFFFF;
             display: grid;
             grid-template-rows: 10vh 1fr 10vh;
-            grid-template-columns: 0.5fr auto 0.5fr;
+            grid-template-columns: 300px auto 0.5fr;
             height: 100%;
             grid-gap: 50px;
         }
@@ -184,7 +184,7 @@ include "../logindbase.php";
 
     $start_from = ($pn - 1) * $limit;
 
-    $sql = "SELECT firstname, lastname, job_description, email, contact_number, request_time, username FROM tbl_account_request ORDER BY request_time DESC LIMIT $start_from, $limit";
+    $sql = "SELECT firstname, lastname, email, contact_number, request_time, username FROM tbl_account_request ORDER BY request_time DESC LIMIT $start_from, $limit";
     $rs_result = mysqli_query($conn, $sql);
     ?>
     <form method="post" action="superadmin_home.php">

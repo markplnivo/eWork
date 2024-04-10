@@ -6,7 +6,7 @@ $jobId = isset($_POST['jobId']) ? $_POST['jobId'] : '';
 $response = [];
 if ($jobId) {
     // Adjusted to include only jobs that are 'pending'
-    $query = "SELECT job_id, creator_name, job_brief, jobstart_datetime, jobend_datetime, manual_deadline_date, manual_deadline_time, deadline_futuredatetime, assigned_artist FROM tbl_jobs WHERE job_id = ? AND job_status = 'pending'";
+    $query = "SELECT job_id, creator_name, job_subject, jobstart_datetime, jobend_datetime, manual_deadline_date, manual_deadline_time, deadline_futuredatetime, assigned_artist FROM tbl_jobs WHERE job_id = ? AND job_status = 'pending'";
     $stmt = $conn->prepare($query);
     $stmt->bind_param("i", $jobId);
     $stmt->execute();
@@ -34,10 +34,13 @@ if ($jobId) {
             $artistStmt->close();
         }
 
+
+
         $response = [
             'job_id' => $jobDetails['job_id'],
             'creator_name' => $jobDetails['creator_name'],
-            'job_brief' => $jobDetails['job_brief'],
+            'job_subject' => $jobDetails['job_subject'],
+            'assigned_artist' => $jobDetails['assigned_artist'],
             'jobstart_datetime' => $jobDetails['jobstart_datetime'],
             'deadline' => $deadline
         ];

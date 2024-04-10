@@ -1,41 +1,32 @@
+<?php ob_start(); ?>
 <?php
 include "logindbase.php";
 
-if (isset($_POST["createAccButton"])) {
+$validToken = false; // Flag to determine if the token is valid
 
-    // Retrieve form data
-    $firstname = $_POST["firstname"];
-    $lastname = $_POST["lastname"];
-    $job_description = $_POST["job_description"];
-    $email = $_POST["email"];
-    $contact_number = $_POST["contact_number"];
-    $password = $_POST["user_password"];
-    $username = $_POST["username"];
+if (isset($_GET['token'])) {
+    $token = $_GET['token'];
 
-    // Hash the password (using bcrypt or another secure hashing method)
-    $hashed_password = password_hash($password, PASSWORD_BCRYPT);
+    // Prepare a statement to prevent SQL injection
+    $stmt = $conn->prepare("SELECT * FROM tbl_invitations WHERE token = ? AND used = 0");
+    $stmt->bind_param("s", $token);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
-    // Insert data into the table
-    $sql = "INSERT INTO tbl_account_request (`firstname`, `lastname`, `job_description`, `email`, `contact_number`, `user_password`, `request_time`, `username`)
-    VALUES (?, ?, ?, ?, ?, ?, NOW(), ?)";
-
-    $stmt = $conn->prepare($sql);
-    
-    if ($stmt) {
-        $stmt->bind_param("sssssss", $firstname, $lastname, $job_description, $email, $contact_number, $hashed_password, $username);
-        if ($stmt->execute()) {
-            // Data inserted successfully
-            echo '<script>alert("Account created successfully.");</script>';
-            echo '<script>window.location.href = "../ework_collab/login_page.php";</script>';
-        } else {
-            // Error inserting data
-            echo '<script>alert("Error: ' . $stmt->error . '");</script>';
-        }
+    if ($result->num_rows > 0) {
+        $validToken = true; // The token is valid
+    } else {
+        echo "Invalid or expired token.";
+        // Here, instead of just echoing, you can redirect the user or handle the error as you see fit.
+        // exit; // Uncomment this if you echo an error message and wish to stop script execution here
     }
+}
 
-    // Close the database connection
-    $conn->close();
-    
+if (!$validToken) {
+    // Handle cases where there's no token or an invalid token
+    // Redirect or inform the user accordingly
+    header('Location: login_page.php'); // Redirect to an error page or home page
+    exit;
 }
 
 ?>
@@ -45,169 +36,167 @@ if (isset($_POST["createAccButton"])) {
 
 <head>
     <title>Registration Page</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+
     <style>
         body {
-            background-image:url("images/lucas-marcou-AAWlI2Wx9CI-unsplash.jpg");
-            background-repeat: no-repeat;
-            background-size: cover;
-            background-position: center;
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            grid-template-rows: 1fr;
-            font-family: Arial, sans-serif;
-            background-color: rgba(150, 40, 32, .9);
-            text-align: center;
-        }
-
-        h2 {        
-            place-self: start stretch;
-            font-size: 3rem;
-            z-index: 0;
-            color: white;
-            text-shadow: -2px 0 black, 0 2px black, 2px 0 black, 0 -2px black;
-            background-color: rgba(0, 0, 0, 0.4);
-            border-radius: 20px;
-        }
-
-        #heading_form{
-            grid-area: 1 / 2 / 2 / 3;
-        }
-
-        .formLayout {
-            display: grid;
-            grid-template-columns: auto auto;
-            grid-template-rows: auto;
+            display: flex;
             justify-content: center;
-            align-content: center;
-            text-align: center;
-            row-gap: .5em;
-            column-gap: 25px;
+            align-items: center;
+            height: 100vh;
+            background-color: darkslategray;
         }
 
-        .formLayout label {
-            font-size: 1.1rem;
-            font-weight: bold;
+        /* Form container */
+        #registrationForm {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
 
-        #employee_info {
-            display:grid;
-            grid-template-rows: repeat(6, auto);
-            grid-column: 1 / 2;
-            grid-row: 1 / 2;
-            place-items:start;
+        /* Form labels */
+        label {
+            display: block;
+            margin-bottom: 5px;
         }
 
-        #imprint_logo_form{
-            grid-column: 2 / 3;
-            grid-row: 1 / 2;
-            place-self: start center;
-            }
-
-        
-        #imprint_logo_form img{
-            margin-top: 35px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
-            }
-
-
-
-        #password_input {
-            grid-column: 2 / 3;
-            grid-row: 1 / 2;
-            background-color: rgba(0, 0, 0, 0.2);
-            border-radius: 3px;
-            width: auto;
-            place-self:  end center;
-        }
-
-
-        form {
-            grid-area: 1 / 2 / 2 / 3;
-            background-color: burlywood;
-            padding: 10px 100px 10px 100px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
-            width: auto;
-            height: auto;
-            place-self: center;
-            place-items: center;
-        }
-
-        input {
-            grid-column: span 2;
-            padding: 12px;
-            margin: 6px;
+        /* Form inputs */
+        input[type="text"],
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
             border: 1px solid #ccc;
             border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+            box-sizing: border-box;
         }
 
-        input::placeholder {
-            font-size: 1rem;
-        }
-
-        input[type="submit"] {
-            background-color: rgba(0, 0, 0, 0.8);
-            color: #fff;
+        /* Form button */
+        button[type="submit"] {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
             border: none;
-            padding: 10px 10px;
+            border-radius: 5px;
+            background-color: orange;
+            color: white;
             cursor: pointer;
-            grid-area: 3 / 1 / -1 / -1;
         }
 
-        input[type="submit"]:hover {
-            background-color: #0056b3;
+        /* Form icons */
+        .form-icon {
+            margin-right: 8px;
+        }
+
+        /* Response container */
+        #response {
+            margin-top: 20px;
         }
     </style>
 </head>
 
+<?php
+if (isset($_POST['submitForm'])) {
+    $firstname = $_POST['firstname'];
+    $lastname = $_POST['lastname'];
+    $email = $_POST['email'];
+    $contact_number = $_POST['contact_number'];
+    $user_password = $_POST['user_password'];
+    $username = $_POST['username'];
+
+    // Check if email or username already exists
+    $checkEmail = $conn->prepare("SELECT email FROM tbl_account_request WHERE email = ?");
+    $checkEmail->bind_param("s", $email);
+    $checkEmail->execute();
+    $checkEmailResult = $checkEmail->get_result();
+
+    $checkUsername = $conn->prepare("SELECT username FROM tbl_account_request WHERE username = ?");
+    $checkUsername->bind_param("s", $username);
+    $checkUsername->execute();
+    $checkUsernameResult = $checkUsername->get_result();
+
+    if ($checkEmailResult->num_rows > 0) {
+        echo "<script>alert('Email already in use.');</script>";
+    } else if ($checkUsernameResult->num_rows > 0) {
+        echo "<script>alert('Username already in use.');</script>";
+    } else {
+        // Email and username are available, proceed with registration
+        $hashed_password = password_hash($user_password, PASSWORD_DEFAULT);
+        $stmt = $conn->prepare("INSERT INTO tbl_account_request (firstname, lastname, email, contact_number, user_password, username) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("ssssss", $firstname, $lastname, $email, $contact_number, $hashed_password, $username);
+
+        if ($stmt->execute()) {
+            // Passing the token as a hidden field:
+            $token = isset($_POST['token']) ? $_POST['token'] : '';
+            
+            $updateTokenStmt = $conn->prepare("UPDATE tbl_invitations SET used = 1 WHERE token = ?");
+            $updateTokenStmt->bind_param("s", $token);
+            $updateTokenStmt->execute();
+        
+            if ($updateTokenStmt->affected_rows > 0) {
+                echo "<script>alert('Account requested successfully!');</script>";
+            } else {
+                // Handle the case where the token wasn't found or couldn't be marked as used
+                echo "<script>alert('Account request token update failed.');</script>";
+            }
+        } else {
+            echo "Error registering user: " . $conn->error;
+        }
+    }
+}
+?>
+
 <body>
-    <div id="heading_form">
-    <h2>Create an account for eWork</h2>
-    <form action="/ework_collab/register.php" method="post" class=formLayout onsubmit="return validateForm()">
-        <div id="employee_info">
-            <label>First name:</label>
-            <input type="text" name="firstname" id="firstname" required>
-            <label>Last name:</label>
-            <input type="text" name="lastname" id="lastname" required>
-            <label>Username:</label>
-            <input type="text" name="username" id="username" required>
-            <label>Job role:</label>
-            <input type="text" name="job_description" id="job_description" required>
-            <label>E-mail address:</label>
-            <input type="text" name="email" id="email" required>
-            <label>Contact number:</label>
-            <input name="contact_number" type="text" id="contact_number" required>
-        </div>
-        <div id="imprint_logo_form">
-            <img src="images/imprint customs logo 2.png" alt="Imprint Customs Logo" width="200" height="200">
-        </div>
-        <div id="password_input">
-            <label>Password:</label>
-            <input type="password" name="user_password" id="u_password" placeholder="Enter your password" required>
-            <input type="password" name="confirm_password" id="confirm_password" placeholder="Confirm password" required>
-            <span id="password_error" style="color: red; padding:10px auto;"></span>
-            <script>
-                function validateForm() {
-                    var password = document.getElementById("u_password").value;
-                    var confirm_password = document.getElementById("confirm_password").value;
-                    var password_error = document.getElementById("password_error");
+    <form id="registrationForm" method="post" action="register.php" onsubmit="return validateForm()">
+        <input type="hidden" name="token" value="<?php echo htmlspecialchars($token); ?>">
 
-                    if (password !== confirm_password) {
-                        password_error.innerHTML = "Passwords do not match!";
-                        return false; // Prevent form submission
-                    } else {
-                        password_error.innerHTML = ""; // Clear any previous error message
-                        return true; // Allow form submission
-                    }
-                }
-            </script>
+        <label for="firstname"><i class="fas fa-user form-icon"></i>First Name:</label>
+        <input type="text" id="firstname" name="firstname" placeholder="First Name" required>
 
-        </div>
-        <input type="submit" value="Create Account" id="formbutton" name="createAccButton">
-        </div>
+        <label for="lastname"><i class="fas fa-user form-icon"></i>Last Name:</label>
+        <input type="text" id="lastname" name="lastname" placeholder="Last Name" required>
+
+        <label for="email"><i class="fas fa-envelope form-icon"></i>Email:</label>
+        <input type="email" id="email" name="email" placeholder="Email" required>
+
+        <label for="contact_number"><i class="fas fa-phone form-icon"></i>Contact Number:</label>
+        <input type="text" id="contact_number" name="contact_number" placeholder="Contact Number" required>
+
+        <label for="user_password"><i class="fas fa-lock form-icon"></i>Password:</label>
+        <input type="password" id="user_password" name="user_password" placeholder="Password" required>
+
+        <label for="confirm_password"><i class="fas fa-lock form-icon"></i>Confirm Password:</label>
+        <input type="password" id="confirm_password" placeholder="Confirm Password" required>
+
+        <label for="username"><i class="fas fa-user-circle form-icon"></i>Username:</label>
+        <input type="text" id="username" name="username" placeholder="Username" required>
+
+        <button type="submit" name="submitForm"><i class="fas fa-paper-plane form-icon"></i>Register</button>
+        <div id="emailResponse"></div>
+        <div id="usernameResponse"></div>
     </form>
 </body>
 
+
+
+<script src="./reg_validation/validation.js"></script> <!-- This script will handle live validation for email and username -->
+<script>
+    function validateForm() {
+        var password = document.getElementById("user_password").value;
+        var confirm_password = document.getElementById("confirm_password").value;
+
+        if (password !== confirm_password) {
+            alert("Passwords do not match!");
+            return false; // Prevent form submission
+        }
+        return true; // Allow form submission
+    }
+</script>
+
+
 </html>
+<?php ob_end_flush(); ?>
