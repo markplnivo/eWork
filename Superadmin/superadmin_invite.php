@@ -1,3 +1,4 @@
+<?php ob_start(); ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,7 +17,9 @@
             flex-direction:column;
             justify-content: center;
             align-items: center;
-            height: 80vh;
+            height: 50vh;
+            
+        
         }
         
         h2 {
@@ -24,7 +27,7 @@
             margin-top: 50px;
         }
         
-        form {
+        .inviteForm {
             max-width: 400px;
             margin: 0 auto;
             background-color: whitesmoke;
@@ -47,7 +50,7 @@
             box-sizing: border-box;
         }
         
-        button {
+        .inviteButton {
             background-color: darkslategray;
             color: #fff;
             border: none;
@@ -57,8 +60,8 @@
             font-size: 16px;
         }
         
-        button:hover {
-            background-color: #0056b3;
+        .inviteButton:hover {
+            background-color: navy;
         }
         
         #backButton {
@@ -71,11 +74,14 @@
 </style>
 <body>
     <h2>Send eWork System Invitation</h2>
-    <form action="send_invite.php" method="post">
+    <h1 style="font-size: 20px; color: red;">Administrator Use Only</h1>
+    <?php include "superadmin_menu.php"; ?>
+    <form class="inviteForm" action="send_invite.php" method="post">
         <label for="emailAddress"><i class="fas fa-envelope form-icon"></i>Enter Email Address:</label>
         <input type="email" id="emailAddress" name="emailAddress" required>
-        <button type="submit" name="sendInvitation"><i class="fas fa-paper-plane form-icon"></i>Send Invitation</button>
+        <button class="inviteButton" type="submit" name="sendInvitation"><i class="fas fa-paper-plane form-icon"></i>Send Invitation</button>
     </form>
-    <button type="button" id="backButton" onclick="history.back()"><i class="fas fa-arrow-left form-icon"></i>Go Back</button>
+    <button class= "inviteButton" type="button" id="backButton" onclick="history.back()"><i class="fas fa-arrow-left form-icon"></i>Go Back</button>
 </body>
 </html>
+<?php ob_end_flush(); ?>

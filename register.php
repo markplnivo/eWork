@@ -22,12 +22,12 @@ if (isset($_GET['token'])) {
     }
 }
 
-if (!$validToken) {
-    // Handle cases where there's no token or an invalid token
-    // Redirect or inform the user accordingly
-    header('Location: login_page.php'); // Redirect to an error page or home page
-    exit;
-}
+// if (!$validToken) {
+//     // Handle cases where there's no token or an invalid token
+//     // Redirect or inform the user accordingly
+//     header('Location: login_page.php'); // Redirect to an error page or home page
+//     exit;
+// }
 
 ?>
 
@@ -45,6 +45,7 @@ if (!$validToken) {
             align-items: center;
             height: 100vh;
             background-color: darkslategray;
+            flex-direction: column;
         }
 
         /* Form container */
@@ -75,6 +76,10 @@ if (!$validToken) {
             box-sizing: border-box;
         }
 
+        button[type="submit"]:hover {
+            background-color: darksalmon;
+        }
+
         /* Form button */
         button[type="submit"] {
             width: 100%;
@@ -95,6 +100,16 @@ if (!$validToken) {
         /* Response container */
         #response {
             margin-top: 20px;
+        }
+        
+        #backButton {
+            margin-top: 10px;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: darkslategray;
+            color: white;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -179,6 +194,7 @@ if (isset($_POST['submitForm'])) {
         <div id="emailResponse"></div>
         <div id="usernameResponse"></div>
     </form>
+    <button onclick="window.history.back();" type="button" id="backButton">Go Back</button>
 </body>
 
 

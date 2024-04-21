@@ -108,6 +108,7 @@
         text-decoration: none;
     }
 
+
     .table_container form input[type="submit"] {
         margin-left: 150px;
         color: #000000;
@@ -154,12 +155,12 @@
             $totalPages = ceil($totalRecords / $itemsPerPage);
             ?>
 
-            <div class="view-buttons">
+            <!-- <div class="view-buttons">
                 <button id="tableViewBtn">Table View</button>
                 <button id="chartViewBtn">Chart View</button>
-            </div>
+            </div> -->
 
-            <div class="pagination">
+            <div class="pagination-container">
                 <?php for ($i = 1; $i <= $totalPages; $i++) : ?>
                     <a href="?page=<?php echo $i; ?>"><?php echo $i; ?></a>
                 <?php endfor; ?>
@@ -175,9 +176,9 @@
                     <thead>
                         <tr>
                             <th></th> <!-- Checkbox column -->
-                            <th>JOB_ID</th>
-                            <th>CREATOR_NAME</th>
-                            <th>TIME_CREATED</th>
+                            <th>Job ID</th>
+                            <th>Creator Name</th>
+                            <th>Time Created</th>
                         </tr>
                     </thead>
                     <tbody>

@@ -293,6 +293,13 @@
                 <button onclick="sortByTime('year')">Year</button>
             </div>
             <table>
+            <tr class="infoRow">
+                        <th style="background-color: slategray; text-align: left;" colspan="7">
+                            <div style="display: inline-block; width: 10px; height: 10px; background-color: #FF6347; border-radius: 50%; margin-right: 5px;"></div>: Completed past deadline.
+                            <div style="display: inline-block; width: 10px; height: 10px; background-color: #b0c4de; border-radius: 50%; margin-right: 5px;"></div>: Completed by Artist deadline.
+                            <div style="display: inline-block; width: 10px; height: 10px; background-color: #98fb98; border-radius: 50%; margin-right: 5px;"></div>: Completed on time.
+                        </th>
+                    </tr>
                 <tr class="infoRow">
                     <th onclick="sortTable('job_id')">Job ID</th>
                     <th onclick="sortTable('creator_name')">Job Agent</th>

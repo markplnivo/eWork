@@ -134,7 +134,7 @@
         background-position: -100%;
         background-size: 200%;
         animation: swipeGradient 0.5s linear forwards;
-    
+
     }
 
     .status-online:hover {
@@ -172,15 +172,12 @@
         animation: swipeGradient 0.5s linear forwards;
     }
 
-    .status-busy { 
+    .status-busy {
         background-image: linear-gradient(to left, #ff0000 10%, #cfcfcf 50%);
         background-position: -100%;
         background-size: 200%;
         animation: swipeGradient 0.5s linear forwards;
     }
-
-    
-
 </style>
 
 <body>
@@ -261,6 +258,14 @@
 
         <div class="table_container" id="tableView">
             <table>
+                <tr class="infoRow">
+                    <th style="background-color: slategray; text-align: left;" colspan="7">
+                        <div style="display: inline-block; width: 10px; height: 10px; background-color: #b0c4de; border-radius: 50%; margin-right: 5px;"></div>: Offline
+                        <div style="display: inline-block; width: 10px; height: 10px; background-color: #00ff00; border-radius: 50%; margin-right: 5px;"></div>: Online
+                        <div style="display: inline-block; width: 10px; height: 10px; background-color: #ffcc00; border-radius: 50%; margin-right: 5px;"></div>: On Break
+                        <div style="display: inline-block; width: 10px; height: 10px; background-color: #ff0000; border-radius: 50%; margin-right: 5px;"></div>: Busy
+                    </th>
+                </tr>
                 <tr>
                     <th>Username</th>
                     <th>Job Position</th>
@@ -473,5 +478,6 @@
             });
     }
 </script>
+
 </html>
 <?php ob_end_flush(); ?>

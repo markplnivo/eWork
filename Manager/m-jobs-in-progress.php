@@ -312,6 +312,15 @@
                 <button onclick="sortByTime('year')">Year</button>
             </div>
             <table>
+            <tr class="infoRow">
+                        <th style="background-color: slategray; text-align: left;" colspan="7">
+                            <div style="display: inline-block; width: 10px; height: 10px; background-color: #FFD700; border-radius: 50%; margin-right: 5px;"></div>: Deadline set by Artist
+                            <div style="display: inline-block; width: 10px; height: 10px; background-color: #FF6347; border-radius: 50%; margin-right: 5px; margin-left: 10px;"></div>: Deadline has passed
+                            <div style="display: inline-block; width: 10px; height: 10px; background-color: #FFA500; border-radius: 50%; margin-right: 5px; margin-left: 10px;"></div>: Deadline is approaching
+                            <div style="display: inline-block; width: 10px; height: 10px; background-color: #98fb98; border-radius: 50%; margin-right: 5px; margin-left: 10px;"></div>: Deadline is safe
+                        </th>
+                        
+                    </tr>
                 <tr class="infoRow">
                     <th onclick="sortTable('job_id')">Job ID</th>
                     <th onclick="sortTable('creator_name')">Job Agent</th>

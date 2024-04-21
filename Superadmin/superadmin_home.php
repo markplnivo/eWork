@@ -169,7 +169,8 @@ include "../logindbase.php";
 
 <body>
     <header>
-        <h1>Admin</h1>
+        <h1>eWork Account Requests</h1>
+        <h1 style="font-size: 20px; color: red;">Administrator Use Only</h1>
     </header>
     <?php
     include "superadmin_menu.php";
@@ -197,7 +198,6 @@ include "../logindbase.php";
                     <th>Firstname</th>
                     <th>Lastname</th>
                     <th>Username</th>
-                    <th>Job Description</th>
                     <th>Email</th>
                     <th>Contact Number</th>
                     <th>Request Time</th>
@@ -218,7 +218,6 @@ include "../logindbase.php";
                         <td><?php echo $row["firstname"]; ?></td>
                         <td><?php echo $row["lastname"]; ?></td>
                         <td><?php echo $row["username"]; ?></td>
-                        <td><?php echo $row["job_description"]; ?></td>
                         <td><?php echo $row["email"]; ?></td>
                         <td><?php echo $row["contact_number"]; ?></td>
                         <td><?php echo date("h:i A, M j", strtotime($row["request_time"])); ?></td>

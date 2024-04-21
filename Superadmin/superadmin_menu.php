@@ -154,6 +154,7 @@ if ($_SESSION['position'] != 'Superadmin') {
       <li><a class="menu_item" href="superadmin_home.php">Home</a></li>
       <li><a class="menu_item" href="superadmin_recyclebin.php">Recycle Bin</a></li>
       <li><a class="menu_item" href="superadmin_userlist.php">User List</a></li>
+      <li><a class="menu_item" href="superadmin_invite.php">Invite User</a></li>
       <li><div class="menu_spacer"></div></li>
       <li>
         <form action="superadmin_menu.php" method="post">

@@ -156,6 +156,7 @@
 <body>
     <header>
         <h1>Recycle Bin</h1>
+        <h1 style="font-size: 20px; color: red;">Administrator Use Only</h1>
     </header>
 
     <?php

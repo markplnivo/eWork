@@ -145,10 +145,10 @@
 
             ?>
 
-            <div class="view-buttons">
+            <!-- <div class="view-buttons">
                 <button id="tableViewBtn">Table View</button>
                 <button id="cardViewBtn">Card View</button>
-            </div>
+            </div> -->
 
             <?php
             echo "<div class='pagination-container'>";

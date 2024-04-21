@@ -279,7 +279,15 @@
                 <button onclick="sortByTime('year')">Year</button>
             </div>
             <table>
-                <tr>
+            <tr class="infoRow">
+                        <th style="background-color: slategray; text-align: left;" colspan="10">
+                            <div style="display: inline-block; width: 10px; height: 10px; background-color: #b0c4de; border-radius: 50%; margin-right: 5px;"></div>: Job order still open.
+                            <div style="display: inline-block; width: 10px; height: 10px; background-color: #ffcccb; border-radius: 50%; margin-right: 5px; margin-left: 10px;"></div>: Pending & No Update.
+                            <div style="display: inline-block; width: 10px; height: 10px; background-color: #ed9121; border-radius: 50%; margin-right: 5px; margin-left: 10px;"></div>: Pending & Update.
+                            <div style="display: inline-block; width: 10px; height: 10px; background-color: #ffffe0; border-radius: 50%; margin-right: 5px; margin-left: 10px;"></div>: Using Deadline.
+                        </th>
+                    </tr>
+                <tr class="infoRow">
                     <th>Job ID</th>
                     <th>Job Agent</th>
                     <th>Time Created</th>
