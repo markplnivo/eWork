@@ -32,8 +32,7 @@ include "../logindbase.php";
         --space-3xl: clamp(3.75rem, 3.0978rem + 3.2609vi, 5.625rem);
 
         /* FLUID RESPONSIVE SPACE BASE VALUE = 21px MIN WIDTH = 480px AND MAX VALUE = 23px MAX WIDTH = 1490px*/
-        --spaceHW-4xs: clamp(0.25rem, 0.2203rem + 0.099vi, 0.3125rem);
-        /*Multiplier = 0.2*/
+        --spaceHW-4xs: clamp(0.25rem, 0.2203rem + 0.099vi, 0.3125rem);/*Multiplier = 0.2*/
         --spaceHW-3xs: clamp(0.3125rem, 0.2828rem + 0.099vi, 0.375rem);
         --spaceHW-2xs: clamp(0.6875rem, 0.6578rem + 0.099vi, 0.75rem);
         --spaceHW-xs: clamp(1rem, 0.9703rem + 0.099vi, 1.0625rem);
@@ -42,61 +41,54 @@ include "../logindbase.php";
         --spaceHW-l: clamp(2.625rem, 2.5062rem + 0.396vi, 2.875rem);
         --spaceHW-xl: clamp(3.9375rem, 3.7593rem + 0.5941vi, 4.3125rem);
         --spaceHW-2xl: clamp(5.25rem, 5.0124rem + 0.7921vi, 5.75rem);
-        --spaceHW-3xl: clamp(5.375rem, 5.1374rem + 0.7921vi, 5.875rem);
-        /*Multiplier = 4.1*/
-        --spaceHW-4xl: clamp(5.9375rem, 5.6702rem + 0.8911vi, 6.5rem);
-        /*Multiplier = 4.5*/
-        --spaceHW-5xl: clamp(6.4375rem, 6.1405rem + 0.9901vi, 7.0625rem);
-        /*Multiplier = 4.9*/
-        --spaceHW-6xl: clamp(6.5625rem, 6.2655rem + 0.9901vi, 7.1875rem);
-        /*Multiplier = 5*/
-        --spaceHW-7xl: clamp(7.25rem, 6.9233rem + 1.0891vi, 7.9375rem);
-        /*Multiplier = 5.5*/
-        --spaceHW-8xl: clamp(7.875rem, 7.5186rem + 1.1881vi, 8.625rem);
-        /*Multiplier = 6*/
-        --spaceHW-9xl: clamp(8.5625rem, 8.1764rem + 1.2871vi, 9.375rem);
-        /*Multiplier = 6.5*/
-        --spaceHW-10xl: clamp(9.1875rem, 8.7717rem + 1.3861vi, 10.0625rem);
-        /*Multiplier = 7*/
-    }
-
+        --spaceHW-3xl: clamp(5.375rem, 5.1374rem + 0.7921vi, 5.875rem);/*Multiplier = 4.1*/
+        --spaceHW-4xl: clamp(5.9375rem, 5.6702rem + 0.8911vi, 6.5rem);/*Multiplier = 4.5*/
+        --spaceHW-5xl: clamp(6.4375rem, 6.1405rem + 0.9901vi, 7.0625rem);/*Multiplier = 4.9*/
+        --spaceHW-6xl: clamp(6.5625rem, 6.2655rem + 0.9901vi, 7.1875rem);/*Multiplier = 5*/
+        --spaceHW-7xl: clamp(7.25rem, 6.9233rem + 1.0891vi, 7.9375rem);/*Multiplier = 5.5*/
+        --spaceHW-8xl: clamp(7.875rem, 7.5186rem + 1.1881vi, 8.625rem);/*Multiplier = 6*/
+        --spaceHW-9xl: clamp(8.5625rem, 8.1764rem + 1.2871vi, 9.375rem);/*Multiplier = 6.5*/
+        --spaceHW-10xl: clamp(9.1875rem, 8.7717rem + 1.3861vi, 10.0625rem);/*Multiplier = 7*/
+}
     *,
     body,
     html {
         overflow-y: auto;
         margin: 0;
         padding: 0;
+        box-sizing: border-box;
         font-family: Arial, Helvetica, sans-serif;
     }
-
     .main {
         height: 100vh;
-        display: grid;
-        grid-template-rows: 100px auto 1fr;
-        grid-template-columns: 210px 1fr;
     }
-
+    .reset-button {
+        margin-block: var(--spaceHW-3xs);
+        margin-inline: var(--space-2xs);
+        cursor: pointer;
+        padding-block: var(--spaceHW-4xs);
+        padding-inline: var(--spaceHW-4xs);
+        height: var(--space-m);
+        border: none;
+        background: #b90000;
+        color: white;
+        border-radius: .5rem;
+        font-size: var(--step-2);
+    }
+    .reset-button:hover{
+        background-color: #df2626;
+        transform: translateY(-1px);
+        box-shadow: rgba(0, 0, 0, 0.50) 0 5px 10px;
+    }
     #selectedArtist {
-        margin-top: 10px;
+        margin-block: var(--space-xs);
         display: flex;
         align-items: center;
+        font-size: var(--step-1);
+        font-weight: 700;
+        color: #000;
     }
-
-    .reset-button {
-        margin-left: 10px;
-        cursor: pointer;
-        padding: 0 5px;
-        height: 20px;
-        line-height: 20px;
-        border: none;
-        background: #f44336;
-        color: white;
-        border-radius: 4px;
-        font-size: 12px;
-    }
-
-    #artist-list,
-    #template-list {
+    #artist-list, #template-list{
         padding-block: var(--space-xs);
         padding-inline: var(--space-2xs);
         margin: var(--space-2xs);
@@ -104,26 +96,21 @@ include "../logindbase.php";
         border-radius: 0.50rem;
         background-color: rgb(211, 211, 211);
     }
-
-    #selectedArtist {
-        margin-top: 10px;
-        display: flex;
-        align-items: center;
+    #templateDetails h3{
+        font-size: var(--step-2);
+        color: #000;
+        padding-top: var(--space-3xs);
+        padding-bottom: var(--space-2xs);
+        padding-inline: var(--space-3xs);
     }
-
-    .reset-button {
-        margin-left: 10px;
-        cursor: pointer;
-        padding: 0 5px;
-        height: 20px;
-        line-height: 20px;
-        border: none;
-        background: #f44336;
-        color: white;
-        border-radius: 4px;
-        font-size: 12px;
+    #templateDetails li{
+        font-size: var(--step-1);
+        color: #000;
+        padding: var(--space-3xs);
     }
-
+    #templateDetails li:nth-child(7){
+        margin-bottom: var(--space-2xs);
+    }
     .overlay {
         display: none;
         position: fixed;
@@ -134,7 +121,6 @@ include "../logindbase.php";
         background: rgba(0, 0, 0, 0.5);
         z-index: 10;
     }
-
     .overlay-content {
         display: flex;
         flex-direction: column;
@@ -151,8 +137,8 @@ include "../logindbase.php";
         border-radius: .80rem;
         width: auto;
     }
-
-    .overlay-content button {
+    .overlay-content .overlay-button button{
+        background-color: #ffd000;
         margin-block: var(--space-s);
         margin-inline: var(--space-3xs);
         padding: 3px 12px;
@@ -160,105 +146,94 @@ include "../logindbase.php";
         border: none;
         border-radius: .50rem;
     }
-
-    .overlay-content button:hover {
+    .overlay-content .overlay-button button:hover{
         background-color: #ffee00;
         transform: translateY(-1px);
         box-shadow: rgba(0, 0, 0, 0.50) 0 5px 10px;
     }
-
-    .overlay-content>h2 {
+    .overlay-content > h2{
         margin: var(--space-2xs);
         font-size: var(--step-3);
     }
-
-    .header-banner {
-        grid-area: 1 / 2 / -4 / 3;
-    }
-
-    .banner-logo {
-        width: 100%;
-        height: 250px;
-        object-fit: cover;
-    }
-
-    .main-title {
-        grid-area: 1 / 2 / -4 / 3;
-        font-family: 'Oswald', sans-serif;
-        color: hsla(0, 0%, 100%, 0.74);
-        z-index: 1;
-        font-size: 5rem;
-        place-self: center center;
-        -webkit-text-stroke: 4px black;
-        letter-spacing: calc(1em / 9);
-    }
-
-    .content-header {
-        display: grid;
-        grid-template-columns: auto;
-        grid-template-rows: auto auto;
-        background-color: #292929;
-        border-top-style: solid;
-        border-bottom-style: solid;
-    }
-
-    .content-title {
-        background-color: #292929;
-        color: #ffffff;
-        -webkit-text-stroke: 2px black;
-        letter-spacing: calc(4em / 15);
-        font-weight: bold;
-        font-size: 30px;
-        place-self: center center;
-    }
-
-    .view-buttons {
-        grid-area: 1 / 1 / 2 / 2;
+    .header-banner-container{
         display: flex;
-        place-self: start;
-        padding: 10px 0;
+        align-items: center;
+        gap: var(--spaceHW-2xs);
+        background-color: #0f0f0f;
+        grid-auto-flow: row;
+        position: fixed;
+        height: var(--spaceHW-5xl);
+        width: 100%;
+        right: var(--spaceHW-xs);
+        z-index: 1;
     }
-
-    .view-buttons button {
-        margin: 0 10px;
-        padding: 10px 20px;
-        font-size: 16px;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        background-color: #ffc400;
-        color: #000000;
+    .header-banner-container .IClogo{
+        display: flex;
+        min-height: 60px;
+        min-width: 60px;
+        margin-left: var(--spaceHW-4xl);
+        
     }
-
-    .view-buttons button:hover {
-        background-color: #dbaf00;
+    .IClogo img{
+        max-height: 90px;
+        max-width: 90px;
     }
-
+    .header-banner-container h1{
+        font-size: var(--step-5);
+        color: #ffbb00;
+        margin-left: var(--spaceHW-xl);
+    }
+    
     .table_container {
-        background: Radial-gradient(rgba(71, 71, 71, 0.8), rgba(71, 71, 71, 0)), Radial-gradient(at 0 0, #474747, #070707);
-
+        box-shadow: rgb(45, 45, 94) 0px 30px 500px -15px inset, rgba(0, 0, 0, 0.603) 0px 20px 500px -15px inset;
+        position: relative;
+        top: var(--spaceHW-5xl);
+        min-height: 100%;
+        padding-top: var(--spaceHW-xl);
+        padding-bottom: var(--spaceHW-7xl);
     }
-
-    .table_container label {
-        font-size: var(--step-1);
-        font-weight: 900;
-        color: #000;
+    .table_container.active{
+        left: 250px;
+        width: calc(100% - 250px);
     }
-
+    .table_container .header_create_job{
+        text-align: center;
+        margin-bottom: var(--space-xs);
+    }
+    .table_container .header_create_job h3{
+        font-size: var(--step-3);
+        font-weight: 800;
+        color: #ffbb00;
+        -webkit-text-stroke: .1rem black;
+    }
     .table_container form {
-        margin: auto;
+		margin: auto;
         display: grid;
         background-color: white;
         grid-area: 3 / 2 / -1 / -1;
         width: 50%;
-        height:80%;
+        min-height: 100%;
         border: none;
         border-radius: 1rem;
         padding: var(--space-s);
         color: white;
-        box-shadow: rgba(50, 50, 93, 0.2) 0px 50px 100px -20px, rgba(0, 0, 0, 0.767) 0px 30px 60px -30px, rgba(10, 37, 64, 0.473) 0px -2px 6px 0px inset;
+        box-shadow: rgba(50, 50, 93, 0.801) 0px 50px 100px -20px, rgba(0, 0, 0, 0.767) 0px 30px 60px -30px, rgba(10, 37, 64, 0.473) 0px -2px 6px 0px inset;
     }
-
+    .table_container label{
+        font-size: var(--step-1);
+        font-weight: 900;
+        color: #000;
+    }
+    .table_container select{
+        border: none;
+        border-radius: 0.30rem;
+        margin-top: var(--space-xs);
+        margin-bottom: var(--space-s);
+        font-size: var(--step-1);
+        padding-block: var(--space-2xs);
+        padding-inline: var(--spaceHW-4xs);
+        background-color: rgb(211, 211, 211);
+    }
     input[type="text"],
     textarea,
     input[type="number"] {
@@ -273,7 +248,6 @@ include "../logindbase.php";
         color: black;
         font-size: var(--step-0);
     }
-
     input[type="submit"] {
         background-color: #ffd000;
         color: rgba(0, 0, 0);
@@ -286,28 +260,31 @@ include "../logindbase.php";
         margin: 20px auto;
         width: 50%;
     }
-
     input[type="submit"]:hover {
         background-color: #ffee00;
         transform: translateY(-1px);
         border-color: #471d00;
         box-shadow: rgba(0, 0, 0, 0.60) 0 10px 15px;
     }
-
     .referenceImageContainer {
         display: grid;
         grid-template-columns: 1fr;
         grid-gap: 10px;
+        width: auto;
     }
-
-    #referencePreview,
-    .imagePreview {
+    .Preview_Container{
+        display: flex;
+        justify-content: center;
+        align-content: center;
+        width: auto;
+        height: 100%;
+        background-color: #b90000;
+    }
+    .Preview_Container .imagePreview{
         width: 10vw;
         height: 10vw;
-        margin-right: 10px;
     }
-
-    #referencePreview {
+    #referencePreview{
         margin: 1rem auto;
     }
 </style>
@@ -346,10 +323,11 @@ $conn->close();
         include "agent_menu.php";
         ?>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-
-        <h1 class="main-title">Agent Job Creation</h1>
-        <div class="header-banner">
-            <img src="../images/holden-baxter-oxQ0egaQMfU-unsplash.jpg" class="banner-logo">
+        <div class="header-banner-container">
+        <div class="IClogo">
+            <img src="imprint customs logo.png">
+        </div>
+        <h1>Imprint Customs  WORKSPACE</h1>
         </div>
         <div class="content-header">
             <h2 class="content-title"></h2>
@@ -364,7 +342,7 @@ $conn->close();
         <!-- Overlay for artist selection -->
         <div id="artistOverlay" class="overlay">
             <div class="overlay-content">
-                <h2>Select an Artist</h2>
+                <h2>Select Artist</h2>
                 <select id="artist-list">
                     <?php foreach ($artists as $artist) : ?>
                         <option value="<?php echo htmlspecialchars($artist['user_id']); ?>">
@@ -372,8 +350,10 @@ $conn->close();
                         </option>
                     <?php endforeach; ?>
                 </select>
-                <button id="selectArtistButton">Select Artist</button>
+                <div class="overlay-button">
+                <button id="selectArtistButton">Select</button>
                 <button id="closeArtistOverlay">Close</button>
+                </div>
             </div>
         </div>
 
@@ -388,13 +368,18 @@ $conn->close();
                         </option>
                     <?php endforeach; ?>
                 </select>
-                <button id="selectTemplateButton">Select Template</button>
+                <div class="overlay-button">
+                <button id="selectTemplateButton">Select</button>
                 <button id="closeTemplateOverlay">Close</button>
+                </div>
             </div>
         </div>
 
         <!-- Job Creation Form -->
         <div class="table_container">
+            <div class="header_create_job">
+            <h3>Job Order Form</h3>
+            </div>
             <form method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>" enctype="multipart/form-data" id="jobForm">
                 <label for="job-subject">Job Order Title:</label>
                 <input type="text" id="job-subject" name="job-subject">
@@ -407,9 +392,11 @@ $conn->close();
                 <div class="designReferenceContainer" id="designReferenceContainer">
                     <div class="referenceImageContainer">
                         <label for="referenceImage">Reference Image:</label>
-                        <img id="referencePreview" src="../upload/default_reference.jpg" alt="Design Reference Preview" />
-                        <div id="imagePreviewContainer"></div>
-
+                        
+                        <img id="referencePreview" src="../upload/default_reference.jpg" alt="Design Reference Preview">
+                        
+                        <div class="Preview_Container" id="imagePreviewContainer"></div>
+                    
                         <input type="file" id="referenceImage" name="referenceImage[]" accept="image/*" multiple placeholder="Upload Reference Image">
                     </div>
                 </div>
@@ -433,7 +420,6 @@ $conn->close();
                 </select>
                 <!-- A hidden input field to store the selected template name -->
                 <input type="hidden" name="selectedTemplateName" id="selectedTemplateName">
-                <input type="hidden" name="selectedTemplateId" id="selectedTemplateId">
 
 
 
@@ -468,6 +454,7 @@ $conn->close();
 
     <?php
 
+
     ?>
     <script type="text/javascript">
         document.addEventListener("DOMContentLoaded", function() {
@@ -485,19 +472,13 @@ $conn->close();
             var manualTimeInput = document.getElementById('manual-time-input');
             var templateDetailsDiv = document.getElementById('templateDetails');
 
-
-
             /*** FORM UPLOAD AND IMAGE UPLOAD ***/
+
             //Form upload and receive job id for image file upload
             $("#jobForm").submit(function(event) {
                 event.preventDefault(); // Prevent the default form submission
 
                 var formData = new FormData(this);
-                if ($("#use-template").val() !== "Manually") {
-                    var templateId = $("#selectedTemplateId").val(); // Get templateId from the hidden input
-                    formData.append('templateId', templateId); // Append templateId to formData
-                }
-
                 // New logic to append process details using the structured naming convention
                 $('.process-row').each(function(index, processRow) {
                     var processId = $(processRow).data('process-id'); // Assuming processId is stored as data attribute
@@ -508,7 +489,6 @@ $conn->close();
                     formData.append(`processes[${index}][option]`, option);
                 });
                 console.log([...formData]);
-
                 // AJAX call to create the job entry and potentially get job_id
                 $.ajax({
                     url: 'create_job.php', // actual endpoint
@@ -517,26 +497,8 @@ $conn->close();
                     processData: false,
                     contentType: false,
                     success: function(response) {
-                        var responseJSON = JSON.parse(response);
-                        var job_id = responseJSON.job_id; // Parse response to get job_id
-                        // Log the activity for job creation
-                        $.ajax({
-                            url: 'log_activity.php',
-                            type: 'POST',
-                            data: {
-                                actionType: 'Job Order Creation',
-                                subjectId: job_id,
-                                subjectType: 'Job',
-                                logDetails: 'Job order created successfully.'
-                            },
-                            success: function(logResponse) {
-                                console.log("Activity logged successfully.", logResponse);
-                            },
-                            error: function(logError) {
-                                console.error("Error logging activity:", logError);
-                            }
-                        }); // End of log activity AJAX call
-                        confirm("Job created successfully with ID: " + job_id + ".");
+                        var job_id = JSON.parse(response).job_id; // Parse response to get job_id
+                        console.log("Job created successfully with ID:", job_id);
                         // Check if there are files to upload
                         var files = $("#referenceImage")[0].files;
                         if (files.length > 0) {
@@ -556,22 +518,23 @@ $conn->close();
                             });
 
                             // Wait for all file uploads to complete
-                            Promise.all(uploadPromises).then(function() {
+                            Promise.all(uploadPromises).then(() => {
                                 console.log("All files uploaded successfully.");
                                 $('#jobForm').trigger("reset");
                                 window.location.reload(true); // refresh the page
-                            }).catch(function(error) {
+                            }).catch((error) => {
+                                console.log([...formData]);
                                 console.error("Error during file upload:", error);
                                 alert("An error occurred during the file upload.");
                             });
                         } else {
                             // If no files, just show success log and reset form
-
                             $('#jobForm').trigger("reset");
                             window.location.reload(true);
                         }
                     }, // End of success callback
                     error: function() {
+
                         console.log("Error creating job.");
                         alert("Error creating job.");
                     }
@@ -591,6 +554,7 @@ $conn->close();
                 if (files.length > 0) {
                     // Hide the default preview image
                     referencePreview.style.display = 'none';
+                    
 
                     Array.from(files).forEach(file => {
                         if (file.type.startsWith('image/')) {
@@ -639,12 +603,12 @@ $conn->close();
             assignToSelect.addEventListener('change', function() {
                 if (this.value === "Assign an Artist") {
                     document.getElementById('artistOverlay').style.display = 'block';
-                }
+                } 
                 if (this.value === "Open to All") {
                     document.getElementById('selected-artist-name').value = null;
                     document.getElementById('artistOverlay').style.display = 'none'; // Hide the overlay if it was previously shown
                     selectedArtistDiv.innerHTML = ''; // Clear any selected artist information
-                }
+                } 
             });
             // Add event listener to the close button
             if (closeArtistButton) closeArtistButton.addEventListener('click', closeArtistOverlay);
@@ -738,7 +702,6 @@ $conn->close();
                         if (data.success) {
                             let htmlContent = `<h3>${data.templateName} Processes</h3><ul>`;
                             document.getElementById('selectedTemplateName').value = data.templateName;
-                            document.getElementById('selectedTemplateId').value = data.templateId;
                             data.processes.forEach((process, index) => {
                                 htmlContent += generateProcessHTML(process, index);
                             });
